@@ -9,10 +9,11 @@ Elles apportent une information : le texte de remplacement transmet **cette info
 | Image | Texte de remplacement |
 |---|---|
 | `images/accroche-*.webp` (accroche) | « Une apprenante code sur son ordinateur portable pendant un atelier en ligne » |
+| `images/sarah-benali-*.webp` | « Sarah Benali, développeuse web » |
 | `images/thomas-martin-*.webp` | « Thomas Martin, designer UX/UI » |
 | `images/aicha-ndiaye-*.webp` | « Aïcha N'Diaye, coach en reconversion » |
 
-Les photos des formateurs suivent l'exemple du cours : le nom **et** le rôle, pour que la photo se comprenne seule (« Sarah Benali, formatrice en développement web »).
+Les photos des formateurs suivent l'exemple du cours : le nom **et** le rôle, pour que la photo se comprenne seule.
 
 ## 2. Images fonctionnelles
 
@@ -30,9 +31,8 @@ Elles n'ajoutent rien au texte voisin : elles sont **ignorées** par le lecteur 
 | Image | Technique |
 |---|---|
 | Icônes des valeurs (Proximité, Transparence, Exigence), SVG en ligne | `aria-hidden="true"` + `focusable="false"` — le titre `h3` porte déjà le sens |
-| Pastille d'initiales (SB), en attendant la photo de Sarah Benali | `aria-hidden="true"` — le nom complet est dans le `h3` juste après |
 
-> Pour une balise `<img>` décorative, on écrirait `alt=""` (attribut **présent et vide**). Ici toutes les images décoratives sont des SVG en ligne ou du texte : c'est `aria-hidden="true"` qui joue ce rôle.
+> Pour une balise `<img>` décorative, on écrirait `alt=""` (attribut **présent et vide**). Ici toutes les images décoratives sont des SVG en ligne : c'est `aria-hidden="true"` qui joue ce rôle.
 
 ## Cas particulier : les boutons « Réserver »
 

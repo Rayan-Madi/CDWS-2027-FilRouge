@@ -48,6 +48,8 @@ Le validateur W3C n'a relevé aucune erreur ([capture](validateur-w3c.png)). Les
 
 **Ce que j'ai compris :** « SB » n'est pas un paragraphe, c'est un décor. Je l'avais mis en `<p>` parce que je voulais éviter les `div`. Mais la `div` n'est pas interdite : elle est **le dernier choix**, légitime quand l'élément n'a aucun sens et sert seulement de crochet de style. Choisir `p` pour éviter `div`, c'est encore choisir la balise pour de mauvaises raisons.
 
+> Depuis, les pastilles d'initiales ont été remplacées par les photos des formateurs (TP 2).
+
 ## Ce que je retiens
 
 Les trois erreurs ont la même cause : j'ai choisi une balise en pensant à **l'apparence** ou à une règle apprise par cœur, au lieu de me demander « que suis-je ? ». La question du cours (« la question est "que suis-je ?", jamais "à quoi dois-je ressembler ?" ») règle les trois.

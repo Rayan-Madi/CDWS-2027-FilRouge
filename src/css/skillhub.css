@@ -376,7 +376,7 @@ ul {
   text-align: center;
 }
 
-/* Photo du formateur ; les initiales la remplacent tant qu'il n'y en a pas */
+/* Photo du formateur */
 .formateur__photo {
   display: block;
   width: 6rem;
@@ -386,18 +386,6 @@ ul {
   border-radius: 50%;
 }
 
-.formateur__avatar {
-  display: grid;
-  place-items: center;
-  width: 6rem;
-  height: 6rem;
-  margin: 0 auto 1rem;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #fff;
-  background: linear-gradient(135deg, var(--accent), var(--accent-fonce));
-  border-radius: 50%;
-}
 
 .formateur__role {
   margin-inline: auto;
