@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SkillHub – apprendre avec un formateur indépendant</title>
+  <meta name="description" content="SkillHub met en relation des apprenants en reconversion et des formateurs indépendants, autour d'ateliers courts et concrets.">
+  <!-- La police du titre : demandée tout de suite -->
+  <link rel="preload" href="polices/sora-600.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- Le strict nécessaire pour peindre le haut de page -->
+  <style>
+    body { margin: 0; font-family: Sora, system-ui, sans-serif; }
+  </style>
+  <link rel="stylesheet" href="css/skillhub.css">
+  <!-- Signale que le JavaScript est disponible, avant la première peinture (pas de flash du menu) -->
+  <script>document.documentElement.classList.add("js");</script>
+  <!-- defer : téléchargé en parallèle, exécuté après l'analyse du HTML -->
+  <script src="js/skillhub.js" defer></script>
+</head>
+<body>
+  <a class="evitement" href="#contenu">Aller au contenu</a>
+
+  <div class="page">
+    <header class="entete">
+      <a class="logo" href="#accroche">
+        <svg class="logo__icone" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <rect width="32" height="32" rx="8" fill="currentColor"/>
+          <path d="M9 20c1.5 2 4 3 7 3 3.5 0 6-1.6 6-4.2 0-2.4-2-3.4-5.6-4.2-3-.7-4-1.2-4-2.4 0-1.2 1.2-2 3.2-2 1.9 0 3.3.7 4.2 1.8" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+        SkillHub
+      </a>
+
+      <button class="menu-bouton" type="button" aria-expanded="false" aria-controls="menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span class="menu-bouton__texte">Menu</span>
+      </button>
+
+      <nav class="navigation" id="menu" aria-label="Navigation principale" data-ferme>
+        <ul class="navigation__liste">
+          <li><a href="#valeurs">Valeurs</a></li>
+          <li><a href="#ateliers">Ateliers</a></li>
+          <li><a href="#formateurs">Formateurs</a></li>
+          <li><a class="navigation__action" href="#inscription">S'inscrire</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="contenu" class="contenu" tabindex="-1">
+      <section id="accroche" class="accroche" aria-labelledby="t-accroche">
+        <div class="accroche__texte">
+          <h1 id="t-accroche">Reprenez la main sur votre reconversion</h1>
+          <p>Des ateliers courts et concrets, animés par des formateurs indépendants qui ont fait le chemin avant vous.</p>
+          <p class="accroche__actions">
+            <a class="action" href="#inscription">Créer mon compte</a>
+            <a class="action action--secondaire" href="#ateliers">Voir les ateliers</a>
+          </p>
+        </div>
+        <!-- Image d'accroche : jamais de loading="lazy", c'est elle qui décide du LCP -->
+        <img class="accroche__image"
+             src="images/accroche-800.webp"
+             srcset="images/accroche-400.webp 400w,
+                     images/accroche-800.webp 800w"
+             sizes="(min-width: 48em) 50vw, 100vw"
+             width="800" height="492"
+             alt="Une apprenante code sur son ordinateur portable pendant un atelier en ligne"
+             fetchpriority="high">
+      </section>
+
+      <section id="valeurs" class="bloc" aria-labelledby="t-valeurs">
+        <h2 id="t-valeurs">Nos valeurs</h2>
+        <ul class="valeurs">
+          <li>
+            <article class="valeur">
+              <svg class="valeur__icone" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M16 11a4 4 0 1 0-8 0M4 20c0-3 3.6-5 8-5s8 2 8 5M12 3v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              <h3>Proximité</h3>
+              <p>Des groupes de huit personnes au maximum : votre formateur connaît votre prénom et votre projet.</p>
+            </article>
+          </li>
+          <li>
+            <article class="valeur">
+              <svg class="valeur__icone" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              </svg>
+              <h3>Transparence</h3>
+              <p>Le prix, le programme et les avis des anciens participants sont affichés avant toute inscription.</p>
+            </article>
+          </li>
+          <li>
+            <article class="valeur">
+              <svg class="valeur__icone" width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              </svg>
+              <h3>Exigence</h3>
+              <p>Chaque atelier se termine par une réalisation concrète que vous pouvez montrer à un recruteur.</p>
+            </article>
+          </li>
+        </ul>
+      </section>
+
+      <section id="ateliers" class="bloc bloc--teinte" aria-labelledby="t-ateliers">
+        <h2 id="t-ateliers">Les ateliers du moment</h2>
+        <ul class="ateliers">
+          <li>
+            <article class="atelier">
+              <p class="atelier__etiquette">Développement</p>
+              <h3>Initiation à Git</h3>
+              <p>Versionner son travail, revenir en arrière et collaborer sur GitHub sans peur de tout casser.</p>
+              <p class="atelier__infos">3 h · en ligne · <time datetime="2026-10-07">7 octobre</time></p>
+              <a class="action" href="#inscription">Réserver <span class="visuellement-masque">l'atelier Initiation à Git</span></a>
+            </article>
+          </li>
+          <li>
+            <article class="atelier">
+              <p class="atelier__etiquette">Design</p>
+              <h3>Maquetter une page avec Figma</h3>
+              <p>Passer d'une idée griffonnée à une maquette propre, prête à être intégrée.</p>
+              <p class="atelier__infos">4 h · Paris · <time datetime="2026-10-14">14 octobre</time></p>
+              <a class="action" href="#inscription">Réserver <span class="visuellement-masque">l'atelier Maquetter une page avec Figma</span></a>
+            </article>
+          </li>
+          <li>
+            <article class="atelier">
+              <p class="atelier__etiquette">Carrière</p>
+              <h3>Construire son portfolio</h3>
+              <p>Choisir ses projets, les présenter et les mettre en ligne gratuitement.</p>
+              <p class="atelier__infos">2 h · en ligne · <time datetime="2026-10-21">21 octobre</time></p>
+              <a class="action" href="#inscription">Réserver <span class="visuellement-masque">l'atelier Construire son portfolio</span></a>
+            </article>
+          </li>
+        </ul>
+      </section>
+
+      <section id="formateurs" class="bloc" aria-labelledby="t-formateurs">
+        <h2 id="t-formateurs">Nos formateurs</h2>
+        <ul class="formateurs">
+          <li>
+            <article class="formateur">
+              <p class="formateur__avatar" aria-hidden="true">SB</p>
+              <h3>Sarah Benali</h3>
+              <p class="formateur__role">Développeuse web</p>
+              <blockquote class="formateur__citation">
+                <p>J'ai changé de métier à 34 ans. Je transmets ce que j'aurais aimé qu'on m'apprenne.</p>
+              </blockquote>
+            </article>
+          </li>
+          <li>
+            <article class="formateur">
+              <p class="formateur__avatar" aria-hidden="true">TM</p>
+              <h3>Thomas Martin</h3>
+              <p class="formateur__role">Designer UX/UI</p>
+              <blockquote class="formateur__citation">
+                <p>Une bonne interface, c'est celle qu'on ne remarque pas. Ça s'apprend.</p>
+              </blockquote>
+            </article>
+          </li>
+          <li>
+            <article class="formateur">
+              <p class="formateur__avatar" aria-hidden="true">AN</p>
+              <h3>Aïcha N'Diaye</h3>
+              <p class="formateur__role">Coach en reconversion</p>
+              <blockquote class="formateur__citation">
+                <p>Votre ancien métier n'est pas un poids : c'est votre différence.</p>
+              </blockquote>
+            </article>
+          </li>
+        </ul>
+      </section>
+
+      <section id="inscription" class="bloc bloc--teinte inscription" aria-labelledby="t-inscription">
+        <h2 id="t-inscription">Créer mon compte</h2>
+        <p>L'inscription est gratuite. Vous ne payez que les ateliers que vous réservez.</p>
+        <form class="formulaire" action="#inscription" method="post">
+          <p class="champ">
+            <label for="nom">Prénom et nom</label>
+            <input id="nom" name="nom" type="text" autocomplete="name" required
+                   aria-describedby="erreur-nom">
+            <span class="champ__erreur" id="erreur-nom" aria-live="polite"></span>
+          </p>
+          <p class="champ">
+            <label for="courriel">Adresse électronique</label>
+            <input id="courriel" name="courriel" type="email" autocomplete="email" required
+                   aria-describedby="aide-courriel erreur-courriel">
+            <span class="champ__aide" id="aide-courriel">Nous ne la transmettons à personne.</span>
+            <span class="champ__erreur" id="erreur-courriel" aria-live="polite"></span>
+          </p>
+          <p class="champ">
+            <label for="profil">Je suis</label>
+            <select id="profil" name="profil" required aria-describedby="erreur-profil">
+              <option value="">Choisissez</option>
+              <option value="apprenant">En reconversion</option>
+              <option value="formateur">Formateur indépendant</option>
+            </select>
+            <span class="champ__erreur" id="erreur-profil" aria-live="polite"></span>
+          </p>
+          <p class="champ champ--case">
+            <input id="cgu" name="cgu" type="checkbox" required aria-describedby="erreur-cgu">
+            <label for="cgu">J'accepte les conditions d'utilisation</label>
+            <span class="champ__erreur" id="erreur-cgu" aria-live="polite"></span>
+          </p>
+          <p>
+            <button class="action" type="submit">Créer mon compte</button>
+          </p>
+          <p class="formulaire__confirmation" role="status" hidden></p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="pied">
+      <nav aria-label="Pied de page">
+        <ul class="pied__liens">
+          <li><a href="#accroche">Haut de page</a></li>
+          <li><a href="#ateliers">Ateliers</a></li>
+          <li><a href="#inscription">S'inscrire</a></li>
+        </ul>
+      </nav>
+      <p>SkillHub · IMIE Paris · projet pédagogique · <span class="annee">2026</span></p>
+    </footer>
+  </div>
+</body>
+</html>
