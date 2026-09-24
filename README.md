@@ -32,7 +32,7 @@ python3 -m http.server 8000
     ├── favicon.svg         icône d'onglet (évite une erreur 404 en console)
     ├── css/skillhub.css    une feuille, mobile-first
     ├── js/skillhub.js      comportement, chargé en defer
-    ├── images/             accroche en WebP, trois largeurs
+    ├── images/             accroche et formateurs en WebP, trois largeurs chacun
     └── polices/            Sora 400 et 600 en woff2 (licence OFL)
 ```
 
