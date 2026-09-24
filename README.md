@@ -6,6 +6,8 @@ Projet fil rouge du module **BC01-FM01 — Développement d'interfaces Front-end
 
 **HTML5 · CSS3 · JavaScript natif — sans framework, sans outil de construction.**
 
+**En ligne :** https://rayan-madi.github.io/CDWS-2027-FilRouge/ (GitHub Pages, branche `main`, dossier racine — `index.html` redirige vers `src/`)
+
 ## Lancer le projet
 
 Aucune installation. Servez le dossier `src/` avec n'importe quel serveur statique :
@@ -23,6 +25,7 @@ python3 -m http.server 8000
 ```
 .
 ├── README.md
+├── index.html              redirection vers src/ pour GitHub Pages
 ├── docs/                   rapports Lighthouse / Wave exportés (à déposer)
 └── src/
     ├── index.html          la page, une seule
