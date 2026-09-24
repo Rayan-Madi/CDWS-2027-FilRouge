@@ -36,10 +36,10 @@ Autres mesures : First Contentful Paint 1,0 s → 0,9 s ; Speed Index 1,3 s → 
 
 | Geste | Où |
 |---|---|
-| 1. Images à leur taille d'affichage | `srcset` 400 / 700 / 800 px, `sizes` exact |
+| 1. Images à leur taille d'affichage | accroche : `srcset` 400 / 700 / 800 px, `sizes` exact · formateurs : 96 / 192 / 288 px (écrans 1×, 2×, 3×) pour un affichage en `6rem` |
 | 2. WebP | toutes les images matricielles |
 | 3. Dimensions sur chaque image | `width="800" height="492"` → CLS 0 |
-| 4. Chargement différé sauf l'accroche | aucune autre image matricielle dans la page ; l'accroche n'est **jamais** en `lazy` |
+| 4. Chargement différé sauf l'accroche | photos des formateurs en `loading="lazy"` + `decoding="async"` ; l'accroche n'est **jamais** en `lazy` |
 | 5. `defer` sur les scripts | `js/skillhub.js` |
 | 6. Police auto-hébergée | Sora en woff2, 2 graisses, `font-display: swap`, 600 préchargée |
 
