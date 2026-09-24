@@ -112,7 +112,7 @@ Sans JavaScript, la page reste complète : le menu est déplié, le bouton Menu 
 - [x] Lighthouse **avant** (mobile, navigation privée, page en ligne) : **Performance 97 · Accessibilité 100 · Bonnes pratiques 100 · SEO 100** — `docs/lighthouse-avant.html`, capture `docs/lighthouse-scores.png`
   - Point relevé : l'image d'accroche servie en 800 px sur mobile (25 Kio gaspillés). Geste : variante 700 px dans `srcset` et `sizes` qui décrit la vraie largeur affichée (marges déduites).
   - TBT 190 ms : la plus longue tâche (242 ms) est « Unattributable » (navigateur, DevTools) ; le JavaScript de la page ne s'exécute qu'en 17 ms.
-- [ ] Lighthouse **après**, mêmes conditions — `docs/lighthouse-apres.html'
+- [ ] Lighthouse **après**, mêmes conditions — `docs/lighthouse-apres.html`
 - [ ] Rapport Wave ou Lighthouse accessibilité exporté dans `docs/`
 
 ## Crédits
