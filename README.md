@@ -106,7 +106,7 @@ Sans JavaScript, la page reste complète : le menu est déplié, le bouton Menu 
 
 ## Vérifications
 
-- [x] HTML : 0 erreur (`html-validate`, règles recommandées) — à confirmer sur [validator.w3.org](https://validator.w3.org/) et capturer
+- [x] HTML : 0 erreur, 0 avertissement sur le [validateur W3C](https://validator.w3.org/nu/?doc=https%3A%2F%2Frayan-madi.github.io%2FCDWS-2027-FilRouge%2Fsrc%2F) (vnu 26.9.16) — capture : `docs/validateur-w3c.png`
 - [x] Trois paliers sans débordement horizontal
 - [ ] Rapport Lighthouse exporté en HTML dans `docs/`
 - [ ] Rapport Wave ou Lighthouse accessibilité exporté dans `docs/`
