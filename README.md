@@ -29,6 +29,7 @@ python3 -m http.server 8000
 ├── docs/                   rapports Lighthouse / Wave exportés (à déposer)
 └── src/
     ├── index.html          la page, une seule
+    ├── favicon.svg         icône d'onglet (évite une erreur 404 en console)
     ├── css/skillhub.css    une feuille, mobile-first
     ├── js/skillhub.js      comportement, chargé en defer
     ├── images/             accroche en WebP, deux largeurs
