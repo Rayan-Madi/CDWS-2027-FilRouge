@@ -32,7 +32,7 @@ python3 -m http.server 8000
     ├── favicon.svg         icône d'onglet (évite une erreur 404 en console)
     ├── css/skillhub.css    une feuille, mobile-first
     ├── js/skillhub.js      comportement, chargé en defer
-    ├── images/             accroche en WebP, deux largeurs
+    ├── images/             accroche en WebP, trois largeurs
     └── polices/            Sora 400 et 600 en woff2 (licence OFL)
 ```
 
@@ -98,7 +98,7 @@ Vérifié à 375, 800 et 1280 px : `scrollWidth === innerWidth`, **aucune barre 
 ### Performance
 
 - Police **auto-hébergée**, deux graisses seulement, `font-display: swap`, graisse du titre préchargée (`preload` + `crossorigin`).
-- Image d'accroche en **WebP**, deux largeurs (`srcset` / `sizes`), `width` et `height` posés (pas de CLS), `fetchpriority="high"` et **pas** de `loading="lazy"` (c'est elle qui fait le LCP).
+- Image d'accroche en **WebP**, trois largeurs (400, 700, 800) (`srcset` / `sizes`), `width` et `height` posés (pas de CLS), `fetchpriority="high"` et **pas** de `loading="lazy"` (c'est elle qui fait le LCP).
 - Script en `defer` ; seule une ligne en ligne dans le `head` pose la classe `js` avant la première peinture, pour éviter le flash du menu.
 
 ### Amélioration progressive
@@ -109,7 +109,10 @@ Sans JavaScript, la page reste complète : le menu est déplié, le bouton Menu 
 
 - [x] HTML : 0 erreur, 0 avertissement sur le [validateur W3C](https://validator.w3.org/nu/?doc=https%3A%2F%2Frayan-madi.github.io%2FCDWS-2027-FilRouge%2Fsrc%2F) (vnu 26.9.16) — capture : `docs/validateur-w3c.png`
 - [x] Trois paliers sans débordement horizontal
-- [x] Lighthouse mobile, navigation privée, sur la page en ligne : **Performance 97 · Accessibilité 100 · Bonnes pratiques 100 · SEO 100** — rapport `docs/lighthouse.html`, capture `docs/lighthouse-scores.png`
+- [x] Lighthouse **avant** (mobile, navigation privée, page en ligne) : **Performance 97 · Accessibilité 100 · Bonnes pratiques 100 · SEO 100** — `docs/lighthouse-avant.html`, capture `docs/lighthouse-scores.png`
+  - Point relevé : l'image d'accroche servie en 800 px sur mobile (25 Kio gaspillés). Geste : variante 700 px dans `srcset` et `sizes` qui décrit la vraie largeur affichée (marges déduites).
+  - TBT 190 ms : la plus longue tâche (242 ms) est « Unattributable » (navigateur, DevTools) ; le JavaScript de la page ne s'exécute qu'en 17 ms.
+- [ ] Lighthouse **après**, mêmes conditions — `docs/lighthouse-apres.html'
 - [ ] Rapport Wave ou Lighthouse accessibilité exporté dans `docs/`
 
 ## Crédits
