@@ -1,0 +1,617 @@
+/* ==========================================================================
+   SkillHub — feuille de style unique, mobile-first, sans framework
+   Ordre : polices · variables · base · composants · paliers (min-width, em)
+   ========================================================================== */
+
+/* ---------- Polices auto-hébergées : deux graisses, font-display: swap ---------- */
+@font-face {
+  font-family: "Sora";
+  src: url("../polices/sora-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Sora";
+  src: url("../polices/sora-600.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+/* ---------- Variables : une source unique, héritée partout ---------- */
+:root {
+  --texte: #12293f;
+  --texte-doux: #44566b;
+  --fond: #ffffff;
+  --fond-teinte: #f1f4f8;
+  --accent: #0b5cad;
+  --accent-fonce: #084784;
+  --accent-clair: #e3eefa;
+  --erreur: #b3261e;
+  --succes: #1d6b3a;
+  --bordure: #cbd5e1;
+  --rayon: 0.75rem;
+  --espace: 1rem;
+  --largeur-max: 72rem;
+  --police: "Sora", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* ---------- Base : les trois oublis qui font déborder ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+video,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem; /* les ancres et le focus ne passent pas sous l'en-tête collant */
+}
+
+body {
+  margin: 0;
+  font-family: var(--police);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--texte);
+  background: var(--fond);
+  overflow-wrap: break-word;
+}
+
+:where(h1, h2, h3) {
+  line-height: 1.2;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 3vw + 0.5rem, 2.25rem);
+}
+
+h3 {
+  font-size: 1.2rem;
+}
+
+p {
+  margin: 0 0 1rem;
+  max-width: 65ch; /* une ligne lisible tient autour de 65 caractères */
+}
+
+a {
+  color: var(--accent);
+}
+
+a:hover {
+  color: var(--accent-fonce);
+}
+
+/* Le focus clavier est toujours visible — :hover seul laisserait le clavier sans retour */
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* Texte lu par les lecteurs d'écran, masqué à l'écran */
+.visuellement-masque {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Lien d'évitement : hors de l'écran, ramené au focus ---------- */
+.evitement {
+  position: absolute;
+  top: -4rem;
+  left: 1rem;
+  z-index: 10;
+  padding: 0.5rem 1rem;
+  background: var(--fond);
+  border: 2px solid var(--accent);
+  border-radius: var(--rayon);
+}
+
+.evitement:focus {
+  top: 1rem;
+}
+
+/* ---------- Structure de page, dessinée en toutes lettres ---------- */
+.page {
+  display: grid;
+  grid-template-areas:
+    "entete"
+    "contenu"
+    "pied";
+  /* minmax(0, 1fr) et non 1fr : une colonne 1fr ne descend jamais sous
+     la largeur min-content de son contenu, et la page déborde */
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.entete  { grid-area: entete; }
+.contenu { grid-area: contenu; }
+.pied    { grid-area: pied; }
+
+.contenu:focus {
+  outline: none;
+}
+
+/* ---------- En-tête et navigation (Flexbox : une dimension) ---------- */
+.entete {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem var(--espace);
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.logo__icone {
+  color: var(--accent);
+}
+
+/* Le bouton n'existe que si le JavaScript peut le faire fonctionner */
+.menu-bouton {
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem; /* cible tactile d'au moins 44 px */
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+  color: var(--texte);
+  background: transparent;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  cursor: pointer;
+}
+
+.js .menu-bouton {
+  display: inline-flex;
+}
+
+.navigation {
+  flex-basis: 100%;
+}
+
+.navigation__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 0.5rem;
+}
+
+.navigation__liste a {
+  display: block;
+  padding: 0.6rem 0.5rem;
+  color: var(--texte);
+  text-decoration: none;
+  border-radius: 0.5rem;
+}
+
+.navigation__liste a:hover,
+.navigation__liste a:focus-visible {
+  background: var(--accent-clair);
+}
+
+/* Menu replié seulement si le JavaScript est là : sans lui, tout reste visible */
+.js .navigation[data-ferme] {
+  display: none;
+}
+
+/* ---------- Boutons d'action ---------- */
+.action {
+  display: inline-block;
+  min-height: 2.75rem;
+  padding: 0.7rem 1.4rem;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  background: var(--accent);
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.action:hover,
+.action:focus-visible {
+  color: #fff;
+  background: var(--accent-fonce);
+  border-color: var(--accent-fonce);
+  transform: translateY(-1px);
+}
+
+.action--secondaire {
+  color: var(--accent);
+  background: transparent;
+}
+
+.action--secondaire:hover,
+.action--secondaire:focus-visible {
+  color: #fff;
+}
+
+/* ---------- Sections ---------- */
+.bloc,
+.accroche {
+  padding: 3rem var(--espace);
+}
+
+.bloc > *,
+.accroche > * {
+  max-width: var(--largeur-max);
+  margin-inline: auto;
+}
+
+.bloc--teinte {
+  background: var(--fond-teinte);
+}
+
+/* ---------- Accroche ---------- */
+.accroche {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+  align-items: center;
+  padding-top: 2.5rem;
+}
+
+.accroche h1 {
+  /* suit la largeur de l'écran sans descendre sous 1,9 rem ni dépasser 3,4 rem */
+  font-size: clamp(1.9rem, 5vw + 0.5rem, 3.4rem);
+}
+
+.accroche__texte p {
+  font-size: 1.1rem;
+  color: var(--texte-doux);
+}
+
+.accroche__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.accroche__image {
+  display: block;
+  width: 100%;
+  border-radius: calc(var(--rayon) * 2);
+  box-shadow: 0 1.5rem 3rem -1.5rem rgba(18, 41, 63, 0.45);
+}
+
+/* ---------- Valeurs, ateliers, formateurs : grilles sans media query ---------- */
+.valeurs,
+.ateliers,
+.formateurs {
+  display: grid;
+  gap: 1.5rem;
+  /* autant de colonnes que la place en autorise, chacune d'au moins 16 rem */
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  margin-top: 1.5rem;
+}
+
+.valeur,
+.atelier,
+.formateur {
+  height: 100%;
+  padding: 1.5rem;
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.valeur__icone {
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+}
+
+/* La carte d'atelier : Flexbox en colonne, bouton collé en pied de carte */
+.atelier {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.atelier p {
+  margin: 0;
+}
+
+.atelier__etiquette {
+  align-self: flex-start;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-fonce);
+  background: var(--accent-clair);
+  border-radius: 999px;
+}
+
+.atelier__infos {
+  font-size: 0.9rem;
+  color: var(--texte-doux);
+}
+
+.atelier > .action {
+  margin-top: auto; /* aligne les boutons de toutes les cartes sur la même ligne */
+  align-self: flex-start;
+}
+
+.formateur {
+  text-align: center;
+}
+
+.formateur__avatar {
+  display: grid;
+  place-items: center;
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto 1rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-fonce));
+  border-radius: 50%;
+}
+
+.formateur__role {
+  margin-inline: auto;
+  color: var(--texte-doux);
+}
+
+.formateur__citation {
+  margin: 1rem 0 0;
+  font-style: italic;
+}
+
+.formateur__citation p {
+  margin-inline: auto;
+}
+
+/* ---------- Formulaire d'inscription ---------- */
+/* Une seule colonne étroite pour le titre, le texte et le formulaire */
+.inscription > * {
+  max-width: 36rem;
+}
+
+.formulaire {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.champ label {
+  font-weight: 600;
+}
+
+.champ input,
+.champ select {
+  min-height: 2.75rem;
+  padding: 0.6rem 0.75rem;
+  font: inherit; /* sans lui, le champ garde la police du système */
+  color: var(--texte);
+  background: var(--fond);
+  border: 1px solid var(--texte-doux);
+  border-radius: 0.5rem;
+}
+
+.champ--case {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.champ--case input {
+  width: 1.4rem;
+  min-height: 1.4rem;
+  accent-color: var(--accent);
+}
+
+.champ--case label {
+  flex: 1;
+  font-weight: 400;
+}
+
+.champ--case .champ__erreur {
+  flex-basis: 100%;
+}
+
+.champ__aide {
+  font-size: 0.9rem;
+  color: var(--texte-doux);
+}
+
+.champ__erreur {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--erreur);
+}
+
+.champ__erreur:empty {
+  display: none;
+}
+
+/* L'état invalide ne s'allume qu'après que la personne a touché au champ */
+.champ input:user-invalid,
+.champ select:user-invalid,
+.champ [aria-invalid="true"] {
+  border-color: var(--erreur);
+  border-width: 2px;
+}
+
+.formulaire button {
+  width: 100%;
+}
+
+.formulaire__confirmation {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: var(--succes);
+  background: #e6f4ea;
+  border-radius: 0.5rem;
+}
+
+/* ---------- Pied de page ---------- */
+.pied {
+  padding: 2rem var(--espace);
+  color: #dbe4ee;
+  text-align: center;
+  background: var(--texte);
+}
+
+.pied p {
+  margin: 1rem auto 0;
+}
+
+.pied__liens {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.5rem;
+}
+
+.pied a {
+  display: inline-block;
+  padding: 0.4rem 0;
+  color: #fff;
+}
+
+.pied a:focus-visible {
+  outline-color: #fff;
+}
+
+/* ==========================================================================
+   Paliers — mobile-first : chaque media query AJOUTE, aucune ne retire.
+   En em pour suivre le réglage de taille de texte du visiteur.
+   ========================================================================== */
+
+/* Palier 2 — tablette : à 48em la navigation tient sur une ligne,
+   et l'accroche a la place pour deux colonnes. */
+@media (min-width: 48em) {
+  :root {
+    --espace: 2rem;
+  }
+
+  .js .menu-bouton {
+    display: none;
+  }
+
+  .navigation,
+  .js .navigation[data-ferme] {
+    display: block;
+    flex-basis: auto;
+  }
+
+  .navigation__liste {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+  }
+
+  .navigation__action {
+    border: 2px solid var(--accent);
+  }
+
+  .accroche {
+    grid-template-columns: 1fr 1fr;
+    padding-block: 4rem;
+  }
+
+  .bloc {
+    padding-block: 4.5rem;
+  }
+
+  .formulaire {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1.25rem;
+  }
+
+  .formulaire > :nth-child(n + 4) {
+    grid-column: 1 / -1; /* case à cocher, bouton et confirmation sur toute la largeur */
+  }
+
+  .formulaire button {
+    width: auto;
+  }
+}
+
+/* Palier 3 — ordinateur : au-delà de 64em les lignes de l'accroche deviennent
+   trop longues ; on donne plus de place au texte et on centre la page. */
+@media (min-width: 64em) {
+  .accroche {
+    grid-template-columns: 1.1fr 1fr;
+    gap: 4rem;
+    max-width: var(--largeur-max);
+    margin-inline: auto;
+    padding-inline: var(--espace);
+  }
+
+  .accroche > * {
+    max-width: none;
+    margin: 0;
+  }
+
+  .entete {
+    padding-inline: max(var(--espace), (100% - var(--largeur-max)) / 2);
+  }
+}
+
+/* ---------- Préférences de la personne, pas de l'écran ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
