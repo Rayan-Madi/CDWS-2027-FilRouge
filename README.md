@@ -41,7 +41,9 @@ Séparation des responsabilités : la structure dans le HTML, la présentation d
 
 ### Structure HTML sémantique (critère C2.1)
 
-- `header`, `nav` (×2, distinguées par `aria-label`), `main` unique, `section`, `article`, `footer`.
+- `header`, `nav` principale (avec `aria-label`), `main` unique, `section`, `article`, `footer`. Les trois liens du pied de page restent une simple liste : ce n'est pas une navigation majeure.
+- Dans chaque fiche, le titre `h3` vient en premier : c'est lui qui ouvre la fiche, dans le code comme à l'écran.
+- `div` réservées aux crochets de style (`.page`, texte de l'accroche, pastilles décoratives des formateurs).
 - Chaque `section` porte un titre `h2` et un `aria-labelledby` qui pointe dessus.
 - Les fiches d'atelier, de valeur et de formateur sont des `article` : elles gardent leur sens hors de la page.
 - Lien d'évitement « Aller au contenu » en premier élément focusable.
