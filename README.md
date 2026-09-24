@@ -109,7 +109,7 @@ Sans JavaScript, la page reste complète : le menu est déplié, le bouton Menu 
 
 - [x] HTML : 0 erreur, 0 avertissement sur le [validateur W3C](https://validator.w3.org/nu/?doc=https%3A%2F%2Frayan-madi.github.io%2FCDWS-2027-FilRouge%2Fsrc%2F) (vnu 26.9.16) — capture : `docs/validateur-w3c.png`
 - [x] Trois paliers sans débordement horizontal
-- [ ] Rapport Lighthouse exporté en HTML dans `docs/`
+- [x] Lighthouse mobile, navigation privée, sur la page en ligne : **Performance 97 · Accessibilité 100 · Bonnes pratiques 100 · SEO 100** — rapport `docs/lighthouse.html`, capture `docs/lighthouse-scores.png`
 - [ ] Rapport Wave ou Lighthouse accessibilité exporté dans `docs/`
 
 ## Crédits
