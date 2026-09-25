@@ -26,12 +26,13 @@ python3 -m http.server 8000
 .
 ├── README.md
 ├── index.html              redirection vers src/ pour GitHub Pages
-├── docs/                   rapports Lighthouse / Wave exportés (à déposer)
+├── docs/                   rapports exportés et documents des TP
+├── outils/contrastes.js    mesure des contrastes (formule WCAG)
 └── src/
     ├── index.html          la page, une seule
     ├── favicon.svg         icône d'onglet (évite une erreur 404 en console)
     ├── css/skillhub.css    une feuille, mobile-first
-    ├── js/skillhub.js      comportement, chargé en defer
+    ├── js/skillhub.js      comportement, chargé en defer : menu, modale, validation
     ├── images/             accroche et formateurs en WebP, trois largeurs chacun
     └── polices/            Sora 400 et 600 en woff2 (licence OFL)
 ```
@@ -86,12 +87,17 @@ h1  Reprenez la main sur votre reconversion
 
 Vérifié à 375, 800 et 1280 px : `scrollWidth === innerWidth`, **aucune barre de défilement horizontale**.
 
-### Accessibilité (critère C1.2, amorcé)
+### Accessibilité (critère C1.2)
+
+Rapport complet : [`docs/fm02-tp4-accessibilite.md`](docs/fm02-tp4-accessibilite.md).
+
 
 - Étiquettes `label for` liées à chaque champ, `autocomplete`, aide lue avec le champ via `aria-describedby`.
 - Messages d'erreur annoncés (`aria-live`), `aria-invalid` sur les champs fautifs, focus renvoyé au premier champ invalide.
 - `:focus-visible` sur tout élément interactif ; cibles de clic d'au moins 44 px.
 - Menu mobile : vrai `button`, `aria-expanded`, `aria-controls`, fermeture par Échap.
+- Modale de réservation en `<dialog>` ouverte par `showModal()` : focus piégé dans la modale tant qu'elle est ouverte, Échap ferme, le focus revient au bouton « Réserver ».
+- Boutons d'envoi désactivés pendant l'envoi (« … en cours ») : pas de double envoi.
 - Icônes SVG décoratives en `aria-hidden="true"` ; texte masqué visuellement sur les boutons « Réserver » pour qu'ils soient distincts au lecteur d'écran.
 - `prefers-reduced-motion` respecté.
 
