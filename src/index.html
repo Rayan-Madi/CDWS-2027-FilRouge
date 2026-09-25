@@ -112,38 +112,48 @@
 
       <section id="ateliers" class="bloc bloc--teinte" aria-labelledby="t-ateliers">
         <h2 id="t-ateliers">Les ateliers du moment</h2>
+        <!-- Filtres : affichés par le JavaScript ; sans lui, tous les ateliers restent visibles -->
+        <div class="filtres" hidden>
+          <fieldset class="filtres__choix">
+            <legend>Filtrer les ateliers</legend>
+            <label class="filtres__option"><input type="checkbox" name="soir"> Le soir (à partir de 18 h)</label>
+            <label class="filtres__option"><input type="checkbox" name="debutant"> Ouverts aux débutants</label>
+          </fieldset>
+          <p class="filtres__resultat" role="status"></p>
+        </div>
         <ul class="ateliers">
           <li>
-            <article class="atelier">
+            <article class="atelier" data-moment="soir" data-niveau="debutant">
               <h3>Initiation à Git</h3>
               <p class="atelier__etiquette">Développement</p>
               <p>Versionner son travail, revenir en arrière et collaborer sur GitHub sans peur de tout casser.</p>
-              <p class="atelier__infos">Niveau débutant · 3 h · en ligne · <time datetime="2026-10-07">7 octobre</time></p>
+              <p class="atelier__infos">Niveau débutant · 3 h · en ligne · <time datetime="2026-10-07T18:30">mercredi 7 octobre, 18 h 30</time></p>
               <p class="atelier__prix">25 €</p>
               <a class="action" href="#inscription" data-reserver>Réserver <span class="visuellement-masque">l'atelier Initiation à Git</span></a>
             </article>
           </li>
           <li>
-            <article class="atelier">
+            <article class="atelier" data-moment="journee" data-niveau="intermediaire">
               <h3>Maquetter une page avec Figma</h3>
               <p class="atelier__etiquette">Design</p>
               <p>Passer d'une idée griffonnée à une maquette propre, prête à être intégrée.</p>
-              <p class="atelier__infos">Niveau débutant · 4 h · Paris · <time datetime="2026-10-14">14 octobre</time></p>
+              <p class="atelier__infos">Niveau intermédiaire · 4 h · Paris · <time datetime="2026-10-17T10:00">samedi 17 octobre, 10 h</time></p>
               <p class="atelier__prix">35 €</p>
               <a class="action" href="#inscription" data-reserver>Réserver <span class="visuellement-masque">l'atelier Maquetter une page avec Figma</span></a>
             </article>
           </li>
           <li>
-            <article class="atelier">
+            <article class="atelier" data-moment="soir" data-niveau="tous">
               <h3>Construire son portfolio</h3>
               <p class="atelier__etiquette">Carrière</p>
               <p>Choisir ses projets, les présenter et les mettre en ligne gratuitement.</p>
-              <p class="atelier__infos">Tous niveaux · 2 h · en ligne · <time datetime="2026-10-21">21 octobre</time></p>
+              <p class="atelier__infos">Tous niveaux · 2 h · en ligne · <time datetime="2026-10-21T19:00">mercredi 21 octobre, 19 h</time></p>
               <p class="atelier__prix">Gratuit</p>
               <a class="action" href="#inscription" data-reserver>Réserver <span class="visuellement-masque">l'atelier Construire son portfolio</span></a>
             </article>
           </li>
         </ul>
+        <p class="ateliers__vide" hidden>Aucun atelier ne correspond à ces filtres. Décochez-en un pour élargir la recherche.</p>
       </section>
 
       <section id="formateurs" class="bloc" aria-labelledby="t-formateurs">

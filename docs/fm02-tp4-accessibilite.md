@@ -10,9 +10,9 @@ Page auditée : `https://rayan-madi.github.io/CDWS-2027-FilRouge/src/` · niveau
 
 | Outil | Avant (page de fin de FM01) | Après (TP 4) | Rapport exporté |
 |---|---|---|---|
-| **Lighthouse**, onglet Accessibilité, mobile | **100** — 25 contrôles réussis, 0 échec, 10 à vérifier à la main | **100** — 26 contrôles réussis (la modale en ajoute un), 0 échec, 10 à vérifier à la main | [`lighthouse-a11y-avant.html`](lighthouse-a11y-avant.html) · [`lighthouse-a11y-apres.html`](lighthouse-a11y-apres.html) |
+| **Lighthouse**, onglet Accessibilité, mobile | **100** — 25 contrôles réussis, 0 échec, 10 à vérifier à la main | **100** — 29 contrôles réussis (la modale et le filtre en ajoutent), 0 échec, 10 à vérifier à la main | [`lighthouse-a11y-avant.html`](lighthouse-a11y-avant.html) · [`lighthouse-a11y-apres.html`](lighthouse-a11y-apres.html) |
 | **Wave** (extension WebAIM) : erreurs / erreurs de contraste / alertes | _à compléter_ | _à compléter_ | `wave-avant.pdf` · `wave-apres.pdf` |
-| **axe-core 4** (le moteur de Lighthouse), 375 et 1280 px | 0 violation, 43 contrôles réussis | 0 violation, 45 contrôles réussis, **modale ouverte comprise** | — |
+| **axe-core 4** (le moteur de Lighthouse), 375 et 1280 px | 0 violation, 43 contrôles réussis | 0 violation, 48 contrôles réussis, **modale ouverte comprise** | — |
 
 Les deux rapports Lighthouse ont été produits le 25/09/2026, dans les mêmes conditions (Lighthouse en ligne de commande, mobile, serveur local) : « avant » sur la version de fin de FM01, « après » sur la version du TP 4.
 
@@ -31,6 +31,8 @@ Les deux rapports Lighthouse ont été produits le 25/09/2026, dans les mêmes c
 | Boutons d'envoi **désactivés pendant l'envoi**, libellé « … en cours » | Pas de double envoi, et l'état du système est visible | Nielsen 1 |
 | **Prix et niveau** sur chaque carte d'atelier | Étape 2 du parcours de Jonny : décider sans cliquer, avec un budget serré | Nielsen 6 |
 | **Conditions d'utilisation lisibles** avant de les accepter (`<details>`, sans quitter la page) | On n'accepte plus à l'aveugle, et la saisie n'est pas perdue | 3.3.2, Nielsen 3 |
+| **Heure des ateliers** sur chaque carte, et **filtre** « Le soir » / « Ouverts aux débutants » | Jonny travaille en journée, Mélanie consulte le soir. Le filtre est un `<fieldset>` avec sa `<legend>` ; le nombre d'ateliers affichés est annoncé (`role="status"`) sans déplacer le focus ; un message dit quoi faire si rien ne correspond | 1.3.1, 4.1.3 |
+| **`aria-current`** sur le lien de la section visible | Sur une page unique à ancres, dire où l'on est ; le lien courant est souligné et en gras, pas seulement coloré | 1.4.1, 2.4.8 |
 | **Appel aux formateurs** : son lien mène au formulaire avec « Formateur indépendant » déjà choisi | Persona Mélanie : « process trop long » | Nielsen 7 |
 | **Balises de partage** `og:title` et `og:description` | Étape 1 du parcours de Jonny : un lien partagé sur Instagram ou LinkedIn doit dire ce qu'est SkillHub | — |
 | Menu : **un clic en dehors le referme** (en plus d'Échap, qui rend le focus au bouton) | Le geste que tout le monde attend | — |
@@ -59,7 +61,7 @@ Les deux rapports Lighthouse ont été produits le 25/09/2026, dans les mêmes c
 
 ## 4. Le parcours clavier commenté, sans souris
 
-Relevé à 1280 px, touche Tab, du premier au dernier élément. **21 arrêts, dans l'ordre du document**, contour de focus visible à chacun (3 px ; 6,04:1 au moins sur les fonds clairs, 14,84:1 en blanc sur le pied de page).
+Relevé à 1280 px, touche Tab, du premier au dernier élément ; numéroté sur la page elle-même : [`ordre-tabulation-1280.png`](ordre-tabulation-1280.png) et [`ordre-tabulation-375.png`](ordre-tabulation-375.png). **23 arrêts, dans l'ordre du document**, contour de focus visible à chacun (3 px ; 6,04:1 au moins sur les fonds clairs, 14,84:1 en blanc sur le pied de page).
 
 | # | Élément | Ce qui se passe |
 |---|---|---|
@@ -67,13 +69,14 @@ Relevé à 1280 px, touche Tab, du premier au dernier élément. **21 arrêts, d
 | 2 | Logo « SkillHub » | Ramène en haut de page |
 | 3–6 | Valeurs, Ateliers, Formateurs, S'inscrire | Navigation principale. Sur mobile, un bouton « Menu » les remplace : Entrée ouvre, Échap ferme **et rend le focus au bouton** |
 | 7–8 | « Créer mon compte », « Voir les ateliers » | Les deux actions de l'accroche |
-| 9–11 | « Réserver l'atelier … » (×3) | Chaque bouton dit **quel** atelier il réserve (texte masqué pour le lecteur d'écran). Entrée ouvre la modale |
+| 9–10 | Filtres « Le soir », « Ouverts aux débutants » | Espace coche ou décoche ; le nombre d'ateliers affichés est annoncé |
+| 11–13 | « Réserver l'atelier … » (×3) | Chaque bouton dit **quel** atelier il réserve (texte masqué pour le lecteur d'écran). Entrée ouvre la modale |
 | — | **Dans la modale** | Le focus arrive sur « Prénom et nom ». Tab circule **dans la modale seulement** (champs, Confirmer, Annuler). Échap ferme et rend le focus au bouton « Réserver » d'origine |
-| 12 | « Créez votre compte » (appel aux formateurs) | Lien dans une phrase, mène au formulaire |
-| 13–16 | Nom, courriel, profil, case « J'accepte » | Envoi incomplet : message sous chaque champ fautif, focus sur le premier |
-| 17 | « Lire les conditions d'utilisation » | Entrée ou Espace déplie les conditions, sans quitter le formulaire |
-| 18 | « Créer mon compte » | Passe à « Création en cours… », désactivé, puis confirmation annoncée (`role="status"`) |
-| 19–21 | Pied de page | Haut de page, Ateliers, S'inscrire |
+| 14 | « Créez votre compte » (appel aux formateurs) | Lien dans une phrase, mène au formulaire |
+| 15–18 | Nom, courriel, profil, case « J'accepte » | Envoi incomplet : message sous chaque champ fautif, focus sur le premier |
+| 19 | « Lire les conditions d'utilisation » | Entrée ou Espace déplie les conditions, sans quitter le formulaire |
+| 20 | « Créer mon compte » | Passe à « Création en cours… », désactivé, puis confirmation annoncée (`role="status"`) |
+| 21–23 | Pied de page | Haut de page, Ateliers, S'inscrire |
 
 **Parcours arrière (Maj+Tab) :** même ordre inversé, aucun élément ne se retrouve caché sous l'en-tête collant (`scroll-padding-top: 5rem`). **Aucun piège** : la seule zone qui retient le focus est la modale, et on en sort toujours par Échap ou Annuler.
 
@@ -93,12 +96,12 @@ C'est la partie que la fiche d'épreuve demande explicitement.
 
 | # | Amélioration possible | Pourquoi | Priorité |
 |---|---|---|---|
-| 1 | **Tester avec un vrai lecteur d'écran** (NVDA sous Windows) | Seul contrôle qui dit ce que la personne entend réellement ; les outils automatiques plafonnent autour de 30 % des critères | Haute |
-| 2 | **Afficher l'heure** des ateliers et permettre de **filtrer** (soir, débutant) | Jonny travaille en journée, Mélanie consulte le soir : aucun des deux ne peut choisir sans l'horaire | Haute |
-| 3 | **Gérer les erreurs du serveur** (atelier complet, adresse déjà utilisée) avec un message qui dit quoi faire | Heuristique 9. Aujourd'hui l'envoi est simulé : il n'y a pas de back-end, donc pas d'erreur serveur possible | Moyenne, avec le back-end (BC02) |
-| 4 | **Une vraie page de conditions**, versionnée et datée | Le `<details>` suffit pour une démonstration, pas pour un service réel | Moyenne |
-| 5 | Marquer la section visible dans la navigation avec **`aria-current`** | Sur une page unique à ancres, dire où l'on est sans passer par la couleur | Basse |
-| 6 | Vérifier le **zoom du texte à 200 %** sur un vrai téléphone (WCAG 1.4.4) | Tailles en `rem` et reflow à 320 px vérifiés, mais pas sur un appareil réel | Basse |
+| 1 | **Tester avec un vrai lecteur d'écran** (NVDA sous Windows), en suivant [`test-nvda.md`](test-nvda.md) | Seul contrôle qui dit ce que la personne entend réellement ; les outils automatiques plafonnent autour de 30 % des critères | Haute |
+| 2 | **Gérer les erreurs du serveur** (atelier complet, adresse déjà utilisée) avec un message qui dit quoi faire | Heuristique 9. Aujourd'hui l'envoi est simulé : il n'y a pas de back-end, donc pas d'erreur serveur possible | Moyenne, avec le back-end (BC02) |
+| 3 | **Une vraie page de conditions**, versionnée et datée | Le `<details>` suffit pour une démonstration, pas pour un service réel | Moyenne |
+| 4 | **Des photos de formateurs sous licence libre** | Les portraits actuels viennent de banques d'images : tolérés pour un projet d'école, pas pour une mise en ligne réelle | Moyenne |
+| 5 | Vérifier le **zoom du texte à 200 %** sur un vrai téléphone (WCAG 1.4.4) | Tailles en `rem`, reflow à 320 px et zoom à 150 % vérifiés, mais pas sur un appareil réel | Basse |
+| 6 | **Filtrer aussi par lieu** (en ligne / Paris) quand le catalogue grandira | Deux critères suffisent pour trois ateliers ; pas pour trente | Basse |
 
 ---
 

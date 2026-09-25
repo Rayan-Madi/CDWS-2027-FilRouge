@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SkillHub – design system minimal</title>
+  <meta name="description" content="Les jetons, les quatre composants et leurs états, les paliers et l'ordre de tabulation de la landing page SkillHub.">
+  <link rel="icon" href="../src/favicon.svg" type="image/svg+xml">
+  <!-- La vraie feuille de style de la page : les jetons et les composants sont les mêmes -->
+  <link rel="stylesheet" href="../src/css/skillhub.css">
+  <style>
+    /* Mise en page de ce document seulement */
+    .ds { max-width: 72rem; margin-inline: auto; padding: var(--e-8) var(--espace) var(--e-16); }
+    .ds section { margin-top: var(--e-12); }
+    .ds h1 { font-size: clamp(var(--t-xl), 4vw, var(--t-2xl)); }
+    .ds h3 { margin-top: var(--e-8); }
+    .ds code { font-size: var(--t-xs); background: var(--fond-teinte); padding: 0 var(--e-1); border-radius: var(--rayon-s); }
+    .ds-grille { display: grid; gap: var(--e-4); grid-template-columns: repeat(auto-fill, minmax(min(14rem, 100%), 1fr)); margin-top: var(--e-4); }
+    .ds-case { padding: var(--e-4); border: 1px solid var(--bordure); border-radius: var(--rayon-m); background: var(--fond); }
+    .ds-case p { margin: 0; }
+    .ds-legende { font-size: var(--t-xs); color: var(--texte-doux); margin-top: var(--e-2); }
+    .ds-nuance { height: 4rem; border-radius: var(--rayon-s); margin-bottom: var(--e-2); border: 1px solid var(--bordure); }
+    .ds-echelle p { margin: 0 0 var(--e-2); line-height: var(--interligne-titre); }
+    .ds-pas { display: grid; gap: var(--e-2); }
+    .ds-pas div { display: flex; align-items: center; gap: var(--e-3); font-size: var(--t-xs); }
+    .ds-pas span { display: block; height: var(--e-4); background: var(--accent); border-radius: 2px; }
+    .ds-tableau { width: 100%; border-collapse: collapse; margin-top: var(--e-4); font-size: var(--t-xs); }
+    .ds-tableau th, .ds-tableau td { text-align: left; padding: var(--e-2) var(--e-3); border-bottom: 1px solid var(--bordure); vertical-align: top; }
+    .ds-etats { display: grid; gap: var(--e-6); grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr)); margin-top: var(--e-4); }
+    .ds-etats > div { display: flex; flex-direction: column; align-items: flex-start; gap: var(--e-2); }
+    /* États forcés pour l'affichage : mêmes valeurs que :hover, :focus-visible et :active dans skillhub.css */
+    .ds-survol { color: #fff; background: var(--accent-fonce); border-color: var(--accent-fonce); transform: translateY(-1px); }
+    .ds-focus { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .ds-actif { color: #fff; background: var(--accent-fonce); border-color: var(--accent-fonce); transform: translateY(1px); }
+    .ds-champ-focus { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .ds-modales { display: grid; gap: var(--e-6); grid-template-columns: repeat(auto-fill, minmax(min(24rem, 100%), 1fr)); margin-top: var(--e-4); align-items: start; }
+    .ds-modale { position: static; display: block; width: 100%; margin: 0; box-shadow: var(--ombre-2); border: 1px solid var(--bordure); }
+    .ds-paliers { display: flex; flex-wrap: wrap; gap: var(--e-6); align-items: flex-start; margin-top: var(--e-4); }
+    .ds-palier { margin: 0; }
+    .ds-palier div { overflow: hidden; border: 1px solid var(--bordure); border-radius: var(--rayon-m); background: var(--fond); }
+    .ds-palier iframe { display: block; border: 0; transform-origin: 0 0; }
+    .ds-palier figcaption { font-size: var(--t-xs); color: var(--texte-doux); margin-top: var(--e-2); }
+    .ds-titre-carte { font-size: var(--t-m); line-height: var(--interligne-titre); margin: 0; }
+    .ds-ordre { display: block; width: 100%; height: auto; border: 1px solid var(--bordure); border-radius: var(--rayon-m); margin-top: var(--e-4); }
+    /* Échantillons : une classe par jeton, aucune valeur en dur dans le HTML */
+    .ds-nuance--texte { background: var(--texte); }
+    .ds-nuance--texte-doux { background: var(--texte-doux); }
+    .ds-nuance--accent { background: var(--accent); }
+    .ds-nuance--accent-fonce { background: var(--accent-fonce); }
+    .ds-nuance--accent-clair { background: var(--accent-clair); }
+    .ds-nuance--erreur { background: var(--erreur); }
+    .ds-nuance--succes { background: var(--succes); }
+    .ds-nuance--fond-teinte { background: var(--fond-teinte); }
+    .ds-t-3xl { font-size: var(--t-3xl); }
+    .ds-t-2xl { font-size: var(--t-2xl); }
+    .ds-t-xl { font-size: var(--t-xl); }
+    .ds-t-l { font-size: var(--t-l); }
+    .ds-t-m { font-size: var(--t-m); }
+    .ds-t-s { font-size: var(--t-s); }
+    .ds-t-xs { font-size: var(--t-xs); }
+    .ds-pas .ds-e-1 { width: var(--e-1); }
+    .ds-pas .ds-e-2 { width: var(--e-2); }
+    .ds-pas .ds-e-3 { width: var(--e-3); }
+    .ds-pas .ds-e-4 { width: var(--e-4); }
+    .ds-pas .ds-e-6 { width: var(--e-6); }
+    .ds-pas .ds-e-8 { width: var(--e-8); }
+    .ds-pas .ds-e-12 { width: var(--e-12); }
+    .ds-pas .ds-e-16 { width: var(--e-16); }
+    .ds-titre-modale { font-size: var(--t-l); font-weight: 600; line-height: var(--interligne-titre); margin-bottom: var(--e-3); }
+    .ds-actions { margin-top: var(--e-4); }
+    .ds-cadre--360 { width: 180px; height: 400px; } .ds-cadre--360 iframe { transform: scale(0.5); }
+    .ds-cadre--768 { width: 307px; height: 400px; } .ds-cadre--768 iframe { transform: scale(0.4); }
+    .ds-cadre--1280 { width: 384px; height: 400px; } .ds-cadre--1280 iframe { transform: scale(0.3); }
+  </style>
+</head>
+<body>
+  <main class="ds">
+    <h1>SkillHub — design system minimal</h1>
+    <p>Le contrat entre la maquette et l'intégration (FM02, TP 3). Tout ce qui s'affiche ici vient de la <strong>vraie feuille de style</strong> de la page, <code>src/css/skillhub.css</code> : un jeton changé là change ici. Les ratios de contraste sont mesurés par la formule WCAG (<a href="fm02-contrastes.md">tableau complet</a>).</p>
+
+    <section aria-labelledby="t-couleurs">
+      <h2 id="t-couleurs">1. Couleurs</h2>
+      <div class="ds-grille">
+        <div class="ds-case"><div class="ds-nuance ds-nuance--texte"></div><p><code>--texte</code> #12293F</p><p class="ds-legende">Sur --fond : 14,84:1 · AAA</p></div>
+        <div class="ds-case"><div class="ds-nuance ds-nuance--texte-doux"></div><p><code>--texte-doux</code> #44566B</p><p class="ds-legende">Sur --fond : 7,52:1 · AAA · bordure des champs</p></div>
+        <div class="ds-case"><div class="ds-nuance ds-nuance--accent"></div><p><code>--accent</code> #0B5CAD</p><p class="ds-legende">Sur --fond : 6,66:1 · texte blanc dessus : 6,66:1 · focus</p></div>
+        <div class="ds-case"><div class="ds-nuance ds-nuance--accent-fonce"></div><p><code>--accent-fonce</code> #084784</p><p class="ds-legende">Texte blanc dessus : 9,35:1 · survol</p></div>
+        <div class="ds-case"><div class="ds-nuance ds-nuance--accent-clair"></div><p><code>--accent-clair</code> #E3EEFA</p><p class="ds-legende">--accent-fonce dessus : 7,96:1 · étiquettes</p></div>
+        <div class="ds-case"><div class="ds-nuance ds-nuance--erreur"></div><p><code>--erreur</code> #B3261E</p><p class="ds-legende">Sur --fond : 6,53:1 · toujours avec un message écrit</p></div>
+        <div class="ds-case"><div class="ds-nuance ds-nuance--succes"></div><p><code>--succes</code> #1D6B3A</p><p class="ds-legende">Sur --succes-fond : 5,74:1</p></div>
+        <div class="ds-case"><div class="ds-nuance ds-nuance--fond-teinte"></div><p><code>--fond-teinte</code> #F1F4F8</p><p class="ds-legende">Sections alternées · --texte dessus : 13,45:1</p></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-typo">
+      <h2 id="t-typo">2. Échelle typographique et pas d'espacement</h2>
+      <p>Rapport <strong>1,25</strong> à partir de 1 rem, deux graisses (400 et 600), interligne 1,5 pour le texte et 1,2 pour les titres. Espacements en <strong>multiples de 4 px</strong>, sans exception.</p>
+      <div class="ds-grille">
+        <div class="ds-case ds-echelle">
+          <p class="ds-t-3xl">3,052 rem</p>
+          <p class="ds-t-2xl">2,441 rem</p>
+          <p class="ds-t-xl">1,953 rem</p>
+          <p class="ds-t-l">1,563 rem</p>
+          <p class="ds-t-m">1,25 rem</p>
+          <p class="ds-t-s">1 rem</p>
+          <p class="ds-t-xs">0,875 rem</p>
+          <p class="ds-legende"><code>--t-xs</code> à <code>--t-3xl</code> · les deux plus grands ne servent qu'aux titres de section et d'accroche</p>
+        </div>
+        <div class="ds-case ds-pas">
+          <div><span class="ds-e-1"></span><code>--e-1</code> 4 px</div>
+          <div><span class="ds-e-2"></span><code>--e-2</code> 8 px</div>
+          <div><span class="ds-e-3"></span><code>--e-3</code> 12 px</div>
+          <div><span class="ds-e-4"></span><code>--e-4</code> 16 px</div>
+          <div><span class="ds-e-6"></span><code>--e-6</code> 24 px</div>
+          <div><span class="ds-e-8"></span><code>--e-8</code> 32 px</div>
+          <div><span class="ds-e-12"></span><code>--e-12</code> 48 px</div>
+          <div><span class="ds-e-16"></span><code>--e-16</code> 64 px</div>
+        </div>
+        <div class="ds-case">
+          <p><strong>Deux rayons</strong> : <code>--rayon-s</code> 8 px (champs, liens), <code>--rayon-m</code> 12 px (cartes, modale). La <strong>pilule</strong> est une forme, réservée aux boutons et aux étiquettes.</p>
+          <p class="ds-legende">&nbsp;</p>
+          <p><strong>Deux ombres</strong> : <code>--ombre-1</code> (panneau du menu), <code>--ombre-2</code> (image d'accroche, modale).</p>
+          <p class="ds-legende">&nbsp;</p>
+          <p><strong>Cible minimale</strong> : <code>--cible</code> 44 px pour les boutons et les champs ; 24 px pour les cases à cocher (WCAG 2.5.8).</p>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-composants">
+      <h2 id="t-composants">3. Les quatre composants et leurs états</h2>
+
+      <h3>Bouton — six états</h3>
+      <div class="ds-etats">
+        <div><button class="action" type="button" tabindex="-1">Réserver</button><p class="ds-legende">Repos</p></div>
+        <div><button class="action ds-survol" type="button" tabindex="-1">Réserver</button><p class="ds-legende">Survol : --accent-fonce, soulevé d'1 px</p></div>
+        <div><button class="action ds-survol ds-focus" type="button" tabindex="-1">Réserver</button><p class="ds-legende">Focus : anneau 3 px posé sur le fond (6,04:1 au moins)</p></div>
+        <div><button class="action ds-actif" type="button" tabindex="-1">Réserver</button><p class="ds-legende">Actif : enfoncé d'1 px pendant l'appui</p></div>
+        <div><button class="action" type="button" disabled>Réservation en cours…</button><p class="ds-legende">Désactivé = chargement : le libellé dit pourquoi</p></div>
+        <div><button class="action action--secondaire" type="button" tabindex="-1">Annuler</button><p class="ds-legende">Variante secondaire, même six états</p></div>
+      </div>
+
+      <h3>Champ — repos, focus, aide, erreur</h3>
+      <div class="ds-etats">
+        <div class="champ"><label for="ds-1">Prénom et nom</label><input id="ds-1" type="text" tabindex="-1"><p class="ds-legende">Repos : bordure --texte-doux (7,52:1)</p></div>
+        <div class="champ"><label for="ds-2">Prénom et nom</label><input id="ds-2" class="ds-champ-focus" type="text" value="Jonny" tabindex="-1"><p class="ds-legende">Focus</p></div>
+        <div class="champ"><label for="ds-3">Adresse électronique</label><input id="ds-3" type="email" tabindex="-1" aria-describedby="ds-3-aide"><span class="champ__aide" id="ds-3-aide">Nous ne la transmettons à personne.</span></div>
+        <div class="champ"><label for="ds-4">Adresse électronique</label><input id="ds-4" type="email" value="jonny@" aria-invalid="true" aria-describedby="ds-4-err" tabindex="-1"><span class="champ__erreur" id="ds-4-err">L'adresse doit ressembler à nom@exemple.fr.</span><p class="ds-legende">Erreur : bordure 2 px ET message écrit, la saisie est conservée</p></div>
+      </div>
+
+      <h3>Carte d'atelier — normale, et deux cas limites</h3>
+      <ul class="ateliers">
+        <li>
+          <article class="atelier">
+            <h4 class="ds-titre-carte">Initiation à Git</h4>
+            <p class="atelier__etiquette">Développement</p>
+            <p>Versionner son travail, revenir en arrière et collaborer sur GitHub.</p>
+            <p class="atelier__infos">Niveau débutant · 3 h · en ligne · mercredi 7 octobre, 18 h 30</p>
+            <p class="atelier__prix">25 €</p>
+            <button class="action" type="button" tabindex="-1">Réserver</button>
+          </article>
+        </li>
+        <li>
+          <article class="atelier">
+            <h4 class="ds-titre-carte">Construire un site accessible de A à Z, du balisage sémantique au rapport d'audit WCAG</h4>
+            <p class="atelier__etiquette">Cas limite : titre de trois lignes</p>
+            <p>Le bouton reste aligné sur ceux des autres cartes (<code>margin-top: auto</code>).</p>
+            <p class="atelier__infos">Niveau intermédiaire · 6 h · Paris</p>
+            <p class="atelier__prix">60 €</p>
+            <button class="action" type="button" tabindex="-1">Réserver</button>
+          </article>
+        </li>
+      </ul>
+      <p class="ateliers__vide">Aucun atelier ne correspond à ces filtres. Décochez-en un pour élargir la recherche.</p>
+      <p class="ds-legende">Cas limite : catalogue vide, quand les filtres n'ont aucun résultat. Le nombre d'ateliers est aussi annoncé au lecteur d'écran (<code>role="status"</code>).</p>
+
+      <h3>Modale de réservation — ouverte, en erreur, confirmée</h3>
+      <p class="ds-legende">Affichée ici à plat pour la montrer. Dans la page, c'est un <code>&lt;dialog&gt;</code> ouvert par <code>showModal()</code> : focus piégé dedans, Échap ferme, le focus revient au bouton « Réserver ».</p>
+      <div class="ds-modales">
+        <div class="modale ds-modale" role="group" aria-label="Exemple : modale en erreur">
+          <div class="modale__contenu">
+            <p class="ds-titre-modale">Réserver : Initiation à Git</p>
+            <p class="modale__recap">Niveau débutant · 3 h · en ligne · mercredi 7 octobre, 18 h 30 · 25 €</p>
+            <div class="champ"><label for="ds-5">Prénom et nom</label><input id="ds-5" type="text" aria-invalid="true" aria-describedby="ds-5-err" tabindex="-1"><span class="champ__erreur" id="ds-5-err">Indiquez votre prénom et votre nom.</span></div>
+            <p class="modale__actions ds-actions"><button class="action" type="button" tabindex="-1">Confirmer la réservation</button><button class="action action--secondaire" type="button" tabindex="-1">Annuler</button></p>
+          </div>
+        </div>
+        <div class="modale ds-modale" role="group" aria-label="Exemple : modale confirmée">
+          <div class="modale__contenu">
+            <p class="ds-titre-modale">Réserver : Initiation à Git</p>
+            <p class="formulaire__confirmation">C'est réservé, Jonny ! Initiation à Git : mercredi 7 octobre, 18 h 30 · 25 €. Le lien de l'atelier arrivera à jonny@exemple.fr la veille.</p>
+            <p><button class="action" type="button" tabindex="-1">Fermer</button></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-paliers">
+      <h2 id="t-paliers">4. Les trois paliers, en direct</h2>
+      <p>La vraie page, chargée à 360, 768 et 1280 px de large puis réduite pour tenir ici. Points de rupture à <strong>48em</strong> (la navigation tient sur une ligne) et <strong>64em</strong> (l'accroche prend plus de place).</p>
+      <div class="ds-paliers">
+        <figure class="ds-palier">
+          <div class="ds-cadre ds-cadre--360"><iframe src="../src/index.html" title="La page à 360 px de large" width="360" height="800" loading="lazy"></iframe></div>
+          <figcaption>Téléphone · 360 px</figcaption>
+        </figure>
+        <figure class="ds-palier">
+          <div class="ds-cadre ds-cadre--768"><iframe src="../src/index.html" title="La page à 768 px de large" width="768" height="1000" loading="lazy"></iframe></div>
+          <figcaption>Tablette · 768 px</figcaption>
+        </figure>
+        <figure class="ds-palier">
+          <div class="ds-cadre ds-cadre--1280"><iframe src="../src/index.html" title="La page à 1280 px de large" width="1280" height="1333" loading="lazy"></iframe></div>
+          <figcaption>Ordinateur · 1280 px</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-ordre">
+      <h2 id="t-ordre">5. Ordre de tabulation attendu</h2>
+      <p>Relevé sur la vraie page, touche Tab après touche Tab : <strong>23 arrêts</strong> sur ordinateur, <strong>20</strong> sur téléphone (le bouton « Menu » y remplace les quatre liens). Il suit l'ordre du document, donc l'ordre de lecture. Le n° 1, le lien d'évitement, n'apparaît qu'au focus : son cadre est vide au repos.</p>
+      <table class="ds-tableau">
+        <caption class="visuellement-masque">Les arrêts de tabulation, dans l'ordre</caption>
+        <thead><tr><th scope="col">Arrêts</th><th scope="col">Zone</th><th scope="col">Éléments</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Avant tout</td><td>Lien « Aller au contenu »</td></tr>
+          <tr><td>2 – 6</td><td>En-tête</td><td>Logo, Valeurs, Ateliers, Formateurs, S'inscrire (sur téléphone : logo, puis « Menu »)</td></tr>
+          <tr><td>7 – 8</td><td>Accroche</td><td>Créer mon compte, Voir les ateliers</td></tr>
+          <tr><td>9 – 13</td><td>Ateliers</td><td>Filtres « Le soir », « Ouverts aux débutants », puis les trois boutons « Réserver »</td></tr>
+          <tr><td>14</td><td>Formateurs</td><td>Lien « Créez votre compte » (profil formateur présélectionné)</td></tr>
+          <tr><td>15 – 20</td><td>Inscription</td><td>Nom, courriel, profil, case des conditions, « Lire les conditions », Créer mon compte</td></tr>
+          <tr><td>21 – 23</td><td>Pied de page</td><td>Haut de page, Ateliers, S'inscrire</td></tr>
+        </tbody>
+      </table>
+      <img class="ds-ordre" src="ordre-tabulation-1280.png" width="1280" height="3077" loading="lazy"
+           alt="La page entière sur ordinateur, avec un numéro rouge de 1 à 23 posé sur chaque élément atteint à la touche Tab, dans l'ordre du tableau ci-dessus">
+    </section>
+  </main>
+</body>
+</html>
