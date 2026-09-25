@@ -163,6 +163,17 @@ if (formInscription) {
   });
 }
 
+/* ---------- Lien « formateur » : le profil est déjà choisi ----------
+   Un choix de moins pour la formatrice qui arrive par l'appel aux formateurs. */
+document.querySelectorAll("a[data-profil]").forEach((lien) => {
+  lien.addEventListener("click", () => {
+    const profil = document.querySelector("#profil");
+    if (profil) {
+      profil.value = lien.dataset.profil;
+    }
+  });
+});
+
 /* ---------- Modale de réservation ---------- */
 const modale = document.querySelector("#modale-reservation");
 const formReservation = document.querySelector("#form-reservation");
@@ -224,7 +235,7 @@ if (modale && formReservation && typeof modale.showModal === "function") {
     setTimeout(() => {
       const prenom = formReservation.nom.value.trim().split(" ")[0];
       zonesSaisie.forEach((zone) => (zone.hidden = true));
-      confirmation.textContent = `C'est réservé, ${prenom} ! Vous recevrez le lien de l'atelier à ${formReservation.courriel.value.trim()} la veille.`;
+      confirmation.textContent = `C'est réservé, ${prenom} ! ${titreAtelier.textContent} : ${recap.textContent}. Le lien de l'atelier arrivera à ${formReservation.courriel.value.trim()} la veille.`;
       confirmation.hidden = false;
       fin.hidden = false;
       fin.querySelector("button").focus(); // le focus ne reste pas sur un bouton devenu caché
