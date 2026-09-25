@@ -252,7 +252,9 @@ ul {
   border: 2px solid var(--accent);
   border-radius: 999px;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.2s;
+  /* Pas de fondu sur le fond : sur le bouton secondaire, le texte passe en blanc tout de suite
+     et un fond qui arrive en fondu le rendrait illisible un instant (relevé par axe) */
+  transition: transform 0.2s;
 }
 
 .action:hover,

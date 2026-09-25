@@ -14,7 +14,8 @@
 
 | Fichier | Contenu |
 |---|---|
-| [`fm02-tp1-personas-parcours.md`](fm02-tp1-personas-parcours.md) | TP 1 : deux personas, parcours d'inscription en six colonnes, ce que le parcours condamne |
+| [`fm02-tp1-personas-parcours.md`](fm02-tp1-personas-parcours.md) | TP 1 : personas Jonny (apprenant) et Mélanie (formatrice), parcours d'inscription de Jonny en six colonnes, ce que le parcours condamne |
+| [`personas-hubspot/`](personas-hubspot/) | Les deux fiches HubSpot de départ |
 | [`fm02-contrastes.md`](fm02-contrastes.md) | Contrastes mesurés par la formule WCAG (script : `outils/contrastes.js`) |
 | [`fm02-tp4-accessibilite.md`](fm02-tp4-accessibilite.md) | TP 4 : rapport d'analyse d'accessibilité — mesures, changements, parcours clavier, améliorations possibles |
 

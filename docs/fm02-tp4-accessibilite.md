@@ -24,12 +24,15 @@ Page auditée : `https://rayan-madi.github.io/CDWS-2027-FilRouge/src/` · niveau
 |---|---|---|
 | **Modale de réservation** en `<dialog>`, ouverte par `showModal()` | Le focus entre dans la modale, Échap ferme, le reste de la page devient inerte : le navigateur le fait seul | 2.1.1, 2.1.2, 4.1.2 |
 | Le focus **revient au bouton « Réserver »** à la fermeture, quelle qu'elle soit (Annuler, Échap, fond, Fermer) | La seule chose que `<dialog>` ne garantit pas partout, et celle que le correcteur vérifie | 2.4.3 |
-| La modale **reprend l'atelier choisi** : titre, niveau, durée, lieu, date, prix | Étape 3 du parcours de Nadia (TP 1) : ne plus avoir à s'en souvenir | Nielsen 6 |
+| La modale **reprend l'atelier choisi** : titre, niveau, durée, lieu, date, prix | Étape 3 du parcours de Jonny (TP 1) : ne plus avoir à s'en souvenir | Nielsen 6 |
 | « Réserver » : **un lien sans JavaScript, un vrai `<button>` avec** | Amélioration progressive, et première règle d'ARIA : un bouton natif plutôt qu'un rôle | 4.1.2 |
 | Boutons d'envoi **désactivés pendant l'envoi**, libellé « … en cours » | Pas de double envoi, et l'état du système est visible | Nielsen 1 |
-| **Prix et niveau** sur chaque carte d'atelier | Étape 2 du parcours de Nadia : décider sans cliquer | Nielsen 6 |
+| **Prix et niveau** sur chaque carte d'atelier | Étape 2 du parcours de Jonny : décider sans cliquer, avec un budget serré | Nielsen 6 |
 | **Conditions d'utilisation lisibles** avant de les accepter (`<details>`, sans quitter la page) | On n'accepte plus à l'aveugle, et la saisie n'est pas perdue | 3.3.2, Nielsen 3 |
+| **Appel aux formateurs** : son lien mène au formulaire avec « Formateur indépendant » déjà choisi | Persona Mélanie : « process trop long » | Nielsen 7 |
+| **Balises de partage** `og:title` et `og:description` | Étape 1 du parcours de Jonny : un lien partagé sur Instagram ou LinkedIn doit dire ce qu'est SkillHub | — |
 | Menu : **un clic en dehors le referme** (en plus d'Échap, qui rend le focus au bouton) | Le geste que tout le monde attend | — |
+| **Suppression du fondu de couleur** sur les boutons | Trouvé en testant : au focus, le texte d'« Annuler » et de « Voir les ateliers » passait en blanc tout de suite, alors que le fond bleu arrivait en fondu sur 0,2 s. Pendant ce court instant : **blanc sur fond transparent, illisible**. axe le relevait une fois sur six, selon le moment de la mesure | 1.4.3 |
 | Règle `[hidden] { display: none !important }` | Une classe en `display: flex` ne peut plus jamais annuler `hidden` | — |
 | Case à cocher portée à **24 × 24 px** | Taille minimale d'une cible | 2.5.8 |
 | Ratios de contraste **écrits dans le CSS**, à côté de chaque couleur | La mesure est dans le code : personne n'a à la refaire | 1.4.3, 1.4.11 |
@@ -88,12 +91,11 @@ C'est la partie que la fiche d'épreuve demande explicitement.
 | # | Amélioration possible | Pourquoi | Priorité |
 |---|---|---|---|
 | 1 | **Tester avec un vrai lecteur d'écran** (NVDA sous Windows) | Seul contrôle qui dit ce que la personne entend réellement ; les outils automatiques plafonnent autour de 30 % des critères | Haute |
-| 2 | **Afficher l'heure** des ateliers et permettre de **filtrer** (soir, débutant) | Douleur du parcours : Nadia ne peut venir que le soir | Haute |
-| 3 | **Présélectionner « Formateur indépendant »** quand on suit le lien de l'appel aux formateurs | Un choix de moins pour Julien | Moyenne |
-| 4 | **Gérer les erreurs du serveur** (atelier complet, adresse déjà utilisée) avec un message qui dit quoi faire | Heuristique 9. Aujourd'hui l'envoi est simulé : il n'y a pas de back-end, donc pas d'erreur serveur possible | Moyenne, avec le back-end (BC02) |
-| 5 | **Une vraie page de conditions**, versionnée et datée | Le `<details>` suffit pour une démonstration, pas pour un service réel | Moyenne |
-| 6 | Marquer la section visible dans la navigation avec **`aria-current`** | Sur une page unique à ancres, dire où l'on est sans passer par la couleur | Basse |
-| 7 | Vérifier le **zoom du texte à 200 %** sur un vrai téléphone (WCAG 1.4.4) | Tailles en `rem` et reflow à 320 px vérifiés, mais pas sur un appareil réel | Basse |
+| 2 | **Afficher l'heure** des ateliers et permettre de **filtrer** (soir, débutant) | Jonny travaille en journée, Mélanie consulte le soir : aucun des deux ne peut choisir sans l'horaire | Haute |
+| 3 | **Gérer les erreurs du serveur** (atelier complet, adresse déjà utilisée) avec un message qui dit quoi faire | Heuristique 9. Aujourd'hui l'envoi est simulé : il n'y a pas de back-end, donc pas d'erreur serveur possible | Moyenne, avec le back-end (BC02) |
+| 4 | **Une vraie page de conditions**, versionnée et datée | Le `<details>` suffit pour une démonstration, pas pour un service réel | Moyenne |
+| 5 | Marquer la section visible dans la navigation avec **`aria-current`** | Sur une page unique à ancres, dire où l'on est sans passer par la couleur | Basse |
+| 6 | Vérifier le **zoom du texte à 200 %** sur un vrai téléphone (WCAG 1.4.4) | Tailles en `rem` et reflow à 320 px vérifiés, mais pas sur un appareil réel | Basse |
 
 ---
 
