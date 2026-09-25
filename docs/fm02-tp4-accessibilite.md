@@ -10,9 +10,11 @@ Page auditée : `https://rayan-madi.github.io/CDWS-2027-FilRouge/src/` · niveau
 
 | Outil | Avant (page de fin de FM01) | Après (TP 4) | Rapport exporté |
 |---|---|---|---|
-| **Lighthouse**, onglet Accessibilité, mobile, navigation privée | _à compléter_ | _à compléter_ | `lighthouse-a11y-avant.html` · `lighthouse-a11y-apres.html` |
+| **Lighthouse**, onglet Accessibilité, mobile | **100** — 25 contrôles réussis, 0 échec, 10 à vérifier à la main | **100** — 26 contrôles réussis (la modale en ajoute un), 0 échec, 10 à vérifier à la main | [`lighthouse-a11y-avant.html`](lighthouse-a11y-avant.html) · [`lighthouse-a11y-apres.html`](lighthouse-a11y-apres.html) |
 | **Wave** (extension WebAIM) : erreurs / erreurs de contraste / alertes | _à compléter_ | _à compléter_ | `wave-avant.pdf` · `wave-apres.pdf` |
-| axe-core 4 (moteur de Lighthouse), mesure locale, 375 et 1280 px | 0 violation, 43 contrôles réussis | 0 violation, **modale ouverte comprise** | — |
+| **axe-core 4** (le moteur de Lighthouse), 375 et 1280 px | 0 violation, 43 contrôles réussis | 0 violation, 45 contrôles réussis, **modale ouverte comprise** | — |
+
+Les deux rapports Lighthouse ont été produits le 25/09/2026, dans les mêmes conditions (Lighthouse en ligne de commande, mobile, serveur local) : « avant » sur la version de fin de FM01, « après » sur la version du TP 4.
 
 **Ce que ces chiffres ne disent pas.** La page partait déjà sans erreur détectable : le HTML sémantique de FM01 fait l'essentiel du travail. Mais le cours le rappelle : aucun outil automatique ne voit plus d'un tiers des critères, et un score de 100 prouve seulement l'absence des fautes qu'une machine sait voir. **Ce TP a donc surtout changé ce que les outils ne mesurent pas** : le comportement au clavier, la modale, l'état des boutons pendant l'envoi.
 
@@ -32,6 +34,7 @@ Page auditée : `https://rayan-madi.github.io/CDWS-2027-FilRouge/src/` · niveau
 | **Appel aux formateurs** : son lien mène au formulaire avec « Formateur indépendant » déjà choisi | Persona Mélanie : « process trop long » | Nielsen 7 |
 | **Balises de partage** `og:title` et `og:description` | Étape 1 du parcours de Jonny : un lien partagé sur Instagram ou LinkedIn doit dire ce qu'est SkillHub | — |
 | Menu : **un clic en dehors le referme** (en plus d'Échap, qui rend le focus au bouton) | Le geste que tout le monde attend | — |
+| **Le bouton du menu passe dans la `<nav>`**, seule la liste est cachée | Trouvé dans l'arbre d'accessibilité : sur mobile, menu fermé, toute la `<nav>` était cachée, donc **le repère « navigation » disparaissait** pour le lecteur d'écran. Ni Lighthouse ni axe ne le signalaient. Voir [`arbre-accessibilite.md`](arbre-accessibilite.md) | 1.3.1, 2.4.1 |
 | **Suppression du fondu de couleur** sur les boutons | Trouvé en testant : au focus, le texte d'« Annuler » et de « Voir les ateliers » passait en blanc tout de suite, alors que le fond bleu arrivait en fondu sur 0,2 s. Pendant ce court instant : **blanc sur fond transparent, illisible**. axe le relevait une fois sur six, selon le moment de la mesure | 1.4.3 |
 | Règle `[hidden] { display: none !important }` | Une classe en `display: flex` ne peut plus jamais annuler `hidden` | — |
 | Case à cocher portée à **24 × 24 px** | Taille minimale d'une cible | 2.5.8 |
@@ -101,7 +104,8 @@ C'est la partie que la fiche d'épreuve demande explicitement.
 
 ## 7. À faire avant de déposer (par moi)
 
-- [ ] Exporter **Lighthouse Accessibilité** avant et après : même conditions (mobile, navigation privée), fichiers ci-dessus
+- [x] Rapports **Lighthouse Accessibilité** avant et après, exportés en HTML
+- [x] Arbre d'accessibilité relevé : [`arbre-accessibilite.md`](arbre-accessibilite.md)
 - [ ] Exporter **Wave** avant et après, et reporter les chiffres dans le tableau 1
-- [ ] Faire la **capture de l'arbre d'accessibilité** (DevTools → Elements → onglet Accessibility, bouton « Réserver » sélectionné) : `docs/arbre-accessibilite.png`
+- [ ] Faire la **capture** de l'arbre d'accessibilité dans Chrome (DevTools → Elements → onglet Accessibility, bouton « Réserver » sélectionné) : `docs/arbre-accessibilite.png`
 - [ ] Refaire le **parcours clavier** moi-même, sans souris, puis en Maj+Tab

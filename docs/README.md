@@ -18,5 +18,7 @@
 | [`personas-hubspot/`](personas-hubspot/) | Les deux fiches HubSpot de départ |
 | [`fm02-contrastes.md`](fm02-contrastes.md) | Contrastes mesurés par la formule WCAG (script : `outils/contrastes.js`) |
 | [`fm02-tp4-accessibilite.md`](fm02-tp4-accessibilite.md) | TP 4 : rapport d'analyse d'accessibilité — mesures, changements, parcours clavier, améliorations possibles |
+| [`lighthouse-a11y-avant.html`](lighthouse-a11y-avant.html) · [`lighthouse-a11y-apres.html`](lighthouse-a11y-apres.html) | TP 4 : rapports Lighthouse Accessibilité exportés |
+| [`arbre-accessibilite.md`](arbre-accessibilite.md) | TP 4 : l'arbre d'accessibilité relevé (rôle, nom, état) |
 
-À venir : TP 2 (audit Nielsen, sur une plateforme choisie par moi), TP 3 (maquette Figma), exports Wave et Lighthouse du TP 4.
+À venir : TP 2 (audit Nielsen, sur une plateforme choisie par moi), TP 3 (maquette Figma), exports Wave du TP 4.
