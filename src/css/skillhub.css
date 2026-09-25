@@ -19,16 +19,17 @@
 
 /* ---------- Variables : une source unique, héritée partout ---------- */
 :root {
-  --texte: #12293f;
-  --texte-doux: #44566b;
+  /* Couleurs : chaque paire a été MESURÉE (formule WCAG, docs/fm02-contrastes.md) */
+  --texte: #12293f;        /* sur --fond : 14,84:1 · sur --fond-teinte : 13,45:1 */
+  --texte-doux: #44566b;   /* sur --fond : 7,52:1 · sur --fond-teinte : 6,82:1 */
   --fond: #ffffff;
   --fond-teinte: #f1f4f8;
-  --accent: #0b5cad;
-  --accent-fonce: #084784;
+  --accent: #0b5cad;       /* sur --fond : 6,66:1 · blanc dessus : 6,66:1 */
+  --accent-fonce: #084784; /* blanc dessus : 9,35:1 · sur --accent-clair : 7,96:1 */
   --accent-clair: #e3eefa;
-  --erreur: #b3261e;
-  --succes: #1d6b3a;
-  --bordure: #cbd5e1;
+  --erreur: #b3261e;       /* sur --fond : 6,53:1 */
+  --succes: #1d6b3a;       /* sur #e6f4ea : 5,74:1 */
+  --bordure: #cbd5e1;      /* 1,48:1 : bordure de carte décorative seulement, jamais de champ */
   --rayon: 0.75rem;
   --espace: 1rem;
   --largeur-max: 72rem;
@@ -445,8 +446,8 @@ ul {
 }
 
 .champ--case input {
-  width: 1.4rem;
-  min-height: 1.4rem;
+  width: 1.5rem;       /* 24 px : taille minimale d'une cible (WCAG 2.5.8) */
+  min-height: 1.5rem;
   accent-color: var(--accent);
 }
 

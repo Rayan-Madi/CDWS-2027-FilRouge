@@ -10,4 +10,11 @@
 | [`textes-alternatifs.md`](textes-alternatifs.md) | Textes de remplacement par catégorie |
 | [`captures/`](captures/) | La page aux trois paliers : 375, 800 et 1280 px |
 
-À venir (FM02) : rapport d'accessibilité Wave ou Lighthouse exporté.
+## FM02 — Ergonomie UX/UI et accessibilité
+
+| Fichier | Contenu |
+|---|---|
+| [`fm02-tp1-personas-parcours.md`](fm02-tp1-personas-parcours.md) | TP 1 : deux personas, parcours d'inscription en six colonnes, ce que le parcours condamne |
+| [`fm02-contrastes.md`](fm02-contrastes.md) | Contrastes mesurés par la formule WCAG (script : `outils/contrastes.js`) |
+
+À venir : TP 2 (audit Nielsen), TP 3 (maquette Figma), TP 4 (mise en accessibilité et rapport Wave avant / après).
