@@ -208,6 +208,7 @@ ul {
   display: inline-flex;
 }
 
+/* Sans JavaScript : la nav passe sous le logo, sur toute la largeur, liste dépliée */
 .navigation {
   flex-basis: 100%;
 }
@@ -217,6 +218,23 @@ ul {
   flex-direction: column;
   gap: 0.25rem;
   padding-bottom: 0.5rem;
+}
+
+/* Avec JavaScript, sur mobile : le bouton reste à droite du logo,
+   la liste s'ouvre en panneau sous l'en-tête (collant, donc repère de position) */
+.js .navigation {
+  flex-basis: auto;
+}
+
+.js .navigation__liste {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  padding: 0.5rem var(--espace) 1rem;
+  background: var(--fond);
+  border-bottom: 1px solid var(--bordure);
+  box-shadow: 0 1rem 1.5rem -1rem rgba(18, 41, 63, 0.35);
 }
 
 .navigation__liste a {
@@ -233,7 +251,7 @@ ul {
 }
 
 /* Menu replié seulement si le JavaScript est là : sans lui, tout reste visible */
-.js .navigation[data-ferme] {
+.js .navigation__liste[data-ferme] {
   display: none;
 }
 
@@ -624,14 +642,19 @@ ul {
     display: none;
   }
 
-  .navigation,
-  .js .navigation[data-ferme] {
-    display: block;
+  .navigation {
     flex-basis: auto;
   }
 
-  .navigation__liste {
+  .navigation__liste,
+  .js .navigation__liste,
+  .js .navigation__liste[data-ferme] {
+    position: static;
+    display: flex;
     flex-direction: row;
+    background: none;
+    border: 0;
+    box-shadow: none;
     align-items: center;
     gap: 0.5rem;
     padding: 0;

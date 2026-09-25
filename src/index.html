@@ -36,15 +36,16 @@
         SkillHub
       </a>
 
-      <button class="menu-bouton" type="button" aria-expanded="false" aria-controls="menu">
-        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <span class="menu-bouton__texte">Menu</span>
-      </button>
-
-      <nav class="navigation" id="menu" aria-label="Navigation principale" data-ferme>
-        <ul class="navigation__liste">
+      <!-- Le bouton est DANS la nav : menu fermé, seule la liste est cachée,
+           et le repère « navigation » reste annoncé au lecteur d'écran -->
+      <nav class="navigation" aria-label="Navigation principale">
+        <button class="menu-bouton" type="button" aria-expanded="false" aria-controls="menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span class="menu-bouton__texte">Menu</span>
+        </button>
+        <ul class="navigation__liste" id="menu" data-ferme>
           <li><a href="#valeurs">Valeurs</a></li>
           <li><a href="#ateliers">Ateliers</a></li>
           <li><a href="#formateurs">Formateurs</a></li>
