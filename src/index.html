@@ -112,8 +112,9 @@
               <h3>Initiation à Git</h3>
               <p class="atelier__etiquette">Développement</p>
               <p>Versionner son travail, revenir en arrière et collaborer sur GitHub sans peur de tout casser.</p>
-              <p class="atelier__infos">3 h · en ligne · <time datetime="2026-10-07">7 octobre</time></p>
-              <a class="action" href="#inscription">Réserver <span class="visuellement-masque">l'atelier Initiation à Git</span></a>
+              <p class="atelier__infos">Niveau débutant · 3 h · en ligne · <time datetime="2026-10-07">7 octobre</time></p>
+              <p class="atelier__prix">25 €</p>
+              <a class="action" href="#inscription" data-reserver>Réserver <span class="visuellement-masque">l'atelier Initiation à Git</span></a>
             </article>
           </li>
           <li>
@@ -121,8 +122,9 @@
               <h3>Maquetter une page avec Figma</h3>
               <p class="atelier__etiquette">Design</p>
               <p>Passer d'une idée griffonnée à une maquette propre, prête à être intégrée.</p>
-              <p class="atelier__infos">4 h · Paris · <time datetime="2026-10-14">14 octobre</time></p>
-              <a class="action" href="#inscription">Réserver <span class="visuellement-masque">l'atelier Maquetter une page avec Figma</span></a>
+              <p class="atelier__infos">Niveau débutant · 4 h · Paris · <time datetime="2026-10-14">14 octobre</time></p>
+              <p class="atelier__prix">35 €</p>
+              <a class="action" href="#inscription" data-reserver>Réserver <span class="visuellement-masque">l'atelier Maquetter une page avec Figma</span></a>
             </article>
           </li>
           <li>
@@ -130,8 +132,9 @@
               <h3>Construire son portfolio</h3>
               <p class="atelier__etiquette">Carrière</p>
               <p>Choisir ses projets, les présenter et les mettre en ligne gratuitement.</p>
-              <p class="atelier__infos">2 h · en ligne · <time datetime="2026-10-21">21 octobre</time></p>
-              <a class="action" href="#inscription">Réserver <span class="visuellement-masque">l'atelier Construire son portfolio</span></a>
+              <p class="atelier__infos">Tous niveaux · 2 h · en ligne · <time datetime="2026-10-21">21 octobre</time></p>
+              <p class="atelier__prix">Gratuit</p>
+              <a class="action" href="#inscription" data-reserver>Réserver <span class="visuellement-masque">l'atelier Construire son portfolio</span></a>
             </article>
           </li>
         </ul>
@@ -195,12 +198,13 @@
             </article>
           </li>
         </ul>
+        <p class="formateurs__appel">Vous êtes formateur indépendant ? <a href="#inscription">Créez votre compte</a> en choisissant « Formateur indépendant » : vous pourrez proposer vos ateliers.</p>
       </section>
 
       <section id="inscription" class="bloc bloc--teinte inscription" aria-labelledby="t-inscription">
         <h2 id="t-inscription">Créer mon compte</h2>
         <p>L'inscription est gratuite. Vous ne payez que les ateliers que vous réservez.</p>
-        <form class="formulaire" action="#inscription" method="post">
+        <form class="formulaire" id="form-inscription" action="#inscription" method="post">
           <p class="champ">
             <label for="nom">Prénom et nom</label>
             <input id="nom" name="nom" type="text" autocomplete="name" required
@@ -228,6 +232,14 @@
             <label for="cgu">J'accepte les conditions d'utilisation</label>
             <span class="champ__erreur" id="erreur-cgu" aria-live="polite"></span>
           </p>
+          <details class="conditions">
+            <summary>Lire les conditions d'utilisation</summary>
+            <ul>
+              <li>SkillHub est un projet pédagogique : ce formulaire est une démonstration, aucune donnée n'est envoyée ni conservée.</li>
+              <li>L'inscription est gratuite. Seuls les ateliers réservés sont payants, au prix affiché sur leur carte.</li>
+              <li>Une réservation s'annule sans frais jusqu'à 48 heures avant l'atelier.</li>
+            </ul>
+          </details>
           <p>
             <button class="action" type="submit">Créer mon compte</button>
           </p>
@@ -245,5 +257,36 @@
       <p>SkillHub · IMIE Paris · projet pédagogique · <span class="annee">2026</span></p>
     </footer>
   </div>
+
+  <!-- Modale de réservation : fermée par défaut, ouverte par showModal() (js/skillhub.js) -->
+  <dialog id="modale-reservation" class="modale" aria-labelledby="t-modale">
+    <div class="modale__contenu">
+      <h2 id="t-modale">Réserver : <span class="modale__atelier">un atelier</span></h2>
+      <p class="modale__recap"></p>
+      <form class="formulaire formulaire--modale" id="form-reservation" method="dialog">
+        <p class="champ">
+          <label for="r-nom">Prénom et nom</label>
+          <input id="r-nom" name="nom" type="text" autocomplete="name" required
+                 aria-describedby="erreur-r-nom">
+          <span class="champ__erreur" id="erreur-r-nom" aria-live="polite"></span>
+        </p>
+        <p class="champ">
+          <label for="r-courriel">Adresse électronique</label>
+          <input id="r-courriel" name="courriel" type="email" autocomplete="email" required
+                 aria-describedby="aide-r-courriel erreur-r-courriel">
+          <span class="champ__aide" id="aide-r-courriel">Pour recevoir la date, le lieu et le lien de l'atelier.</span>
+          <span class="champ__erreur" id="erreur-r-courriel" aria-live="polite"></span>
+        </p>
+        <p class="modale__actions">
+          <button class="action" type="submit" value="reserver">Confirmer la réservation</button>
+          <button class="action action--secondaire" type="submit" value="annuler" formnovalidate>Annuler</button>
+        </p>
+        <p class="formulaire__confirmation" role="status" hidden></p>
+        <p class="modale__fin" hidden>
+          <button class="action" type="submit" value="fermer" formnovalidate>Fermer</button>
+        </p>
+      </form>
+    </div>
+  </dialog>
 </body>
 </html>
