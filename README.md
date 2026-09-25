@@ -45,7 +45,7 @@ Séparation des responsabilités : la structure dans le HTML, la présentation d
 
 - `header`, `nav` principale (avec `aria-label`), `main` unique, `section`, `article`, `footer`. Les trois liens du pied de page restent une simple liste : ce n'est pas une navigation majeure.
 - Dans chaque fiche, le titre `h3` vient en premier : c'est lui qui ouvre la fiche, dans le code comme à l'écran.
-- `div` réservées aux crochets de style : il n'en reste que deux (`.page` et le bloc texte de l'accroche).
+- `div` réservées aux crochets sans sens propre, quatre en tout : `.page` (la grille de page), le bloc texte de l'accroche, le groupe des filtres (affiché ou caché d'un coup) et le contenu de la modale (pour distinguer un clic sur le fond).
 - Chaque `section` porte un titre `h2` et un `aria-labelledby` qui pointe dessus.
 - Les fiches d'atelier, de valeur et de formateur sont des `article` : elles gardent leur sens hors de la page.
 - Lien d'évitement « Aller au contenu » en premier élément focusable.
@@ -69,6 +69,10 @@ h1  Reprenez la main sur votre reconversion
     h3  Aïcha N'Diaye
   h2  Créer mon compte
 ```
+
+### Jetons de design (FM02, chapitre 3)
+
+Toutes les valeurs sont posées une fois dans `:root`, puis seulement référencées : couleurs avec leur **ratio de contraste mesuré en commentaire**, échelle typographique de **rapport 1,25** (`--t-xs` à `--t-3xl`), **pas d'espacement de 4 px** (`--e-1` à `--e-16`), **deux rayons**, **deux ombres**, une hauteur de cible de 44 px. Aucune valeur brute dans les composants. Les jetons, les composants et leurs états sont présentés dans [`docs/design-system.html`](docs/design-system.html), rendu avec la vraie feuille de style.
 
 ### Responsive sans framework (critère C1.1)
 
@@ -98,6 +102,7 @@ Rapport complet : [`docs/fm02-tp4-accessibilite.md`](docs/fm02-tp4-accessibilite
 - Menu mobile : vrai `button`, `aria-expanded`, `aria-controls`, fermeture par Échap.
 - Modale de réservation en `<dialog>` ouverte par `showModal()` : focus piégé dans la modale tant qu'elle est ouverte, Échap ferme, le focus revient au bouton « Réserver ».
 - Boutons d'envoi désactivés pendant l'envoi (« … en cours ») : pas de double envoi.
+- Filtre des ateliers en `<fieldset>` + `<legend>`, nombre de résultats annoncé par `role="status"` ; section courante marquée par `aria-current` dans la navigation.
 - Icônes SVG décoratives en `aria-hidden="true"` ; texte masqué visuellement sur les boutons « Réserver » pour qu'ils soient distincts au lecteur d'écran.
 - `prefers-reduced-motion` respecté.
 

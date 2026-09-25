@@ -259,6 +259,69 @@ if (modale && formReservation && typeof modale.showModal === "function") {
   });
 }
 
+/* ---------- Filtre des ateliers ----------
+   Demandé par les deux personas : Jonny travaille en journée, Mélanie consulte le soir. */
+const filtres = document.querySelector(".filtres");
+
+if (filtres) {
+  const cartes = [...document.querySelectorAll(".ateliers > li")];
+  const resultat = filtres.querySelector(".filtres__resultat");
+  const vide = document.querySelector(".ateliers__vide");
+
+  function filtrer() {
+    const soir = filtres.querySelector("[name=soir]").checked;
+    const debutant = filtres.querySelector("[name=debutant]").checked;
+    let visibles = 0;
+
+    cartes.forEach((carte) => {
+      const atelier = carte.querySelector(".atelier");
+      const garde =
+        (!soir || atelier.dataset.moment === "soir") &&
+        (!debutant || atelier.dataset.niveau !== "intermediaire");
+      carte.hidden = !garde;
+      if (garde) visibles += 1;
+    });
+
+    // role="status" : le nombre de résultats est annoncé sans déplacer le focus
+    resultat.textContent = visibles > 1 ? `${visibles} ateliers affichés` : `${visibles} atelier affiché`;
+    vide.hidden = visibles > 0;
+  }
+
+  filtres.hidden = false;
+  filtres.addEventListener("change", filtrer);
+  filtrer();
+}
+
+/* ---------- Navigation : où suis-je dans la page ? ----------
+   aria-current marque le lien de la section visible : le lecteur d'écran l'annonce
+   (« page actuelle »), et le style ne repose pas sur la couleur seule. */
+const liensSections = [...document.querySelectorAll('.navigation__liste a[href^="#"]')];
+
+if (liensSections.length && "IntersectionObserver" in window) {
+  const observateur = new IntersectionObserver(
+    (entrees) => {
+      entrees
+        .filter((entree) => entree.isIntersecting)
+        .forEach((entree) => {
+          liensSections.forEach((lien) => {
+            if (lien.getAttribute("href") === `#${entree.target.id}`) {
+              lien.setAttribute("aria-current", "true");
+            } else {
+              lien.removeAttribute("aria-current");
+            }
+          });
+        });
+    },
+    // Une section est « courante » quand elle traverse le milieu de l'écran
+    { rootMargin: "-45% 0px -50% 0px" }
+  );
+
+  liensSections.forEach((lien) => {
+    const section = document.querySelector(lien.getAttribute("href"));
+    if (section) observateur.observe(section);
+  });
+}
+
 /* ---------- Année du pied de page ---------- */
 const annee = document.querySelector(".annee");
 if (annee) {
