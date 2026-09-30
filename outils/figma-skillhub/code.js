@@ -333,10 +333,346 @@ function hexVersRgb(hex) {
   };
 }
 
+/** @param {number} n */
+function formaterNombre(n) {
+  return String(Math.round(n * 1000) / 1000).replace(".", ",");
+}
+
+/* ---------- 3. Primitives Figma ---------- */
+
+/**
+ * @typedef {{
+ *   variables: Record<string, Variable>,
+ *   styles: Record<string, TextStyle>,
+ *   police: { regulier: FontName, gras: FontName },
+ *   composants: Record<string, any>,
+ *   images: Record<string, string>,
+ *   pages: Record<string, PageNode>,
+ *   rapport: string[],
+ *   options: { delaiImagesMs: number }
+ * }} Etat
+ */
+
+/** @param {{delaiImagesMs?: number}} [options] @returns {Etat} */
+function nouvelEtat(options) {
+  return {
+    variables: {},
+    styles: {},
+    police: { regulier: { family: "Sora", style: "Regular" }, gras: { family: "Sora", style: "SemiBold" } },
+    composants: {},
+    images: {},
+    pages: {},
+    rapport: [],
+    options: Object.assign({ delaiImagesMs: 20000 }, options || {}),
+  };
+}
+
+// L'état d'une construction : rempli au fil des étapes, remis à zéro à chaque lancement
+let ETAT = nouvelEtat();
+
+// La valeur d'un jeton en pixels : "e-6" → 24, "t-m" → 20, "rayon-m" → 12 ; un nombre passe tel quel
+/** @param {string|number} jeton @returns {number} */
+function valeur(jeton) {
+  if (typeof jeton === "number") return jeton;
+  for (const groupe of [JETONS.espace, JETONS.typo, JETONS.forme]) {
+    const px = /** @type {Record<string, number>} */ (groupe)[jeton];
+    if (px !== undefined) return px;
+  }
+  throw new Error(`Jeton inconnu : ${jeton}`);
+}
+
+// Une peinture unie LIÉE à la variable du jeton : la maquette ne contient pas de valeur brute.
+// « blanc » reste brut, comme le #fff du CSS.
+/** @param {string} nom @param {number} [opacite] @returns {SolidPaint} */
+function peinture(nom, opacite) {
+  /** @type {SolidPaint} */
+  const base = { type: "SOLID", color: hexVersRgb(hexDe(nom)), opacity: opacite === undefined ? 1 : opacite };
+  const variable = ETAT.variables[nom];
+  return variable ? figma.variables.setBoundVariableForPaint(base, "color", variable) : base;
+}
+
+// Règle un champ numérique et le lie à la variable du jeton, s'il y en a une
+/** @param {SceneNode} noeud @param {VariableBindableNodeField} champ @param {string|number} jeton */
+function regler(noeud, champ, jeton) {
+  /** @type {any} */ (noeud)[champ] = valeur(jeton);
+  if (typeof jeton === "string" && ETAT.variables[jeton]) noeud.setBoundVariable(champ, ETAT.variables[jeton]);
+}
+
+/** @param {Array<string|number>} marge @returns {Array<string|number>} haut, droite, bas, gauche */
+function etendreMarge(marge) {
+  if (marge.length === 1) return [marge[0], marge[0], marge[0], marge[0]];
+  if (marge.length === 2) return [marge[0], marge[1], marge[0], marge[1]];
+  return marge;
+}
+
+/**
+ * @typedef {{
+ *   sens?: "HORIZONTAL" | "VERTICAL",
+ *   ecart?: string | number,
+ *   marge?: Array<string | number>,
+ *   fond?: string,
+ *   fondOpacite?: number,
+ *   bordure?: string,
+ *   epaisseur?: number,
+ *   pointilles?: boolean,
+ *   rayon?: string | number,
+ *   axe?: "MIN" | "CENTER" | "MAX" | "SPACE_BETWEEN",
+ *   travers?: "MIN" | "CENTER" | "MAX" | "BASELINE",
+ *   retour?: boolean,
+ *   ecartLignes?: string | number
+ * }} OptionsCadre
+ */
+
+// L'auto-layout de Figma, c'est Flexbox (cours, 4.2) : sens = flex-direction, ecart = gap, marge = padding
+/** @template {FrameNode | ComponentNode} T @param {T} f @param {string} nom @param {OptionsCadre} [o] @returns {T} */
+function reglerCadre(f, nom, o) {
+  const r = o || {};
+  f.name = nom;
+  f.layoutMode = r.sens || "VERTICAL";
+  f.primaryAxisSizingMode = "AUTO";
+  f.counterAxisSizingMode = "AUTO";
+  f.fills = r.fond ? [peinture(r.fond, r.fondOpacite)] : [];
+  f.clipsContent = false;
+  if (r.ecart !== undefined) regler(f, "itemSpacing", r.ecart);
+  if (r.marge) {
+    const [haut, droite, bas, gauche] = etendreMarge(r.marge);
+    regler(f, "paddingTop", haut);
+    regler(f, "paddingRight", droite);
+    regler(f, "paddingBottom", bas);
+    regler(f, "paddingLeft", gauche);
+  }
+  if (r.bordure) {
+    f.strokes = [peinture(r.bordure)];
+    f.strokeWeight = r.epaisseur || 1;
+    f.strokeAlign = "INSIDE";
+    if (r.pointilles) f.dashPattern = [4, 3];
+  }
+  if (r.rayon !== undefined) regler(f, "cornerRadius", r.rayon);
+  if (r.axe) f.primaryAxisAlignItems = r.axe;
+  if (r.travers) f.counterAxisAlignItems = r.travers;
+  if (r.retour) {
+    f.layoutWrap = "WRAP";
+    if (r.ecartLignes !== undefined) regler(f, "counterAxisSpacing", r.ecartLignes);
+  }
+  return f;
+}
+
+/** @param {string} nom @param {OptionsCadre} [o] @returns {FrameNode} */
+function cadre(nom, o) {
+  return reglerCadre(figma.createFrame(), nom, o);
+}
+
+/** @param {string} nom @param {OptionsCadre} [o] @returns {ComponentNode} */
+function composant(nom, o) {
+  return reglerCadre(figma.createComponent(), nom, o);
+}
+
+/** @typedef {"FILL" | "HUG" | number | undefined} Dimension */
+
+/** @param {SceneNode} n @param {Dimension} largeur @param {Dimension} [hauteur] */
+function dimensionner(n, largeur, hauteur) {
+  const d = /** @type {FrameNode} */ (n);
+  if (largeur === "FILL" || largeur === "HUG") d.layoutSizingHorizontal = largeur;
+  else if (typeof largeur === "number") {
+    d.resize(largeur, d.height);
+    d.layoutSizingHorizontal = "FIXED";
+  }
+  if (hauteur === "FILL" || hauteur === "HUG") d.layoutSizingVertical = hauteur;
+  else if (typeof hauteur === "number") {
+    d.resize(d.width, hauteur);
+    d.layoutSizingVertical = "FIXED";
+  }
+  // Un texte à largeur imposée passe à la ligne ; un texte « HUG » tient sur une ligne
+  if (n.type === "TEXT" && largeur !== undefined) n.textAutoResize = largeur === "HUG" ? "WIDTH_AND_HEIGHT" : "HEIGHT";
+}
+
+/**
+ * @template {SceneNode} T
+ * @param {FrameNode | ComponentNode | ComponentSetNode | PageNode} parent @param {T} enfant
+ * @param {Dimension} [largeur] @param {Dimension} [hauteur] @returns {T}
+ */
+function ajouter(parent, enfant, largeur, hauteur) {
+  parent.appendChild(enfant);
+  if (parent.type !== "PAGE") dimensionner(enfant, largeur, hauteur);
+  return enfant;
+}
+
+/**
+ * Un texte posé avec un style de l'échelle et une couleur liée
+ * @param {string} contenu
+ * @param {{ style?: string, couleur?: string, taille?: number, aligner?: "LEFT" | "CENTER" | "RIGHT", souligne?: boolean, nom?: string }} [o]
+ * @returns {Promise<TextNode>}
+ */
+async function texte(contenu, o) {
+  const r = o || {};
+  const style = ETAT.styles[r.style || "t-s/400"];
+  if (!style) throw new Error(`Style de texte inconnu : ${r.style}`);
+  const t = figma.createText();
+  await t.setTextStyleIdAsync(style.id);
+  t.characters = contenu;
+  // Titres fluides (clamp() du CSS) : la taille calculée au palier remplace celle du style
+  if (r.taille) t.fontSize = r.taille;
+  t.fills = [peinture(r.couleur || "texte")];
+  if (r.aligner) t.textAlignHorizontal = r.aligner;
+  if (r.souligne) t.textDecoration = "UNDERLINE";
+  t.name = r.nom || contenu.slice(0, 48);
+  return t;
+}
+
+/** @param {keyof typeof ICONES} nom @returns {FrameNode} */
+function icone(nom) {
+  const f = figma.createNodeFromSvg(ICONES[nom]);
+  f.name = `icône ${nom}`;
+  f.fills = [];
+  return f;
+}
+
+/* ---------- 4. Constructeurs ---------- */
+
+// Sora, la police de la page ; à défaut, Inter (toujours présente dans Figma)
+async function chargerPolices() {
+  const disponibles = await figma.listAvailableFontsAsync();
+  /** @param {string} famille @param {RegExp} motif */
+  const trouver = (famille, motif) => {
+    const f = disponibles.find((p) => p.fontName.family === famille && motif.test(p.fontName.style));
+    return f ? f.fontName : null;
+  };
+  const regulier = trouver("Sora", /^regular$/i);
+  const gras = trouver("Sora", /^semi ?bold$/i);
+  if (regulier && gras) {
+    ETAT.police = { regulier, gras };
+  } else {
+    ETAT.police = { regulier: { family: "Inter", style: "Regular" }, gras: { family: "Inter", style: "Semi Bold" } };
+    ETAT.rapport.push("⚠ Sora est introuvable dans Figma : les textes sont en Inter. Installe Sora (Google Fonts) et relance dans un nouveau fichier.");
+  }
+  await figma.loadFontAsync(ETAT.police.regulier);
+  await figma.loadFontAsync(ETAT.police.gras);
+  await figma.loadFontAsync({ family: "Inter", style: "Regular" }); // la police d'un texte neuf, et celle du rapport
+}
+
+// Les jetons, avec les mêmes noms que le CSS : Dev Mode affichera var(--accent), pas #0B5CAD
+async function creerVariables() {
+  const collection = figma.variables.createVariableCollection("SkillHub");
+  const mode = collection.modes[0].modeId;
+  collection.renameMode(mode, "clair");
+
+  for (const nom of Object.keys(JETONS.couleurs)) {
+    const v = figma.variables.createVariable(`couleurs/${nom}`, collection, "COLOR");
+    v.setValueForMode(mode, hexVersRgb(hexDe(nom)));
+    v.description = descriptionCouleur(nom);
+    v.setVariableCodeSyntax("WEB", `var(--${nom})`);
+    ETAT.variables[nom] = v;
+  }
+
+  /** @type {Array<[string, Record<string, number>, VariableScope[]]>} */
+  const groupes = [
+    ["typo", JETONS.typo, ["FONT_SIZE"]],
+    ["espace", JETONS.espace, ["GAP", "WIDTH_HEIGHT"]],
+    ["forme", JETONS.forme, ["CORNER_RADIUS", "WIDTH_HEIGHT"]],
+  ];
+  for (const [groupe, jetons, portees] of groupes) {
+    for (const nom of Object.keys(jetons)) {
+      const px = jetons[nom];
+      const v = figma.variables.createVariable(`${groupe}/${nom}`, collection, "FLOAT");
+      v.setValueForMode(mode, px);
+      v.description = nom === "pilule" ? "999 px : une forme (boutons, étiquettes), pas un rayon" : `${formaterNombre(px / 16)} rem`;
+      v.setVariableCodeSyntax("WEB", `var(--${nom})`);
+      v.scopes = portees;
+      ETAT.variables[nom] = v;
+    }
+  }
+}
+
+// Un style par cran de l'échelle et par graisse employée ; la taille est liée à sa variable
+/** @type {Array<[string, number]>} */
+const STYLES_TEXTE = [
+  ["t-xs", 400], ["t-xs", 600], ["t-s", 400], ["t-s", 600], ["t-m", 400], ["t-m", 600],
+  ["t-l", 600], ["t-xl", 600], ["t-2xl", 600], ["t-3xl", 600],
+];
+
+async function creerStylesTexte() {
+  for (const [cran, graisse] of STYLES_TEXTE) {
+    const style = figma.createTextStyle();
+    style.name = `${cran}/${graisse}`;
+    style.fontName = graisse === 600 ? ETAT.police.gras : ETAT.police.regulier;
+    style.fontSize = valeur(cran);
+    // --interligne-titre (1,2) pour les titres, --interligne (1,5) pour le texte courant
+    const titre = graisse === 600 && valeur(cran) >= 20;
+    style.lineHeight = { unit: "PERCENT", value: titre ? 120 : 150 };
+    style.setBoundVariable("fontSize", ETAT.variables[cran]);
+    style.description = `var(--${cran}), ${graisse === 600 ? "600" : "400"}, interligne ${titre ? "1,2" : "1,5"}`;
+    ETAT.styles[style.name] = style;
+  }
+}
+
+// Le rapport de construction, en haut de la page 1 : à recopier si quelque chose a échoué
+/** @param {string[]} lignes */
+async function ecrireRapport(lignes) {
+  await figma.setCurrentPageAsync(ETAT.pages.systeme);
+  const t = figma.createText();
+  t.fontName = { family: "Inter", style: "Regular" };
+  t.characters = ["Rapport du plugin SkillHub — " + new Date().toLocaleString("fr-FR")].concat(lignes).join("\n");
+  t.fontSize = 14;
+  t.name = "rapport du plugin";
+  t.x = 0;
+  t.y = -80 - lignes.length * 20;
+}
+
 /* ---------- 5. Point d'entrée ---------- */
 
-async function main() {
-  figma.closePlugin("Plugin en cours d'écriture.");
+/**
+ * Les étapes, dans l'ordre. Chacune est isolée : un échec est noté au rapport et n'arrête pas les suivantes.
+ * @type {Array<[string, keyof Etat["pages"] | null, () => Promise<void>]>}
+ */
+const ETAPES = [
+  ["Polices", null, chargerPolices],
+  ["Variables", null, creerVariables],
+  ["Styles de texte", null, creerStylesTexte],
+];
+
+/** @param {{delaiImagesMs?: number}} [options] @returns {Promise<string[]>} */
+async function main(options) {
+  ETAT = nouvelEtat(options);
+  await figma.loadAllPagesAsync();
+
+  // Le plugin ne supprime jamais rien : il n'accepte qu'un fichier neuf (une page, sans calque)
+  const pages = figma.root.children;
+  if (pages.length !== 1 || pages[0].children.length > 0) {
+    figma.notify("SkillHub : lance le plugin dans un nouveau fichier Figma vide (une seule page, sans calque).", { error: true, timeout: 10000 });
+    figma.closePlugin();
+    return ["✗ Fichier non vide : rien n'a été construit"];
+  }
+  ETAT.pages.systeme = pages[0];
+  ETAT.pages.systeme.name = "1 · Design system";
+  ETAT.pages.landing = figma.createPage();
+  ETAT.pages.landing.name = "2 · Landing";
+  ETAT.pages.parcours = figma.createPage();
+  ETAT.pages.parcours.name = "3 · Parcours de Jonny";
+
+  // L'iframe cachée : elle ne sert qu'à convertir les photos WebP en PNG
+  figma.showUI(__html__, { visible: false });
+
+  for (const [nom, page, etape] of ETAPES) {
+    try {
+      figma.notify(`SkillHub : ${nom}…`, { timeout: 1500 });
+      await figma.setCurrentPageAsync(ETAT.pages[page || "systeme"]);
+      await etape();
+      ETAT.rapport.push(`✓ ${nom}`);
+    } catch (erreur) {
+      ETAT.rapport.push(`✗ ${nom} : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+      console.error(`SkillHub, étape « ${nom} »`, erreur);
+    }
+  }
+
+  const echecs = ETAT.rapport.filter((l) => l.startsWith("✗")).length;
+  await ecrireRapport(ETAT.rapport);
+  await figma.setCurrentPageAsync(ETAT.pages.systeme);
+  figma.closePlugin(
+    echecs === 0
+      ? `SkillHub : ${ETAPES.length} étapes sur ${ETAPES.length} réussies.`
+      : `SkillHub : ${echecs} étape(s) en échec. Le détail est en haut de la page 1 (« rapport du plugin »).`
+  );
+  return ETAT.rapport;
 }
 
 // Sous Node (tests), on exporte ; dans Figma, module n'existe pas et on construit.
