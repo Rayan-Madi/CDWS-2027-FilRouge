@@ -252,6 +252,44 @@ test("l'ordre de tabulation est numéroté à 1280 et à 360, du lien d'éviteme
   }
 });
 
+/* ---------- Prototype : le parcours de Jonny ---------- */
+
+test("le prototype joue le parcours de Jonny, de « Réserver » à la confirmation", () => {
+  const parcours = page(sim, "3 ·");
+  const ecran = (nom) => parcours.children.find((n) => n.name === nom);
+  const landing = ecran("Landing 360");
+  assert.ok(landing, "Landing 360 absente");
+  const noms = ["saisie", "erreur", "corrigée", "envoi", "confirmée"];
+  const [saisie, erreur, corrigee, envoi, confirmee] = noms.map((n) => ecran(`Modale · ${n}`));
+  [saisie, erreur, corrigee, envoi, confirmee].forEach((e, i) => {
+    assert.ok(e, `écran Modale · ${noms[i]} absent`);
+    assert.equal(e.width, 360);
+    assert.equal(e.height, 800);
+  });
+  assert.deepEqual(parcours.flowStartingPoints, [{ nodeId: landing.id, name: "Réserver un atelier le soir" }]);
+
+  const action = (noeud) => noeud.reactions[0].actions[0];
+  const vers = (noeud, cible, navigation) => {
+    assert.ok(noeud.reactions.length > 0, `${noeud.name} sans réaction`);
+    assert.equal(action(noeud).navigation, navigation, `${noeud.name} : navigation`);
+    assert.equal(action(noeud).destinationId, cible.id, `${noeud.name} : destination`);
+  };
+
+  const carte = nomme(landing, "carte · Initiation à Git");
+  const reserver = carte.findOne((n) => n.reactions.length > 0) || carte;
+  vers(reserver, saisie, "OVERLAY");
+  vers(nomme(saisie, "bouton Confirmer"), erreur, "SWAP");
+  vers(nomme(erreur, "champ adresse"), corrigee, "SWAP");
+  vers(nomme(corrigee, "bouton Confirmer"), envoi, "SWAP");
+  assert.deepEqual(envoi.reactions[0].trigger, { type: "AFTER_TIMEOUT", timeout: plugin.DELAI_ENVOI_MS });
+  vers(envoi, confirmee, "SWAP");
+  assert.equal(action(nomme(confirmee, "bouton Fermer")).type, "CLOSE");
+  for (const e of [saisie, erreur, corrigee]) assert.equal(action(nomme(e, "bouton Annuler")).type, "CLOSE");
+
+  assert.equal(nomme(nomme(saisie, "champ adresse"), "valeur").characters, "jonny@gmail");
+  assert.equal(nomme(nomme(corrigee, "champ adresse"), "valeur").characters, "jonny@gmail.com");
+});
+
 test("un fichier qui n'est pas vide est laissé intact", async () => {
   const autre = await construire({}, (s) => {
     s.figma.createFrame().name = "travail de l'étudiant";
