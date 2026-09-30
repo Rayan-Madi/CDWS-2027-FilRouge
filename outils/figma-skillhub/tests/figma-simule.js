@@ -577,6 +577,7 @@ function creerSimulateur(options = {}) {
       return t;
     },
     createNodeFromSvg(svg) {
+      if (reglages.panne === "createNodeFromSvg") throw new Error("createNodeFromSvg : panne simulée");
       if (!/^<svg[\s>]/.test(svg)) throw new Error("createNodeFromSvg : SVG invalide");
       const f = new Conteneur("FRAME");
       const largeur = Number((svg.match(/width="(\d+)"/) || [])[1] || 24);

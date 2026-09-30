@@ -27,7 +27,9 @@ python3 -m http.server 8000
 ├── README.md
 ├── index.html              redirection vers src/ pour GitHub Pages
 ├── docs/                   rapports exportés et documents des TP
-├── outils/contrastes.js    mesure des contrastes (formule WCAG)
+├── outils/
+│   ├── contrastes.js       mesure des contrastes (formule WCAG)
+│   └── figma-skillhub/     plugin Figma : construit la maquette du TP 3 (FM02) avec les mêmes jetons
 └── src/
     ├── index.html          la page, une seule
     ├── favicon.svg         icône d'onglet (évite une erreur 404 en console)
@@ -73,6 +75,8 @@ h1  Reprenez la main sur votre reconversion
 ### Jetons de design (FM02, chapitre 3)
 
 Toutes les valeurs sont posées une fois dans `:root`, puis seulement référencées : couleurs avec leur **ratio de contraste mesuré en commentaire**, échelle typographique de **rapport 1,25** (`--t-xs` à `--t-3xl`), **pas d'espacement de 4 px** (`--e-1` à `--e-16`), **deux rayons**, **deux ombres**, une hauteur de cible de 44 px. Aucune valeur brute dans les composants. Les jetons, les composants et leurs états sont présentés dans [`docs/design-system.html`](docs/design-system.html), rendu avec la vraie feuille de style.
+
+La maquette Figma (TP 3) est construite par le plugin [`outils/figma-skillhub/`](outils/figma-skillhub/) : ses variables portent les mêmes noms que ce `:root` (Dev Mode affiche `var(--accent)`), et un test vérifie qu'elles n'ont pas divergé. Mode d'emploi : [`docs/fm02-tp3-guide-figma.md`](docs/fm02-tp3-guide-figma.md).
 
 ### Responsive sans framework (critère C1.1)
 
@@ -128,6 +132,7 @@ Sans JavaScript, la page reste complète : le menu est déplié, le bouton Menu 
 - [x] Textes de remplacement par catégorie : [`docs/textes-alternatifs.md`](docs/textes-alternatifs.md)
 - [x] Trois erreurs commentées (TP 1) : [`docs/tp1-erreurs-commentees.md`](docs/tp1-erreurs-commentees.md)
 - [ ] Rapport Wave ou Lighthouse accessibilité exporté dans `docs/`
+- [x] Plugin Figma (TP 3) : `cd outils/figma-skillhub && npm install && npm test && npm run types`. Il vérifie que les jetons sont ceux du CSS, que le contenu est celui de la page, et qu'une construction complète passe sur un simulateur de l'API. Les appels à l'API sont vérifiés contre ses types officiels.
 
 ## Crédits
 
