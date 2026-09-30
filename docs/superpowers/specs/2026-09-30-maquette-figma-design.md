@@ -44,7 +44,7 @@ Les variables sont **liées** (`setBoundVariable`, `setBoundVariableForPaint`) a
 |---|---|---|
 | `bouton` | `type` = principal, secondaire · `état` = repos, survol, focus, actif, désactivé, chargement | 12 variantes. Pilule, marge interne `e-3`/`e-6`, hauteur ≥ `cible`. Survol = `accent-fonce` (texte blanc aussi sur le secondaire). Focus = survol + anneau 3 px `accent` décalé de 3 px (cadre englobant, comme `outline-offset`). Actif = décalé d'1 px vers le bas. Désactivé = fond `texte-doux`, libellé qui dit pourquoi (« Complet, liste d'attente ouverte »). Chargement = fond `texte-doux`, libellé « Réservation en cours… ». Propriété texte `libellé`. |
 | `champ` | `type` = texte, liste · `état` = repos, survol, focus, rempli, erreur, désactivé | 12 variantes. Libellé 600 au-dessus, zone de saisie ≥ `cible`, bordure 1 px `texte-doux`, rayon `rayon-s`. Survol = bordure `texte`. Focus = anneau 3 px décalé. Erreur = bordure 2 px `erreur` **et** message écrit 600 `erreur` en `t-xs`. Désactivé = fond `fond-teinte`, texte `texte-doux`. Propriétés : texte `libellé`, texte `valeur`, booléen `aide` + texte `texte d'aide`. Le type `liste` porte un chevron. |
-| `carte-atelier` | `cas` = normal, titre long | Colonne, espacement `e-2`, marge interne `e-6`, fond `fond`, bordure 1 px `bordure`, rayon `rayon-m`. Titre `t-m` 600, étiquette pilule `accent-fonce` sur `accent-clair`, description, infos `t-xs` `texte-doux`, prix `t-m` 600, instance de `bouton` (« Réserver »). « Titre long » : « Maquetter une page responsive avec Figma, de la grille aux composants » (3 lignes à 360). |
+| `carte-atelier` | propriétés de **contenu** (texte) : `titre`, `étiquette`, `description`, `infos`, `prix` | Un composant simple, pas un jeu de variantes : **les variantes décrivent des états, les propriétés décrivent du contenu**. Un titre long est un contenu, pas un état. Colonne, espacement `e-2`, marge interne `e-6`, fond `fond`, bordure 1 px `bordure`, rayon `rayon-m`. Titre `t-m` 600, étiquette pilule `accent-fonce` sur `accent-clair`, description, infos `t-xs` `texte-doux`, prix `t-m` 600, instance de `bouton` (« Réserver »). Le cas limite « titre long » est une **instance** : « Maquetter une page responsive avec Figma, de la grille aux composants » (3 lignes à 360). |
 | `modale` | `étape` = saisie, erreur, envoi, confirmée | Largeur 328 (360 − 2 × 16) jusqu'à 512 (32 rem), marge interne `e-6`, rayon `rayon-m`, ombre `ombre-2`. Titre « Réserver : Initiation à Git » (`t-l`), récapitulatif (date, lieu, prix), deux instances de `champ`, boutons « Confirmer la réservation » (principal) et « Annuler » (secondaire). Erreur : champ adresse en erreur, message « L'adresse doit ressembler à nom@exemple.fr », saisie conservée. Envoi : bouton en `chargement`. Confirmée : bloc succès qui reprend l'atelier, la date, le lieu et l'adresse, bouton « Fermer ». |
 
 **Cas limites** (section à part, étiquetée) : carte `titre long` ; **catalogue vide** (section « Les ateliers du moment », deux filtres cochés, message en pointillés « Aucun atelier ne correspond à ces filtres. Décochez-en un pour élargir la recherche. ») ; **champ en erreur** (formulaire d'inscription, adresse invalide).
@@ -69,7 +69,7 @@ Prototype à 360 px (Jonny est sur mobile). Flow nommé **« Réserver un atelie
 | `Modale · saisie` | clic sur « Confirmer la réservation » | swap → `Modale · erreur` (adresse mal tapée : `jonny@gmail` ) |
 | `Modale · erreur` | clic sur le champ adresse | swap → `Modale · corrigée` |
 | `Modale · corrigée` | clic sur « Confirmer la réservation » | swap → `Modale · envoi` |
-| `Modale · envoi` | après 1 200 ms | swap → `Modale · confirmée` |
+| `Modale · envoi` | après 800 ms (le `DELAI_SIMULE` de `skillhub.js`) | swap → `Modale · confirmée` |
 | `Modale · confirmée` | clic sur « Fermer » | fermer l'overlay |
 | toutes les modales | clic sur « Annuler » | fermer l'overlay |
 
@@ -90,8 +90,10 @@ outils/figma-skillhub/
 ├── tsconfig.json     checkJs, noEmit
 ├── .gitignore        node_modules/
 └── tests/
-    ├── jetons.test.js      jetons du plugin == :root de skillhub.css ; ratios recalculés == descriptions
-    └── contenu.test.js     contenu réel == index.html (titres, prix) ; ordre de tabulation 1 → n sans trou
+    ├── jetons.test.js        jetons du plugin == :root de skillhub.css ; ratios recalculés == fm02-contrastes.md
+    ├── contenu.test.js       contenu réel == index.html et skillhub.js (titres, prix, messages) ; ordre de tabulation
+    ├── figma-simule.js       simulateur de l'API Figma qui applique les règles d'exécution connues
+    └── construction.test.js  main() de bout en bout sur le simulateur : pages, variables, variantes, frames, pastilles, réactions
 ```
 
 `code.js` est organisé en couches, de haut en bas :
@@ -102,7 +104,7 @@ outils/figma-skillhub/
 4. **Construction** : `creerVariables()`, `creerStylesTexte()`, `creerComposants()`, `construireLanding(palier)`, `poserTabulation(frame)`, `construirePrototype()`.
 5. **Point d'entrée** `main()`, appelé seulement si `figma` existe. Il crée les 3 pages, enchaîne les étapes, notifie l'avancement (`figma.notify`), écrit un rapport en fin de course et ne ferme le plugin qu'à la fin.
 
-**Relancer le plugin** : le plugin marque ce qu'il crée (`setPluginData("skillhub", "1")`). Au lancement, s'il trouve des pages ou une collection `SkillHub` marquées, il demande confirmation dans l'iframe avant de les remplacer. Il ne touche jamais à ce qu'il n'a pas créé.
+**Fichier vide exigé** : le plugin ne supprime jamais rien. Il ne s'exécute que dans un fichier qui ne contient qu'une page vide (un nouveau fichier Figma) : il renomme cette page en `1 · Design system` et crée les deux autres (3 pages au total, limite Starter respectée). Sinon il s'arrête avec le message « Lance le plugin dans un nouveau fichier Figma vide ». Pour relancer après une correction : nouveau fichier.
 
 **Erreurs** : chaque étape est isolée (try/catch) ; une étape en échec n'empêche pas les suivantes et apparaît dans le rapport final (« 5 étapes sur 6 réussies, voici l'erreur »). Image injoignable → cadre gris légendé « image : accroche » à la bonne taille.
 
@@ -113,6 +115,7 @@ outils/figma-skillhub/
 | Jetons identiques au CSS, ratios exacts | `node --test outils/figma-skillhub/tests` | automatique |
 | Contenu identique à `index.html` | idem | automatique |
 | Chaque appel à l'API Figma existe et est bien typé | `npx tsc -p outils/figma-skillhub` (checkJs, noEmit) | automatique |
+| Le plugin s'exécute de bout en bout sans violer les règles d'exécution de Figma | `construction.test.js` sur le simulateur | automatique |
 | Le fichier se construit sans erreur | lancer le plugin dans Figma Desktop sur un fichier vide | **l'étudiant** |
 | Relecture visuelle | checklist du 4.3 dans le guide ; optionnel : lecture par le serveur MCP de Figma (`get_screenshot`, `get_variable_defs`) | l'étudiant, puis l'assistant |
 
@@ -135,5 +138,6 @@ outils/figma-skillhub/
 | L'API refuse une réaction sur un calque d'instance | Réaction posée sur l'instance parente, signalée dans le rapport |
 | Sora absente | Repli Inter + avertissement |
 | Réseau coupé | Cadres gris légendés à la place des images |
-| Unité de `AFTER_TIMEOUT` | La documentation de l'API (page *Trigger*) le dit : « timeout and delay are stored in milliseconds ». Valeur dans une seule constante `DELAI_ENVOI_MS = 1200`, citée dans le README en cas de comportement différent |
+| Unité de `AFTER_TIMEOUT` | La documentation de l'API (page *Trigger*) le dit : « timeout and delay are stored in milliseconds ». Valeur dans une seule constante `DELAI_ENVOI_MS = 800`, citée dans le README en cas de comportement différent |
+| Erreurs d'exécution qu'aucun typage ne voit (police non chargée avant d'écrire un texte, `FILL` sur un enfant hors auto-layout, `ABSOLUTE` hors auto-layout, ajout d'enfant dans une instance…) | Un **simulateur de l'API Figma** (`tests/figma-simule.js`) qui applique ces règles ; `main()` tourne en entier dessus dans les tests Node |
 | Le plugin ne peut pas être testé ici (pas de Figma Desktop côté assistant) | Typage strict contre `@figma/plugin-typings`, étapes isolées, rapport d'erreur précis à recopier |
