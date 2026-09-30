@@ -396,7 +396,14 @@ function peinture(nom, opacite) {
 // Règle un champ numérique et le lie à la variable du jeton, s'il y en a une
 /** @param {SceneNode} noeud @param {VariableBindableNodeField} champ @param {string|number} jeton */
 function regler(noeud, champ, jeton) {
-  /** @type {any} */ (noeud)[champ] = valeur(jeton);
+  const px = valeur(jeton);
+  // width et height sont en lecture seule dans Figma : on passe par resize()
+  if (champ === "width" || champ === "height") {
+    const n = /** @type {FrameNode} */ (noeud);
+    n.resize(champ === "width" ? px : n.width, champ === "height" ? px : n.height);
+  } else {
+    /** @type {any} */ (noeud)[champ] = px;
+  }
   if (typeof jeton === "string" && ETAT.variables[jeton]) noeud.setBoundVariable(champ, ETAT.variables[jeton]);
 }
 
@@ -803,6 +810,185 @@ async function creerChamp() {
   ETAT.composants.champ = { jeu, libelle, aide, texteAide };
 }
 
+// Les deux ombres de skillhub.css (--ombre-1, --ombre-2)
+/** @param {1 | 2} n @returns {DropShadowEffect} */
+function ombre(n) {
+  const rgb = hexVersRgb(hexDe("texte"));
+  return n === 1
+    ? { type: "DROP_SHADOW", color: { r: rgb.r, g: rgb.g, b: rgb.b, a: 0.35 }, offset: { x: 0, y: 16 }, radius: 24, spread: -16, visible: true, blendMode: "NORMAL" }
+    : { type: "DROP_SHADOW", color: { r: rgb.r, g: rgb.g, b: rgb.b, a: 0.5 }, offset: { x: 0, y: 24 }, radius: 48, spread: -20, visible: true, blendMode: "NORMAL" };
+}
+
+// Change le texte d'un calque DANS une instance (une surcharge, comme dans l'éditeur)
+/** @param {InstanceNode} inst @param {string} calque @param {string} contenu */
+function remplacerTexte(inst, calque, contenu) {
+  const t = /** @type {TextNode | null} */ (inst.findOne((n) => n.type === "TEXT" && n.name === calque));
+  if (!t) throw new Error(`${inst.name} : pas de calque texte « ${calque} »`);
+  t.characters = contenu;
+}
+
+/**
+ * Une instance de bouton, libellé compris
+ * @param {"principal" | "secondaire"} type @param {string} etat @param {string} libelle @param {string} [nom]
+ */
+function bouton(type, etat, libelle, nom) {
+  const b = instance("bouton", { type, "état": etat });
+  b.setProperties({ [ETAT.composants.bouton.libelle]: libelle });
+  b.name = nom || `bouton ${libelle}`;
+  return b;
+}
+
+/**
+ * Une instance de champ : libellé, aide éventuelle, valeur saisie
+ * @param {string} etat @param {string} libelle @param {string | null} aide @param {string} valeurSaisie @param {string} nom
+ * @param {string} [message] le message d'erreur, si ce n'est pas celui de l'adresse
+ */
+function champ(etat, libelle, aide, valeurSaisie, nom, message) {
+  const c = instance("champ", { type: "texte", "état": etat });
+  const cles = ETAT.composants.champ;
+  /** @type {Record<string, string | boolean>} */
+  const proprietes = { [cles.libelle]: libelle, [cles.aide]: aide !== null };
+  if (aide) proprietes[cles.texteAide] = aide;
+  c.setProperties(proprietes);
+  remplacerTexte(c, "valeur", valeurSaisie);
+  if (message) remplacerTexte(c, "message d'erreur", message);
+  c.name = nom;
+  return c;
+}
+
+// Composant 3 : la carte d'atelier (.atelier). Prix, niveau, durée et date sur la carte :
+// Jonny compare avec un budget serré sans ouvrir une autre page (TP 1, étape 2).
+// Un composant simple : les variantes décrivent des ÉTATS, les propriétés décrivent du CONTENU.
+async function creerCarteAtelier() {
+  await legende("Carte d'atelier", "Titre, étiquette, description, infos et prix sont des propriétés de contenu. Le bouton est une instance du composant bouton, aligné en pied de carte (margin-top: auto).");
+  const git = CONTENU.ateliers.items[0];
+  // Deux blocs et « espace entre » : quand les cartes d'une rangée prennent la même hauteur, les boutons s'alignent
+  const c = composant("carte-atelier", { marge: ["e-6"], fond: "fond", bordure: "bordure", rayon: "rayon-m", axe: "SPACE_BETWEEN" });
+  c.counterAxisSizingMode = "FIXED";
+  c.resize(368, c.height);
+  const contenu = ajouter(c, cadre("contenu", { ecart: "e-2" }), "FILL");
+  const titre = ajouter(contenu, await texte(git.titre, { style: "t-m/600", nom: "titre" }), "FILL");
+  const etiquette = ajouter(contenu, cadre("étiquette", { marge: ["e-1", "e-2"], fond: "accent-clair", rayon: "pilule" }));
+  const etiquetteTexte = ajouter(etiquette, await texte(git.etiquette, { style: "t-xs/600", couleur: "accent-fonce", nom: "étiquette" }), "HUG");
+  const description = ajouter(contenu, await texte(git.description, { nom: "description" }), "FILL");
+  const infos = ajouter(contenu, await texte(git.infos, { style: "t-xs/400", couleur: "texte-doux", nom: "infos" }), "FILL");
+  const prix = ajouter(contenu, await texte(git.prix, { style: "t-m/600", nom: "prix" }), "FILL");
+  const pied = ajouter(c, cadre("pied de carte", { marge: ["e-2", 0, 0, 0] }), "FILL");
+  ajouter(pied, bouton("principal", "repos", "Réserver", "bouton Réserver"));
+  c.description = ".atelier — flex en colonne, gap --e-2, padding --e-6, bordure --bordure (décorative : la carte n'est pas interactive)";
+
+  /** @type {Record<string, string>} */
+  const proprietes = {};
+  /** @type {Array<[string, TextNode]>} */
+  const liens = [["titre", titre], ["étiquette", etiquetteTexte], ["description", description], ["infos", infos], ["prix", prix]];
+  for (const [nom, noeud] of liens) {
+    proprietes[nom] = c.addComponentProperty(nom, "TEXT", noeud.characters);
+    noeud.componentPropertyReferences = { characters: proprietes[nom] };
+  }
+  placer(c);
+  ETAT.composants["carte-atelier"] = { composant: c, proprietes };
+}
+
+/** @param {{titre: string, etiquette: string, description: string, infos: string, prix: string}} atelier @returns {InstanceNode} */
+function carteAtelier(atelier) {
+  const { composant: c, proprietes: p } = ETAT.composants["carte-atelier"];
+  const carte = /** @type {ComponentNode} */ (c).createInstance();
+  carte.setProperties({
+    [p["titre"]]: atelier.titre,
+    [p["étiquette"]]: atelier.etiquette,
+    [p["description"]]: atelier.description,
+    [p["infos"]]: atelier.infos,
+    [p["prix"]]: atelier.prix,
+  });
+  carte.name = `carte · ${atelier.titre}`;
+  return carte;
+}
+
+const ETAPES_MODALE = ["saisie", "erreur", "envoi", "confirmée"];
+
+// Composant 4 : la modale de réservation (<dialog>). Elle reprend l'atelier choisi (heuristique 6),
+// garde la saisie en cas d'erreur (heuristique 9) et montre l'envoi en cours (heuristique 1).
+async function creerModale() {
+  await legende("Modale de réservation — 4 étapes", "Saisie, erreur (la saisie est conservée), envoi (« Réservation en cours… »), confirmée (atelier, date, lieu et adresse repris). Largeur : min(32rem, 100% − 2rem), soit 328 px à 360.");
+  const git = CONTENU.ateliers.items[0];
+  const jonny = MAQUETTE.jonny;
+  /** @type {ComponentNode[]} */
+  const variantes = [];
+
+  for (const etape of ETAPES_MODALE) {
+    const c = composant(`étape=${etape}`, { ecart: "e-4", marge: ["e-6"], fond: "fond", rayon: "rayon-m" });
+    c.counterAxisSizingMode = "FIXED";
+    c.resize(328, c.height);
+    c.effects = [ombre(2)];
+    const entete = ajouter(c, cadre("en-tête", { ecart: "e-2" }), "FILL");
+    ajouter(entete, await texte(CONTENU.modale.titre + git.titre, { style: "t-l/600", nom: "titre" }), "FILL");
+    ajouter(entete, await texte(recapAtelier(git), { couleur: "texte-doux", nom: "récapitulatif" }), "FILL");
+
+    if (etape === "confirmée") {
+      // La confirmation remplace la saisie : role="status", annoncée sans déplacer le focus
+      const bloc = ajouter(c, cadre("confirmation", { marge: ["e-3", "e-4"], fond: "succes-fond", rayon: "rayon-s" }), "FILL");
+      ajouter(bloc, await texte(confirmationReservation(jonny.prenom, git, jonny.courriel), { style: "t-s/600", couleur: "succes", nom: "message de confirmation" }), "FILL");
+      ajouter(c, bouton("principal", "repos", CONTENU.modale.fermer, "bouton Fermer"), "FILL");
+    } else {
+      ajouter(c, champ("rempli", CONTENU.inscription.nom, null, jonny.nom, "champ nom"), "FILL");
+      const etatAdresse = etape === "erreur" ? "erreur" : etape === "saisie" ? "focus" : "rempli";
+      const saisie = etape === "envoi" ? jonny.courriel : jonny.courrielFaute;
+      ajouter(c, champ(etatAdresse, CONTENU.inscription.courriel, CONTENU.modale.aideCourriel, saisie, "champ adresse"), "FILL");
+      // Sous 48em, les boutons du formulaire prennent toute la largeur (.formulaire button { width: 100% })
+      const actions = ajouter(c, cadre("actions", { ecart: "e-3" }), "FILL");
+      ajouter(actions, bouton("principal", etape === "envoi" ? "chargement" : "repos", CONTENU.modale.confirmer, "bouton Confirmer"), "FILL");
+      ajouter(actions, bouton("secondaire", "repos", CONTENU.modale.annuler, "bouton Annuler"), "FILL");
+    }
+    c.description = {
+      saisie: "La modale s'ouvre sur l'atelier choisi ; le focus entre dans la modale (showModal).",
+      erreur: "Adresse mal formée : message écrit, bordure 2 px, saisie conservée. Le focus va au premier champ fautif.",
+      envoi: "Envoi : le bouton passe à « Réservation en cours… » et se désactive (DELAI_SIMULE = 800 ms).",
+      confirmée: "Confirmation : l'atelier, la date, le lieu et l'adresse sont repris ; « Fermer » rend le focus au bouton « Réserver ».",
+    }[etape] || "";
+    variantes.push(c);
+  }
+
+  const jeu = figma.combineAsVariants(variantes, figma.currentPage);
+  jeu.name = "modale";
+  jeu.description = "Composant 4 — <dialog class=\"modale\"> (index.html), comportement dans skillhub.js.";
+  arrangerVariantes(jeu, ETAPES_MODALE.length);
+  placer(jeu);
+  ETAT.composants.modale = { jeu };
+}
+
+// La planche des jetons : ce que l'intégrateur lit en premier (cours, 4.4)
+async function creerPlanche() {
+  const planche = cadre("planche · jetons", { ecart: "e-12", marge: ["e-12"], fond: "fond", bordure: "bordure", rayon: "rayon-m" });
+  ajouter(planche, await texte("SkillHub — design system minimal", { style: "t-2xl/600" }), "HUG");
+  ajouter(planche, await texte("Mêmes jetons, mêmes noms que src/css/skillhub.css. Chaque couleur porte ses ratios mesurés (formule WCAG 2.2, docs/fm02-contrastes.md) : 4,5:1 pour le texte, 3:1 pour les composants et le focus.", { couleur: "texte-doux" }), 960);
+
+  const couleurs = ajouter(planche, cadre("couleurs", { sens: "HORIZONTAL", ecart: "e-6", retour: true, ecartLignes: "e-6" }), 1296);
+  for (const nom of Object.keys(JETONS.couleurs)) {
+    const nuancier = ajouter(couleurs, cadre(`nuancier ${nom}`, { ecart: "e-2" }), 200);
+    ajouter(nuancier, cadre("échantillon", { fond: nom, bordure: "bordure", rayon: "rayon-s" }), "FILL", 72);
+    ajouter(nuancier, await texte(`--${nom}`, { style: "t-s/600" }), "FILL");
+    ajouter(nuancier, await texte(hexDe(nom).toUpperCase(), { style: "t-xs/400", couleur: "texte-doux" }), "FILL");
+    ajouter(nuancier, await texte(descriptionCouleur(nom).split(" · ").join("\n"), { style: "t-xs/400" }), "FILL");
+  }
+
+  const echelle = ajouter(planche, cadre("échelle typographique", { ecart: "e-3" }), "FILL");
+  ajouter(echelle, await texte("Échelle typographique — rapport 1,25 à partir de 1 rem · Sora 400 et 600", { style: "t-m/600" }), "FILL");
+  for (const cran of Object.keys(JETONS.typo).reverse()) {
+    const px = valeur(cran);
+    ajouter(echelle, await texte(`${cran} · ${formaterNombre(px)} px — Reprenez la main`, { style: `${cran}/${px >= 20 ? 600 : 400}` }), "FILL");
+  }
+
+  const espace = ajouter(planche, cadre("pas d'espacement", { ecart: "e-3" }), "FILL");
+  ajouter(espace, await texte("Pas d'espacement — multiples de 4 px, aucune valeur hors pas", { style: "t-m/600" }), "FILL");
+  for (const nom of Object.keys(JETONS.espace)) {
+    const ligne = ajouter(espace, cadre(`espace ${nom}`, { sens: "HORIZONTAL", ecart: "e-4", travers: "CENTER" }), "FILL");
+    ajouter(ligne, await texte(`${nom} · ${valeur(nom)} px`, { style: "t-xs/600" }), 120);
+    const barre = ajouter(ligne, cadre("barre", { fond: "accent", rayon: 2 }), valeur(nom), 16);
+    regler(barre, "width", nom);
+  }
+  placer(planche, 160);
+}
+
 // Le rapport de construction, en haut de la page 1 : à recopier si quelque chose a échoué
 /** @param {string[]} lignes */
 async function ecrireRapport(lignes) {
@@ -826,8 +1012,11 @@ const ETAPES = [
   ["Polices", null, chargerPolices],
   ["Variables", null, creerVariables],
   ["Styles de texte", null, creerStylesTexte],
+  ["Planche des jetons", "systeme", creerPlanche],
   ["Composant bouton", "systeme", creerBouton],
   ["Composant champ", "systeme", creerChamp],
+  ["Composant carte d'atelier", "systeme", creerCarteAtelier],
+  ["Composant modale", "systeme", creerModale],
 ];
 
 /** @param {{delaiImagesMs?: number}} [options] @returns {Promise<string[]>} */

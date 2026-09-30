@@ -125,6 +125,50 @@ test("le champ a deux types et six états, avec libellé, aide et message d'erre
   assert.ok(nomme(variante(champ, "type=liste, état=repos"), "icône chevron"));
 });
 
+/* ---------- Composants : carte d'atelier et modale ; planche des jetons ---------- */
+
+test("la carte d'atelier est un composant à propriétés de contenu, avec une instance de bouton", () => {
+  const carte = jeu("carte-atelier");
+  assert.equal(carte.type, "COMPONENT");
+  const noms = Object.keys(carte.componentPropertyDefinitions).map((k) => k.split("#")[0]);
+  assert.deepEqual(noms.sort(), ["description", "infos", "prix", "titre", "étiquette"].sort());
+  const bouton = nomme(carte, "bouton Réserver");
+  assert.equal(bouton.type, "INSTANCE");
+  assert.equal(bouton.mainComponent.name, "type=principal, état=repos");
+});
+
+test("la modale a quatre étapes, garde la saisie en erreur et confirme l'atelier, la date et l'adresse", () => {
+  const modale = jeu("modale");
+  assert.equal(modale.type, "COMPONENT_SET");
+  assert.equal(modale.children.length, 4);
+  for (const etape of ["saisie", "erreur", "envoi", "confirmée"]) assert.ok(variante(modale, `étape=${etape}`), `étape ${etape} absente`);
+
+  const adresse = nomme(variante(modale, "étape=erreur"), "champ adresse");
+  assert.equal(adresse.mainComponent.name, "type=texte, état=erreur");
+  assert.equal(nomme(adresse, "valeur").characters, "jonny@gmail");
+
+  const envoi = nomme(variante(modale, "étape=envoi"), "bouton Confirmer");
+  assert.equal(envoi.mainComponent.name, "type=principal, état=chargement");
+
+  const attendu = plugin.confirmationReservation("Jonny", plugin.CONTENU.ateliers.items[0], "jonny@gmail.com");
+  const confirmee = variante(modale, "étape=confirmée");
+  assert.ok(confirmee.findOne((n) => n.type === "TEXT" && n.characters === attendu), "message de confirmation absent");
+  assert.ok(nomme(confirmee, "bouton Fermer"));
+  assert.equal(nomme(confirmee, "champ adresse"), null, "la saisie disparaît une fois confirmé");
+});
+
+test("la planche des jetons montre chaque couleur avec ses ratios", () => {
+  const planche = jeu("planche · jetons");
+  assert.ok(planche, "planche absente");
+  for (const nom of Object.keys(plugin.JETONS.couleurs)) {
+    assert.ok(nomme(planche, `nuancier ${nom}`), `nuancier ${nom} absent`);
+  }
+  const accent = nomme(planche, "nuancier accent");
+  assert.ok(accent.findOne((n) => n.type === "TEXT" && /6,66:1/.test(n.characters)));
+  assert.ok(nomme(planche, "échelle typographique"));
+  assert.ok(nomme(planche, "pas d'espacement"));
+});
+
 test("un fichier qui n'est pas vide est laissé intact", async () => {
   const autre = await construire({}, (s) => {
     s.figma.createFrame().name = "travail de l'étudiant";

@@ -66,8 +66,8 @@ function creerSimulateur(options = {}) {
       this.visible = true;
       this.x = 0;
       this.y = 0;
-      this.width = 100;
-      this.height = 100;
+      this._l = 100;
+      this._h = 100;
       this.boundVariables = {};
       this.reactions = [];
       this._plugin = {};
@@ -79,6 +79,19 @@ function creerSimulateur(options = {}) {
     }
     get removed() {
       return !noeuds.has(this.id);
+    }
+    // Dans Figma, width et height sont en lecture seule : on passe par resize()
+    get width() {
+      return this._l;
+    }
+    set width(_v) {
+      throw new Error(`Cannot assign to read only property 'width' of ${this.name} : utiliser resize()`);
+    }
+    get height() {
+      return this._h;
+    }
+    set height(_v) {
+      throw new Error(`Cannot assign to read only property 'height' of ${this.name} : utiliser resize()`);
     }
     _dansInstance() {
       for (let p = this.parent; p; p = p.parent) if (p.type === "INSTANCE") return true;
@@ -102,8 +115,8 @@ function creerSimulateur(options = {}) {
     }
     resize(largeur, hauteur) {
       if (!(largeur >= 0.01) || !(hauteur >= 0.01)) throw new Error(`resize: dimensions invalides ${largeur} × ${hauteur} (${this.name})`);
-      this.width = largeur;
-      this.height = hauteur;
+      this._l = largeur;
+      this._h = hauteur;
     }
     setPluginData(k, v) {
       this._plugin[k] = v;
@@ -426,7 +439,7 @@ function creerSimulateur(options = {}) {
         noeuds.delete(e.id);
       }
       this.children = [];
-      copierProprietes(principal, this, ["name", "x", "y", "parent", "children"]);
+      copierProprietes(principal, this, ["name", "type", "x", "y", "parent", "children", "reactions"]);
       for (const e of principal.children) this._inserer(this.children.length, cloner(e));
       this.name = principal.parent && principal.parent.type === "COMPONENT_SET" ? principal.parent.name : principal.name;
     }
@@ -451,7 +464,7 @@ function creerSimulateur(options = {}) {
         const parent = this.parent;
         this._copierDepuis(cible);
         this.parent = parent;
-        this.width = largeur;
+        this._l = largeur;
       }
       for (const [k, v] of Object.entries(proprietes)) {
         if (defs[k].type === "VARIANT") continue;
@@ -568,8 +581,8 @@ function creerSimulateur(options = {}) {
       const f = new Conteneur("FRAME");
       const largeur = Number((svg.match(/width="(\d+)"/) || [])[1] || 24);
       const hauteur = Number((svg.match(/height="(\d+)"/) || [])[1] || 24);
-      f.width = largeur;
-      f.height = hauteur;
+      f._l = largeur;
+      f._h = hauteur;
       f._inserer(0, new Noeud("VECTOR"));
       pageCourante.appendChild(f);
       return f;
