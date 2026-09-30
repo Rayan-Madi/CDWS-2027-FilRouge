@@ -670,6 +670,7 @@ function anneauDeFocus(porteur, rayon) {
 
 /** @param {string} nomJeu @param {Record<string, string>} proprietes @returns {InstanceNode} */
 function instance(nomJeu, proprietes) {
+  if (!ETAT.composants[nomJeu]) throw new Error(`le composant « ${nomJeu} » n'a pas été construit (voir son étape plus haut)`);
   const jeu = /** @type {ComponentSetNode} */ (ETAT.composants[nomJeu].jeu);
   const cible = jeu.children.find((c) => {
     const vp = /** @type {ComponentNode} */ (c).variantProperties || {};
@@ -893,6 +894,7 @@ async function creerCarteAtelier() {
 
 /** @param {{titre: string, etiquette: string, description: string, infos: string, prix: string}} atelier @returns {InstanceNode} */
 function carteAtelier(atelier) {
+  if (!ETAT.composants["carte-atelier"]) throw new Error("le composant « carte-atelier » n'a pas été construit (voir son étape plus haut)");
   const { composant: c, proprietes: p } = ETAT.composants["carte-atelier"];
   const carte = /** @type {ComponentNode} */ (c).createInstance();
   carte.setProperties({

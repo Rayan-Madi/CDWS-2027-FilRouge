@@ -290,6 +290,19 @@ test("le prototype joue le parcours de Jonny, de « Réserver » à la confirmat
   assert.equal(nomme(nomme(corrigee, "champ adresse"), "valeur").characters, "jonny@gmail.com");
 });
 
+test("une étape en panne n'arrête pas les suivantes, et le rapport la nomme", async () => {
+  const panne = await construire({ panne: "createNodeFromSvg" });
+  const ligne = (debut) => panne.rapport.find((l) => l.slice(2).startsWith(debut));
+  assert.match(ligne("Composant champ"), /^✗ .*createNodeFromSvg/);
+  assert.match(ligne("Composant bouton"), /^✓/);
+  assert.match(ligne("Composant carte d'atelier"), /^✓/, "la carte ne dépend que du bouton");
+  // La modale contient des champs : elle tombe avec eux, et le rapport dit pourquoi
+  assert.match(ligne("Composant modale"), /^✗ .*« champ » n'a pas été construit/);
+  assert.match(panne.journal.fermeture, /échec/);
+  const rapport = nomme(page(panne, "1 ·"), "rapport du plugin");
+  assert.ok(rapport && rapport.characters.includes("✗ Composant champ"));
+});
+
 test("un fichier qui n'est pas vide est laissé intact", async () => {
   const autre = await construire({}, (s) => {
     s.figma.createFrame().name = "travail de l'étudiant";
