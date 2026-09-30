@@ -314,6 +314,10 @@ test("à 360, les textes et les rangées longs passent à la ligne au lieu de d�
   assert.equal(nomme(f, "mention du pied").layoutSizingHorizontal, "FILL");
   assert.equal(nomme(f, "liens du pied").layoutSizingHorizontal, "FILL");
   assert.equal(nomme(f, "filtrer les ateliers").layoutSizingHorizontal, "FILL");
+  // Relevé sur la capture réelle : la fin de l'appel aux formateurs était tassée à droite du lien
+  const appel = nomme(f, "appel aux formateurs");
+  assert.equal(appel.layoutMode, "VERTICAL");
+  assert.equal(nomme(appel, "appel · suite").layoutSizingHorizontal, "FILL");
   const cgu = nomme(f, `option ${plugin.CONTENU.inscription.cgu}`);
   assert.equal(cgu.layoutSizingHorizontal, "FILL");
   assert.equal(nomme(cgu, "libellé").layoutSizingHorizontal, "FILL");
