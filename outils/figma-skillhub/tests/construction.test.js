@@ -61,6 +61,70 @@ test("les styles de texte suivent l'échelle et sont liés aux variables de tail
   assert.equal(tl.boundVariables.fontSize.id, variable.id);
 });
 
+/* ---------- Composants : bouton et champ ---------- */
+
+const jeu = (nom) => nomme(page(sim, "1 ·"), nom);
+const variante = (jeuDeComposants, nom) => jeuDeComposants.children.find((c) => c.name === nom);
+const variableNommee = (nom) => sim.variables.find((v) => v.name === nom);
+const lieeA = (peinture, nom) => peinture.boundVariables && peinture.boundVariables.color.id === variableNommee(nom).id;
+
+test("le bouton a deux types et six états, soit douze variantes nommées", () => {
+  const bouton = jeu("bouton");
+  assert.equal(bouton.type, "COMPONENT_SET");
+  assert.equal(bouton.children.length, 12);
+  for (const type of ["principal", "secondaire"]) {
+    for (const etat of ["repos", "survol", "focus", "actif", "désactivé", "chargement"]) {
+      assert.ok(variante(bouton, `type=${type}, état=${etat}`), `variante type=${type}, état=${etat} absente`);
+    }
+  }
+  const proprietes = Object.keys(bouton.componentPropertyDefinitions);
+  assert.ok(proprietes.some((p) => p.startsWith("libellé#")), "propriété texte « libellé » absente");
+});
+
+test("le bouton est construit avec les jetons, pas avec des valeurs brutes", () => {
+  const repos = variante(jeu("bouton"), "type=principal, état=repos");
+  assert.ok(lieeA(repos.fills[0], "couleurs/accent"), "fond du bouton non lié à accent");
+  assert.equal(repos.boundVariables.paddingLeft.id, variableNommee("espace/e-6").id);
+  assert.equal(repos.boundVariables.cornerRadius.id, variableNommee("forme/pilule").id);
+  const survol = variante(jeu("bouton"), "type=principal, état=survol");
+  assert.ok(lieeA(survol.fills[0], "couleurs/accent-fonce"));
+});
+
+test("le focus du bouton est un anneau posé sur le fond, et chargement dit ce qui se passe", () => {
+  const focus = variante(jeu("bouton"), "type=principal, état=focus");
+  const anneau = nomme(focus, "anneau de focus");
+  assert.ok(anneau, "anneau de focus absent");
+  assert.equal(anneau.layoutPositioning, "ABSOLUTE");
+  assert.equal(anneau.strokeWeight, 3);
+  assert.ok(lieeA(anneau.strokes[0], "couleurs/accent"));
+  const chargement = variante(jeu("bouton"), "type=principal, état=chargement");
+  assert.ok(nomme(chargement, "libellé").characters.includes("en cours"));
+  const desactive = variante(jeu("bouton"), "type=principal, état=désactivé");
+  assert.ok(lieeA(desactive.fills[0], "couleurs/texte-doux"));
+});
+
+test("le champ a deux types et six états, avec libellé, aide et message d'erreur", () => {
+  const champ = jeu("champ");
+  assert.equal(champ.type, "COMPONENT_SET");
+  assert.equal(champ.children.length, 12);
+  for (const type of ["texte", "liste"]) {
+    for (const etat of ["repos", "survol", "focus", "rempli", "erreur", "désactivé"]) {
+      assert.ok(variante(champ, `type=${type}, état=${etat}`), `variante type=${type}, état=${etat} absente`);
+    }
+  }
+  const proprietes = Object.keys(champ.componentPropertyDefinitions);
+  for (const nom of ["libellé#", "aide#", "texte d'aide#"]) {
+    assert.ok(proprietes.some((p) => p.startsWith(nom)), `propriété ${nom} absente`);
+  }
+  const erreur = variante(champ, "type=texte, état=erreur");
+  const zone = nomme(erreur, "zone de saisie");
+  assert.equal(zone.strokeWeight, 2);
+  assert.ok(lieeA(zone.strokes[0], "couleurs/erreur"));
+  assert.ok(nomme(erreur, "message d'erreur").visible);
+  assert.equal(nomme(variante(champ, "type=texte, état=repos"), "message d'erreur").visible, false);
+  assert.ok(nomme(variante(champ, "type=liste, état=repos"), "icône chevron"));
+});
+
 test("un fichier qui n'est pas vide est laissé intact", async () => {
   const autre = await construire({}, (s) => {
     s.figma.createFrame().name = "travail de l'étudiant";
