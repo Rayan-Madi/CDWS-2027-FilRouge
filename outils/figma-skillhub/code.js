@@ -1218,10 +1218,14 @@ async function construireLanding(largeur, nom) {
     ajouter(carte, await texte(fo.citation, { aligner: "CENTER", nom: "citation" }), "FILL");
   }
   egaliserHauteurs(listeFormateurs, p.colonnes);
-  const appel = ajouter(formateurs, cadre("appel aux formateurs", { sens: "HORIZONTAL", retour: true, ecart: "e-1", ecartLignes: 0 }), "FILL");
-  ajouter(appel, await texte(CONTENU.formateurs.appel.avant), "HUG");
-  focus["appel-formateurs"] = ajouter(appel, await texte(CONTENU.formateurs.appel.lien, { couleur: "accent", souligne: true, nom: "lien Créez votre compte" }), "HUG");
-  ajouter(appel, await texte(CONTENU.formateurs.appel.apres), p.navigation === "menu" ? "FILL" : "HUG");
+  // Une phrase avec un lien au milieu. Dès 48em, elle tient sur une rangée ; à 360, la suite passe sur
+  // sa propre ligne en pleine largeur (dans une rangée qui se replie, elle se tassait à droite du lien).
+  const etroit = p.navigation === "menu";
+  const appel = ajouter(formateurs, cadre("appel aux formateurs", etroit ? { ecart: 0 } : { sens: "HORIZONTAL", retour: true, ecart: "e-1", ecartLignes: 0 }), "FILL");
+  const debut = etroit ? ajouter(appel, cadre("appel · début", { sens: "HORIZONTAL", retour: true, ecart: "e-1", ecartLignes: 0 }), "FILL") : appel;
+  ajouter(debut, await texte(CONTENU.formateurs.appel.avant), "HUG");
+  focus["appel-formateurs"] = ajouter(debut, await texte(CONTENU.formateurs.appel.lien, { couleur: "accent", souligne: true, nom: "lien Créez votre compte" }), "HUG");
+  ajouter(appel, await texte(CONTENU.formateurs.appel.apres, { nom: "appel · suite" }), etroit ? "FILL" : "HUG");
 
   // Créer mon compte : une colonne de 36rem au plus, centrée
   const inscription = ajouter(f, cadre("section inscription", { marge: [p.sectionY, p.marge], fond: "fond-teinte", travers: "CENTER" }), "FILL");
