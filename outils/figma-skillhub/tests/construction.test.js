@@ -169,6 +169,70 @@ test("la planche des jetons montre chaque couleur avec ses ratios", () => {
   assert.ok(nomme(planche, "pas d'espacement"));
 });
 
+/* ---------- Cas limites, landing aux trois paliers, images ---------- */
+
+const frameLanding = (largeur) => page(sim, "2 ·").children.find((n) => n.name === String(largeur));
+const textes = (noeud) => tous(noeud, (n) => n.type === "TEXT").map((t) => t.characters);
+
+test("les cas limites sont sur la page 1 : titre de trois lignes, catalogue vide, champs en erreur", () => {
+  const cas = jeu("cas limites");
+  assert.ok(cas, "cadre « cas limites » absent");
+  const long = nomme(cas, "titre long");
+  assert.ok(textes(long).includes(plugin.MAQUETTE.titreLong));
+  const vide = nomme(cas, "catalogue vide");
+  assert.equal(tous(vide, (n) => n.name.startsWith("carte · ")).length, 0);
+  assert.ok(nomme(vide, "message catalogue vide").visible);
+  assert.ok(textes(vide).includes(plugin.CONTENU.ateliers.vide));
+  assert.ok(textes(vide).includes(plugin.CONTENU.ateliers.filtres.resultatVide));
+  const erreurs = nomme(cas, "champ en erreur");
+  assert.ok(textes(erreurs).includes(plugin.CONTENU.messages.nomManquant));
+  assert.ok(textes(erreurs).includes(plugin.CONTENU.messages.courrielInvalide));
+});
+
+test("la landing existe aux trois paliers, en auto-layout, avec sa grille de colonnes", () => {
+  for (const largeur of [360, 768, 1280]) {
+    const f = frameLanding(largeur);
+    assert.ok(f, `frame ${largeur} absente`);
+    assert.equal(f.width, largeur);
+    assert.equal(f.layoutMode, "VERTICAL");
+    assert.equal(f.layoutGrids[0].count, plugin.PALIERS[largeur].grille.count);
+    assert.equal(tous(f, (n) => n.type === "INSTANCE" && n.name.startsWith("carte · ")).length, 3, `cartes à ${largeur}`);
+  }
+});
+
+test("le bouton Menu remplace les liens à 360 ; les liens sont visibles dès 768", () => {
+  assert.ok(nomme(frameLanding(360), "bouton Menu"));
+  assert.equal(nomme(frameLanding(360), "lien Valeurs"), null);
+  for (const largeur of [768, 1280]) {
+    assert.ok(nomme(frameLanding(largeur), "lien Valeurs"), `liens absents à ${largeur}`);
+    assert.equal(nomme(frameLanding(largeur), "bouton Menu"), null);
+  }
+});
+
+test("la landing montre le contenu réel", () => {
+  const contenu = textes(frameLanding(1280));
+  for (const attendu of ["Reprenez la main sur votre reconversion", "25 €", "35 €", "Gratuit", "Sarah Benali", "Aïcha N'Diaye", "Créez votre compte", plugin.CONTENU.pied.mention]) {
+    assert.ok(contenu.includes(attendu), `« ${attendu} » absent de la frame 1280`);
+  }
+});
+
+test("les vraies images sont posées, converties par l'iframe", () => {
+  const accroche = nomme(frameLanding(1280), "image : accroche");
+  assert.equal(accroche.fills[0].type, "IMAGE");
+  const photos = tous(frameLanding(360), (n) => n.name.startsWith("photo · "));
+  assert.equal(photos.length, 3);
+  photos.forEach((p) => assert.equal(p.fills[0].type, "IMAGE"));
+  assert.ok(sim.journal.messagesUi.some((m) => m.type === "charger-images" && m.urls.length === 4));
+});
+
+test("sans réseau, des cadres gris remplacent les images et le rapport le dit", async () => {
+  const muet = await construire({ images: "muet" });
+  assert.deepEqual(muet.rapport.filter((l) => l.startsWith("✗")), []);
+  assert.ok(muet.rapport.some((l) => l.startsWith("⚠ Images")));
+  const f = page(muet, "2 ·").children.find((n) => n.name === "1280");
+  assert.equal(nomme(f, "image : accroche").fills[0].type, "SOLID");
+});
+
 test("un fichier qui n'est pas vide est laissé intact", async () => {
   const autre = await construire({}, (s) => {
     s.figma.createFrame().name = "travail de l'étudiant";

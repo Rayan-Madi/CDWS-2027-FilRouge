@@ -83,6 +83,8 @@ const ICONES = {
     '<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M3 12h18M3 18h18" stroke="#12293f" stroke-width="2" stroke-linecap="round"/></svg>',
   chevron:
     '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M3 6l5 5 5-5" fill="none" stroke="#12293f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  triangle:
+    '<svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><path d="M2 1l6 4-6 4z" fill="#0b5cad"/></svg>',
   coche:
     '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   proximite:
@@ -989,6 +991,333 @@ async function creerPlanche() {
   placer(planche, 160);
 }
 
+/* ----- La landing ----- */
+
+/** @typedef {typeof PALIERS[360]} Palier */
+/** @typedef {Record<string, SceneNode>} Focusables les éléments focalisables, rangés par clé d'ORDRE_TABULATION */
+
+// Un titre fluide : le style du cran s'il tombe juste, sinon le cran inférieur et la taille calculée du clamp()
+/** @param {number} px @returns {{ style: string, taille?: number }} */
+function styleTitre(px) {
+  const crans = Object.keys(JETONS.typo);
+  const exact = crans.find((c) => Math.abs(valeur(c) - px) < 0.02);
+  if (exact) return { style: `${exact}/600` };
+  const inferieur = crans.filter((c) => valeur(c) < px).pop() || "t-m";
+  return { style: `${inferieur}/600`, taille: Math.round(px * 100) / 100 };
+}
+
+/** @param {string} contenu @param {number} px @param {string} nom */
+async function titre(contenu, px, nom) {
+  const s = styleTitre(px);
+  return texte(contenu, { style: s.style, taille: s.taille, nom });
+}
+
+// La largeur d'une colonne d'une grille auto-fit : minmax(16rem, 1fr), gouttière --e-6
+/** @param {number} contenu @param {number} colonnes */
+function largeurColonne(contenu, colonnes) {
+  return (contenu - valeur("e-6") * (colonnes - 1)) / colonnes;
+}
+
+/** @param {string} nom @returns {FrameNode} */
+function grille(nom) {
+  return cadre(nom, { sens: "HORIZONTAL", ecart: "e-6", retour: true, ecartLignes: "e-6" });
+}
+
+// Les cartes d'une même rangée prennent la hauteur de la plus haute (grid : height: 100%)
+/** @param {FrameNode} g @param {number} colonnes */
+function egaliserHauteurs(g, colonnes) {
+  const enfants = g.children.slice();
+  for (let i = 0; i < enfants.length; i += colonnes) {
+    const rangee = enfants.slice(i, i + colonnes);
+    const hauteur = Math.max.apply(null, rangee.map((e) => e.height));
+    rangee.forEach((e) => dimensionner(e, undefined, hauteur));
+  }
+}
+
+/** @param {SceneNode & MinimalFillsMixin} noeud @param {string} url @param {string} nom */
+function poserImage(noeud, url, nom) {
+  const hash = ETAT.images[url];
+  noeud.name = nom;
+  noeud.fills = hash ? [{ type: "IMAGE", imageHash: hash, scaleMode: "FILL" }] : [peinture("fond-teinte")];
+}
+
+// Une section de la page : padding --e-12 puis --e-16 dès 48em, marge latérale --espace
+/** @param {string} nom @param {Palier} p @param {boolean} [teinte] */
+function section(nom, p, teinte) {
+  return cadre(nom, { marge: [p.sectionY, p.marge], ecart: "e-6", fond: teinte ? "fond-teinte" : "fond" });
+}
+
+/** @param {string} libelle @param {boolean} cochee */
+async function caseACocher(libelle, cochee) {
+  const option = cadre(`option ${libelle}`, { sens: "HORIZONTAL", ecart: "e-2", travers: "CENTER" });
+  regler(option, "minHeight", "cible");
+  // 24 px : la taille minimale d'une cible (WCAG 2.5.8)
+  const boite = ajouter(option, cadre("case", { fond: cochee ? "accent" : "fond", bordure: cochee ? "accent" : "texte-doux", epaisseur: 2, rayon: 4, axe: "CENTER", travers: "CENTER" }), 24, 24);
+  if (cochee) ajouter(boite, icone("coche"));
+  ajouter(option, await texte(libelle, { nom: "libellé" }), "HUG");
+  return { option, boite };
+}
+
+/**
+ * La section « Les ateliers du moment » : filtres, cartes, et le message du catalogue vide
+ * @param {Palier} p @param {Focusables} focus @param {{ vide?: boolean }} [o]
+ */
+async function sectionAteliers(p, focus, o) {
+  const vide = Boolean(o && o.vide);
+  const s = section("section ateliers", p, true);
+  ajouter(s, await titre(CONTENU.ateliers.titre, p.h2, "titre ateliers"), "FILL");
+
+  // Les filtres : affichés par le JavaScript, demandés par les deux personas (soir, débutants)
+  const filtres = ajouter(s, cadre("filtres", { sens: "HORIZONTAL", retour: true, ecart: "e-6", ecartLignes: "e-2", axe: "SPACE_BETWEEN", travers: "CENTER" }), "FILL");
+  const choix = ajouter(filtres, cadre("filtrer les ateliers", { sens: "HORIZONTAL", retour: true, ecart: "e-6", ecartLignes: "e-2", travers: "CENTER" }));
+  ajouter(choix, await texte(CONTENU.ateliers.filtres.legende, { style: "t-s/600", nom: "légende" }), "HUG");
+  const soir = await caseACocher(CONTENU.ateliers.filtres.options[0], vide);
+  const debutants = await caseACocher(CONTENU.ateliers.filtres.options[1], vide);
+  ajouter(choix, soir.option);
+  ajouter(choix, debutants.option);
+  focus["filtre-soir"] = soir.boite;
+  focus["filtre-debutants"] = debutants.boite;
+  const resultat = vide ? CONTENU.ateliers.filtres.resultatVide : CONTENU.ateliers.filtres.resultat;
+  ajouter(filtres, await texte(resultat, { style: "t-xs/400", couleur: "texte-doux", nom: "résultat (role=status)" }), "HUG");
+
+  if (!vide) {
+    const cartes = ajouter(s, grille("liste des ateliers"), "FILL");
+    const largeur = largeurColonne(p.contenu, p.colonnes);
+    CONTENU.ateliers.items.forEach((atelier, i) => {
+      const carte = ajouter(cartes, carteAtelier(atelier), largeur);
+      const bouton = carte.findOne((n) => n.name === "bouton Réserver");
+      if (bouton) focus[`reserver-${i + 1}`] = bouton;
+    });
+    egaliserHauteurs(cartes, p.colonnes);
+  }
+
+  const message = ajouter(s, cadre("message catalogue vide", { marge: ["e-4"], fond: "fond", bordure: "texte-doux", pointilles: true, rayon: "rayon-m" }), "FILL");
+  ajouter(message, await texte(CONTENU.ateliers.vide), "FILL");
+  message.visible = vide; // [hidden] tant qu'un atelier correspond
+  return s;
+}
+
+/**
+ * La landing à un palier, en auto-layout de haut en bas
+ * @param {360 | 768 | 1280} largeur @param {string} [nom]
+ * @returns {Promise<{ frame: FrameNode, focus: Focusables }>}
+ */
+async function construireLanding(largeur, nom) {
+  const p = PALIERS[largeur];
+  /** @type {Focusables} */
+  const focus = {};
+  const f = cadre(nom || String(largeur), { fond: "fond" });
+  f.counterAxisSizingMode = "FIXED";
+  f.resize(largeur, f.height);
+  f.clipsContent = true;
+  f.layoutGrids = [{ pattern: "COLUMNS", alignment: "STRETCH", count: p.grille.count, gutterSize: p.grille.gutter, offset: p.grille.offset, visible: true, color: { r: 0.8, g: 0.1, b: 0.1, a: 0.06 } }];
+
+  // En-tête collant : logo, puis bouton Menu (360) ou liens (dès 48em)
+  const entete = ajouter(f, cadre("en-tête", { sens: "HORIZONTAL", marge: ["e-3", p.marge], axe: "SPACE_BETWEEN", travers: "CENTER", fond: "fond", fondOpacite: 0.96 }), "FILL");
+  entete.strokes = [peinture("bordure")];
+  entete.strokeAlign = "INSIDE";
+  entete.strokeTopWeight = 0;
+  entete.strokeRightWeight = 0;
+  entete.strokeLeftWeight = 0;
+  entete.strokeBottomWeight = 1;
+  const logo = ajouter(entete, cadre("logo", { sens: "HORIZONTAL", ecart: "e-2", travers: "CENTER" }));
+  ajouter(logo, icone("logo"));
+  ajouter(logo, await texte(CONTENU.logo, { style: "t-m/600" }), "HUG");
+  focus.logo = logo;
+  if (p.navigation === "menu") {
+    const menu = ajouter(entete, cadre("bouton Menu", { sens: "HORIZONTAL", ecart: "e-2", marge: ["e-2", "e-4"], bordure: "bordure", rayon: "rayon-m", travers: "CENTER" }));
+    regler(menu, "minHeight", "cible");
+    ajouter(menu, icone("menu"));
+    ajouter(menu, await texte(CONTENU.menu), "HUG");
+    focus.menu = menu;
+  } else {
+    const nav = ajouter(entete, cadre("navigation", { sens: "HORIZONTAL", ecart: "e-2", travers: "CENTER" }));
+    for (const lien of CONTENU.navigation) {
+      const action = lien.cle === "nav-inscription";
+      const l = ajouter(nav, cadre(`lien ${lien.texte}`, { marge: ["e-3", "e-2"], rayon: "rayon-s", bordure: action ? "accent" : undefined, epaisseur: 2 }));
+      ajouter(l, await texte(lien.texte), "HUG");
+      focus[lien.cle] = l;
+    }
+  }
+
+  // Accroche : une colonne à 360, deux dès 48em (1,1fr / 1fr à 64em)
+  const deuxColonnes = p.accrocheColonnes.length > 1;
+  const accroche = ajouter(f, cadre("accroche", { sens: deuxColonnes ? "HORIZONTAL" : "VERTICAL", ecart: p.accrocheEcart, marge: [p.accrocheHaut, p.accrocheMarge, p.accrocheBas, p.accrocheMarge], travers: "CENTER" }), "FILL");
+  const interieur = largeur - 2 * p.accrocheMarge;
+  const total = p.accrocheColonnes.reduce((a, b) => a + b, 0);
+  const utile = interieur - (deuxColonnes ? p.accrocheEcart : 0);
+  const largeurs = deuxColonnes ? p.accrocheColonnes.map((fr) => (utile * fr) / total) : [interieur, interieur];
+  const blocTexte = ajouter(accroche, cadre("accroche · texte", { ecart: "e-3" }), largeurs[0]);
+  ajouter(blocTexte, await titre(CONTENU.accroche.titre, p.h1, "h1"), "FILL");
+  ajouter(blocTexte, await texte(CONTENU.accroche.texte, { style: "t-m/400", couleur: "texte-doux" }), "FILL");
+  const actions = ajouter(blocTexte, cadre("accroche · actions", { sens: "HORIZONTAL", retour: true, ecart: "e-3", ecartLignes: "e-3", marge: ["e-3", 0, 0, 0] }), "FILL");
+  focus["accroche-compte"] = ajouter(actions, bouton("principal", "repos", CONTENU.accroche.actions[0]));
+  focus["accroche-ateliers"] = ajouter(actions, bouton("secondaire", "repos", CONTENU.accroche.actions[1]));
+  const image = figma.createRectangle();
+  ajouter(accroche, image);
+  image.resize(largeurs[1], (largeurs[1] * CONTENU.accroche.image.hauteur) / CONTENU.accroche.image.largeur);
+  poserImage(image, CONTENU.accroche.image.url, "image : accroche");
+  regler(image, "cornerRadius", "rayon-m");
+  image.effects = [ombre(2)];
+
+  // Nos valeurs
+  const valeurs = ajouter(f, section("section valeurs", p), "FILL");
+  ajouter(valeurs, await titre(CONTENU.valeurs.titre, p.h2, "titre valeurs"), "FILL");
+  const listeValeurs = ajouter(valeurs, grille("liste des valeurs"), "FILL");
+  for (const v of CONTENU.valeurs.items) {
+    const carte = ajouter(listeValeurs, cadre(`valeur · ${v.titre}`, { ecart: "e-3", marge: ["e-6"], fond: "fond", bordure: "bordure", rayon: "rayon-m" }), largeurColonne(p.contenu, p.colonnes));
+    ajouter(carte, icone(/** @type {keyof typeof ICONES} */ (v.icone)));
+    ajouter(carte, await texte(v.titre, { style: "t-m/600" }), "FILL");
+    ajouter(carte, await texte(v.texte), "FILL");
+  }
+  egaliserHauteurs(listeValeurs, p.colonnes);
+
+  // Les ateliers du moment
+  ajouter(f, await sectionAteliers(p, focus), "FILL");
+
+  // Nos formateurs
+  const formateurs = ajouter(f, section("section formateurs", p), "FILL");
+  ajouter(formateurs, await titre(CONTENU.formateurs.titre, p.h2, "titre formateurs"), "FILL");
+  const listeFormateurs = ajouter(formateurs, grille("liste des formateurs"), "FILL");
+  for (const fo of CONTENU.formateurs.items) {
+    const carte = ajouter(listeFormateurs, cadre(`formateur · ${fo.nom}`, { ecart: "e-3", marge: ["e-6"], fond: "fond", bordure: "bordure", rayon: "rayon-m", travers: "CENTER" }), largeurColonne(p.contenu, p.colonnes));
+    const photo = figma.createEllipse();
+    ajouter(carte, photo);
+    photo.resize(96, 96);
+    poserImage(photo, fo.photo, `photo · ${fo.nom}`);
+    ajouter(carte, await texte(fo.nom, { style: "t-m/600", aligner: "CENTER" }), "FILL");
+    ajouter(carte, await texte(fo.role, { couleur: "texte-doux", aligner: "CENTER" }), "FILL");
+    // Sora n'a pas d'italique : le navigateur la simule, Figma non. La citation reste droite dans la maquette.
+    ajouter(carte, await texte(fo.citation, { aligner: "CENTER", nom: "citation" }), "FILL");
+  }
+  egaliserHauteurs(listeFormateurs, p.colonnes);
+  const appel = ajouter(formateurs, cadre("appel aux formateurs", { sens: "HORIZONTAL", retour: true, ecart: "e-1", ecartLignes: 0 }), "FILL");
+  ajouter(appel, await texte(CONTENU.formateurs.appel.avant), "HUG");
+  focus["appel-formateurs"] = ajouter(appel, await texte(CONTENU.formateurs.appel.lien, { couleur: "accent", souligne: true, nom: "lien Créez votre compte" }), "HUG");
+  ajouter(appel, await texte(CONTENU.formateurs.appel.apres), p.navigation === "menu" ? "FILL" : "HUG");
+
+  // Créer mon compte : une colonne de 36rem au plus, centrée
+  const inscription = ajouter(f, cadre("section inscription", { marge: [p.sectionY, p.marge], fond: "fond-teinte", travers: "CENTER" }), "FILL");
+  const colonne = ajouter(inscription, cadre("colonne", { ecart: "e-6" }), Math.min(576, p.contenu));
+  ajouter(colonne, await titre(CONTENU.inscription.titre, p.h2, "titre inscription"), "FILL");
+  ajouter(colonne, await texte(CONTENU.inscription.texte), "FILL");
+  const formulaire = ajouter(colonne, cadre("formulaire", { ecart: "e-4", marge: ["e-6"], fond: "fond", bordure: "bordure", rayon: "rayon-m" }), "FILL");
+  const i = CONTENU.inscription;
+  const nomChamp = champ("repos", i.nom, null, "", "champ nom");
+  const courriel = champ("repos", i.courriel, i.aideCourriel, "", "champ adresse");
+  const profil = instance("champ", { type: "liste", "état": "repos" });
+  profil.name = "liste profil";
+  // Deux colonnes dès 48em : nom et adresse côte à côte, « Je suis » seul sur sa ligne
+  if (p.formulaireColonnes === 2) {
+    const ligne1 = ajouter(formulaire, cadre("ligne 1", { sens: "HORIZONTAL", ecart: "e-4" }), "FILL");
+    ajouter(ligne1, nomChamp, "FILL");
+    ajouter(ligne1, courriel, "FILL");
+    const ligne2 = ajouter(formulaire, cadre("ligne 2", { sens: "HORIZONTAL", ecart: "e-4" }), "FILL");
+    ajouter(ligne2, profil, "FILL");
+    ajouter(ligne2, cadre("cellule vide"), "FILL");
+  } else {
+    ajouter(formulaire, nomChamp, "FILL");
+    ajouter(formulaire, courriel, "FILL");
+    ajouter(formulaire, profil, "FILL");
+  }
+  /** @param {InstanceNode} c */
+  const zone = (c) => c.findOne((n) => n.name === "zone de saisie") || c;
+  focus["champ-nom"] = zone(nomChamp);
+  focus["champ-courriel"] = zone(courriel);
+  focus["champ-profil"] = zone(profil);
+  const cgu = await caseACocher(i.cgu, false);
+  ajouter(formulaire, cgu.option, "FILL");
+  focus["case-cgu"] = cgu.boite;
+  const conditions = ajouter(formulaire, cadre("lire les conditions", { sens: "HORIZONTAL", ecart: "e-2", marge: ["e-2", 0], travers: "CENTER" }));
+  ajouter(conditions, icone("triangle"));
+  ajouter(conditions, await texte(i.conditions, { style: "t-xs/400", couleur: "accent", souligne: true }), "HUG");
+  focus.conditions = conditions;
+  focus["bouton-inscription"] = ajouter(formulaire, bouton("principal", "repos", i.bouton, "bouton Créer mon compte (formulaire)"), p.formulaireColonnes === 2 ? "HUG" : "FILL");
+
+  // Pied de page
+  const pied = ajouter(f, cadre("pied de page", { marge: ["e-8", p.marge], ecart: "e-4", fond: "texte", travers: "CENTER" }), "FILL");
+  const liens = ajouter(pied, cadre("liens du pied", { sens: "HORIZONTAL", retour: true, ecart: "e-6", ecartLignes: "e-2", axe: "CENTER" }));
+  const clesPied = ["pied-haut", "pied-ateliers", "pied-inscription"];
+  for (let k = 0; k < CONTENU.pied.liens.length; k++) {
+    const l = ajouter(liens, cadre(`lien ${CONTENU.pied.liens[k]} (pied)`, { marge: ["e-2", 0] }));
+    ajouter(l, await texte(CONTENU.pied.liens[k], { couleur: "blanc", souligne: true }), "HUG");
+    focus[clesPied[k]] = l;
+  }
+  ajouter(pied, await texte(CONTENU.pied.mention, { couleur: "pied-texte", aligner: "CENTER" }), "HUG");
+
+  // Le lien d'évitement : hors de l'écran, ramené en haut à gauche au focus. Caché ici, montré sur les frames de tabulation.
+  const evitement = ajouter(f, cadre("lien d'évitement", { marge: ["e-2", "e-4"], fond: "fond", bordure: "accent", epaisseur: 2, rayon: "rayon-m" }));
+  evitement.layoutPositioning = "ABSOLUTE";
+  evitement.x = 16;
+  evitement.y = 16;
+  ajouter(evitement, await texte(CONTENU.evitement, { couleur: "accent", souligne: true }), "HUG");
+  evitement.visible = false;
+  focus.evitement = evitement;
+
+  return { frame: f, focus };
+}
+
+// Les photos du site, converties en PNG par l'iframe (ui.html) ; sans réseau, des cadres gris
+async function chargerImages() {
+  const urls = [CONTENU.accroche.image.url].concat(CONTENU.formateurs.items.map((fo) => fo.photo));
+  /** @type {Array<{url: string, octets?: Uint8Array, erreur?: string}> | null} */
+  const resultats = await new Promise((resoudre) => {
+    /** @param {any} message */
+    const ecouter = (message) => {
+      if (!message || message.type !== "images") return;
+      clearTimeout(minuterie);
+      figma.ui.off("message", ecouter);
+      resoudre(message.resultats);
+    };
+    const minuterie = setTimeout(() => {
+      figma.ui.off("message", ecouter);
+      resoudre(null);
+    }, ETAT.options.delaiImagesMs);
+    figma.ui.on("message", ecouter);
+    figma.ui.postMessage({ type: "charger-images", urls });
+  });
+  if (!resultats) {
+    ETAT.rapport.push("⚠ Images : pas de réponse du réseau, cadres gris à la place des photos.");
+    return;
+  }
+  for (const r of resultats) {
+    if (r.octets) ETAT.images[r.url] = figma.createImage(r.octets).hash;
+    else ETAT.rapport.push(`⚠ Image indisponible (${r.url}) : ${r.erreur}`);
+  }
+}
+
+// Les trois paliers côte à côte (cours, 4.3, règle 3 : une maquette en une seule largeur ne dit rien du responsive)
+async function creerLanding() {
+  let x = 0;
+  for (const largeur of /** @type {Array<360 | 768 | 1280>} */ ([360, 768, 1280])) {
+    const { frame } = await construireLanding(largeur);
+    frame.x = x;
+    frame.y = 0;
+    x += largeur + 200;
+  }
+}
+
+// Les cas limites (cours, 4.3, règle 6) : ce qui casse une mise en page
+async function creerCasLimites() {
+  await legende("Cas limites", "Un titre de trois lignes, un catalogue vide, des champs en erreur : ce sont eux qui cassent une mise en page.");
+  const jonny = MAQUETTE.jonny;
+  const bloc = cadre("cas limites", { sens: "HORIZONTAL", ecart: "e-12" });
+
+  const long = ajouter(bloc, cadre("titre long", { ecart: "e-3" }));
+  ajouter(long, await texte("Titre de trois lignes, à 360 px", { style: "t-s/600" }), "HUG");
+  ajouter(long, carteAtelier(Object.assign({}, CONTENU.ateliers.items[1], { titre: MAQUETTE.titreLong })), 328);
+
+  const vide = ajouter(bloc, cadre("catalogue vide", { ecart: "e-3" }));
+  ajouter(vide, await texte("Catalogue vide : aucun atelier ne correspond aux filtres (palier 768)", { style: "t-s/600" }), "HUG");
+  ajouter(vide, await sectionAteliers(PALIERS[768], {}, { vide: true }), 768);
+
+  const erreurs = ajouter(bloc, cadre("champ en erreur", { ecart: "e-4" }));
+  ajouter(erreurs, await texte("Champs en erreur : message écrit, bordure 2 px, saisie conservée", { style: "t-s/600" }), "HUG");
+  ajouter(erreurs, champ("erreur", CONTENU.inscription.nom, null, "", "champ nom en erreur", CONTENU.messages.nomManquant), 328);
+  ajouter(erreurs, champ("erreur", CONTENU.inscription.courriel, CONTENU.inscription.aideCourriel, jonny.courrielFaute, "champ adresse en erreur"), 328);
+  placer(bloc);
+}
+
 // Le rapport de construction, en haut de la page 1 : à recopier si quelque chose a échoué
 /** @param {string[]} lignes */
 async function ecrireRapport(lignes) {
@@ -1017,6 +1346,9 @@ const ETAPES = [
   ["Composant champ", "systeme", creerChamp],
   ["Composant carte d'atelier", "systeme", creerCarteAtelier],
   ["Composant modale", "systeme", creerModale],
+  ["Cas limites", "systeme", creerCasLimites],
+  ["Images", null, chargerImages],
+  ["Landing aux trois paliers", "landing", creerLanding],
 ];
 
 /** @param {{delaiImagesMs?: number}} [options] @returns {Promise<string[]>} */
