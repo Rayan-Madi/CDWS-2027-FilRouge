@@ -113,10 +113,33 @@ function creerSimulateur(options = {}) {
       };
       effacer(this);
     }
+    // Relevé dans le vrai Figma (sonde du 30/09/2026) : sur un cadre en auto-layout, resize() ne fige
+    // que l'axe dont la taille CHANGE. resize(200, hauteurActuelle) garde la hauteur en HUG.
     resize(largeur, hauteur) {
       if (!(largeur >= 0.01) || !(hauteur >= 0.01)) throw new Error(`resize: dimensions invalides ${largeur} × ${hauteur} (${this.name})`);
+      if (this.type !== "TEXT" && largeur !== this._l) this._sizingH = "FIXED";
+      if (this.type !== "TEXT" && hauteur !== this._h) this._sizingV = "FIXED";
       this._l = largeur;
       this._h = hauteur;
+    }
+    // primaryAxisSizingMode / counterAxisSizingMode : l'autre nom des réglages HUG / FIXED des deux axes
+    _axe(primaire) {
+      const horizontal = this.layoutMode === "HORIZONTAL";
+      return primaire === horizontal ? "_sizingH" : "_sizingV";
+    }
+    get primaryAxisSizingMode() {
+      return this[this._axe(true)] === "HUG" ? "AUTO" : "FIXED";
+    }
+    set primaryAxisSizingMode(v) {
+      if (v !== "AUTO" && v !== "FIXED") throw new Error(`primaryAxisSizingMode: Expected 'FIXED' | 'AUTO', received '${v}'`);
+      this[this._axe(true)] = v === "AUTO" ? "HUG" : "FIXED";
+    }
+    get counterAxisSizingMode() {
+      return this[this._axe(false)] === "HUG" ? "AUTO" : "FIXED";
+    }
+    set counterAxisSizingMode(v) {
+      if (v !== "AUTO" && v !== "FIXED") throw new Error(`counterAxisSizingMode: Expected 'FIXED' | 'AUTO', received '${v}'`);
+      this[this._axe(false)] = v === "AUTO" ? "HUG" : "FIXED";
     }
     setPluginData(k, v) {
       this._plugin[k] = v;
@@ -139,6 +162,8 @@ function creerSimulateur(options = {}) {
     set layoutSizingHorizontal(v) {
       this._verifierDimensionnement(v, "horizontal");
       this._sizingH = v;
+      // Relevé dans le vrai Figma : un texte en FILL passe tout seul en hauteur automatique
+      if (this.type === "TEXT" && v === "FILL") this._textAutoResize = "HEIGHT";
     }
     get layoutSizingVertical() {
       return this._sizingV;
@@ -317,6 +342,8 @@ function creerSimulateur(options = {}) {
     set fontSize(v) {
       verifierPolice(this, this._police);
       this._taille = v;
+      // Relevé dans le vrai Figma : une taille posée sur un texte stylé DÉTACHE le style
+      this.textStyleId = "";
     }
     async setTextStyleIdAsync(id) {
       const style = stylesTexte.find((s) => s.id === id);
