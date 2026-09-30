@@ -8,7 +8,7 @@ Le fichier Figma est construit par un plugin du dépôt, [`outils/figma-skillhub
 
 | Exigence du TP 3 | Dans le fichier Figma | Vérifié par |
 |---|---|---|
-| 1. Jetons : tailles de texte, pas d'espacement, couleurs, **ratio mesuré à côté** | Page 1 : 31 variables (collection `SkillHub`) aux noms du CSS, avec la syntaxe de code `var(--…)` ; la description de chaque couleur donne ses ratios ; planche des jetons ; 10 styles de texte liés aux variables de taille | `tests/jetons.test.js` : jetons == `:root`, ratios == [`fm02-contrastes.md`](fm02-contrastes.md) |
+| 1. Jetons : tailles de texte, pas d'espacement, couleurs, **ratio mesuré à côté** | Page 1 : 31 variables (collection `SkillHub`) aux noms du CSS, avec la syntaxe de code `var(--…)` ; la description de chaque couleur donne ses ratios ; planche des jetons ; 12 styles de texte (10 crans liés aux variables de taille, 2 titres fluides à 768) | `tests/jetons.test.js` : jetons == `:root`, ratios == [`fm02-contrastes.md`](fm02-contrastes.md) |
 | 2. Quatre composants et leurs variantes, six états pour les interactifs | Page 1 : `bouton` (principal, secondaire × repos, survol, focus, actif, désactivé, chargement), `champ` (texte, liste × repos, survol, focus, rempli, erreur, désactivé), `carte-atelier`, `modale` (saisie, erreur, envoi, confirmée) | `tests/construction.test.js` |
 | 3. La landing aux **trois paliers**, en auto-layout, contenu réel | Page 2 : frames `360`, `768`, `1280`, grille de colonnes, vraies photos, vrais titres et vrais prix | `tests/contenu.test.js` |
 | 4. Cas limites : titre de trois lignes, catalogue vide, champ en erreur | Page 1, bloc « Cas limites » | `tests/construction.test.js` |

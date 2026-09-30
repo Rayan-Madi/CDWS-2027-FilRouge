@@ -290,6 +290,41 @@ test("le prototype joue le parcours de Jonny, de « Réserver » à la confirmat
   assert.equal(nomme(nomme(corrigee, "champ adresse"), "valeur").characters, "jonny@gmail.com");
 });
 
+/* ---------- Règles relevées dans le vrai Figma (sondes du 30/09/2026) ---------- */
+
+test("les cadres qui épousent leur contenu le restent après avoir reçu une largeur", () => {
+  for (const v of jeu("champ").children) assert.equal(v.layoutSizingVertical, "HUG", v.name);
+  for (const v of jeu("modale").children) assert.equal(v.layoutSizingVertical, "HUG", v.name);
+  assert.equal(jeu("carte-atelier").layoutSizingVertical, "HUG");
+  for (const largeur of [360, 768, 1280]) {
+    assert.equal(frameLanding(largeur).layoutSizingVertical, "HUG", `frame ${largeur}`);
+    assert.equal(nomme(frameLanding(largeur), "colonne").layoutSizingVertical, "HUG", `colonne à ${largeur}`);
+  }
+});
+
+test("chaque texte de la landing garde un style, y compris les titres fluides à 768", () => {
+  for (const largeur of [360, 768, 1280]) {
+    const sansStyle = tous(frameLanding(largeur), (n) => n.type === "TEXT" && !n.textStyleId).map((n) => n.name);
+    assert.deepEqual(sansStyle, [], `textes sans style à ${largeur}`);
+  }
+});
+
+test("à 360, les textes et les rangées longs passent à la ligne au lieu de déborder", () => {
+  const f = frameLanding(360);
+  assert.equal(nomme(f, "mention du pied").layoutSizingHorizontal, "FILL");
+  assert.equal(nomme(f, "liens du pied").layoutSizingHorizontal, "FILL");
+  assert.equal(nomme(f, "filtrer les ateliers").layoutSizingHorizontal, "FILL");
+  const cgu = nomme(f, `option ${plugin.CONTENU.inscription.cgu}`);
+  assert.equal(cgu.layoutSizingHorizontal, "FILL");
+  assert.equal(nomme(cgu, "libellé").layoutSizingHorizontal, "FILL");
+});
+
+test("même quand les polices manquent, le plugin se ferme et rend son rapport", async () => {
+  const sansPolice = await construire({ polices: [] });
+  assert.notEqual(sansPolice.journal.fermeture, null, "closePlugin n'a pas été appelé");
+  assert.ok(sansPolice.rapport.some((l) => l.startsWith("✗ Polices")), "l'échec des polices doit figurer au rapport");
+});
+
 test("une étape en panne n'arrête pas les suivantes, et le rapport la nomme", async () => {
   const panne = await construire({ panne: "createNodeFromSvg" });
   const ligne = (debut) => panne.rapport.find((l) => l.slice(2).startsWith(debut));

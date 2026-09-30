@@ -8,7 +8,10 @@
      page 3 : le prototype du parcours de Jonny (TP 1)
    Ordre du fichier : données · outils · primitives Figma · constructeurs · point d'entrée.
    Pas d'étape de construction : Figma lit ce fichier tel quel. Syntaxe prudente pour le bac à sable
-   de Figma : ni ?. ni ?? ni décomposition d'objet (un test y veille).
+   de Figma : ni ?. ni ?? ni { ...objet } (un test y veille) ; la déstructuration ES6 est permise.
+   Comportements vérifiés dans le vrai Figma par deux sondes (30/09/2026) : resize() ne fige que l'axe
+   dont la taille change ; une taille posée sur un texte stylé détache le style ; les réactions sur un
+   calque d'instance imbriquée sont acceptées ; timeout en millisecondes, duration en secondes.
    ========================================================================== */
 
 /* ---------- 1. Données ---------- */
@@ -511,7 +514,7 @@ function ajouter(parent, enfant, largeur, hauteur) {
 /**
  * Un texte posé avec un style de l'échelle et une couleur liée
  * @param {string} contenu
- * @param {{ style?: string, couleur?: string, taille?: number, aligner?: "LEFT" | "CENTER" | "RIGHT", souligne?: boolean, nom?: string }} [o]
+ * @param {{ style?: string, couleur?: string, aligner?: "LEFT" | "CENTER" | "RIGHT", souligne?: boolean, nom?: string }} [o]
  * @returns {Promise<TextNode>}
  */
 async function texte(contenu, o) {
@@ -521,8 +524,6 @@ async function texte(contenu, o) {
   const t = figma.createText();
   await t.setTextStyleIdAsync(style.id);
   t.characters = contenu;
-  // Titres fluides (clamp() du CSS) : la taille calculée au palier remplace celle du style
-  if (r.taille) t.fontSize = r.taille;
   t.fills = [peinture(r.couleur || "texte")];
   if (r.aligner) t.textAlignHorizontal = r.aligner;
   if (r.souligne) t.textDecoration = "UNDERLINE";
@@ -601,7 +602,36 @@ const STYLES_TEXTE = [
   ["t-l", 600], ["t-xl", 600], ["t-2xl", 600], ["t-3xl", 600],
 ];
 
+// Les titres suivent un clamp() : à 768, la taille calculée tombe entre deux crans. Elle reçoit son propre
+// style (« clamp/46,4 ») plutôt qu'une taille posée à la main, qui détacherait le texte de son style.
+/** @param {number} px @returns {string} */
+function styleTitre(px) {
+  const exact = Object.keys(JETONS.typo).find((c) => Math.abs(valeur(c) - px) < 0.02);
+  return exact ? `${exact}/600` : `clamp/${formaterNombre(px)}`;
+}
+
+/** @returns {number[]} les tailles de titre des paliers qui ne tombent sur aucun cran */
+function taillesFluides() {
+  /** @type {number[]} */
+  const tailles = [];
+  for (const p of [PALIERS[360], PALIERS[768], PALIERS[1280]]) {
+    for (const px of [p.h1, p.h2]) {
+      if (styleTitre(px).startsWith("clamp/") && tailles.indexOf(px) === -1) tailles.push(px);
+    }
+  }
+  return tailles;
+}
+
 async function creerStylesTexte() {
+  for (const px of taillesFluides()) {
+    const style = figma.createTextStyle();
+    style.name = styleTitre(px);
+    style.fontName = ETAT.police.gras;
+    style.fontSize = px;
+    style.lineHeight = { unit: "PERCENT", value: 120 };
+    style.description = `Titre fluide : un clamp() de skillhub.css calculé à 768 px (${formaterNombre(px)} px), entre deux crans de l'échelle`;
+    ETAT.styles[style.name] = style;
+  }
   for (const [cran, graisse] of STYLES_TEXTE) {
     const style = figma.createTextStyle();
     style.name = `${cran}/${graisse}`;
@@ -998,20 +1028,9 @@ async function creerPlanche() {
 /** @typedef {typeof PALIERS[360]} Palier */
 /** @typedef {Record<string, SceneNode>} Focusables les éléments focalisables, rangés par clé d'ORDRE_TABULATION */
 
-// Un titre fluide : le style du cran s'il tombe juste, sinon le cran inférieur et la taille calculée du clamp()
-/** @param {number} px @returns {{ style: string, taille?: number }} */
-function styleTitre(px) {
-  const crans = Object.keys(JETONS.typo);
-  const exact = crans.find((c) => Math.abs(valeur(c) - px) < 0.02);
-  if (exact) return { style: `${exact}/600` };
-  const inferieur = crans.filter((c) => valeur(c) < px).pop() || "t-m";
-  return { style: `${inferieur}/600`, taille: Math.round(px * 100) / 100 };
-}
-
 /** @param {string} contenu @param {number} px @param {string} nom */
 async function titre(contenu, px, nom) {
-  const s = styleTitre(px);
-  return texte(contenu, { style: s.style, taille: s.taille, nom });
+  return texte(contenu, { style: styleTitre(px), nom });
 }
 
 // La largeur d'une colonne d'une grille auto-fit : minmax(16rem, 1fr), gouttière --e-6
@@ -1049,14 +1068,14 @@ function section(nom, p, teinte) {
   return cadre(nom, { marge: [p.sectionY, p.marge], ecart: "e-6", fond: teinte ? "fond-teinte" : "fond" });
 }
 
-/** @param {string} libelle @param {boolean} cochee */
-async function caseACocher(libelle, cochee) {
+/** @param {string} libelle @param {boolean} cochee @param {boolean} [pleineLargeur] le libellé passe à la ligne */
+async function caseACocher(libelle, cochee, pleineLargeur) {
   const option = cadre(`option ${libelle}`, { sens: "HORIZONTAL", ecart: "e-2", travers: "CENTER" });
   regler(option, "minHeight", "cible");
   // 24 px : la taille minimale d'une cible (WCAG 2.5.8)
   const boite = ajouter(option, cadre("case", { fond: cochee ? "accent" : "fond", bordure: cochee ? "accent" : "texte-doux", epaisseur: 2, rayon: 4, axe: "CENTER", travers: "CENTER" }), 24, 24);
   if (cochee) ajouter(boite, icone("coche"));
-  ajouter(option, await texte(libelle, { nom: "libellé" }), "HUG");
+  ajouter(option, await texte(libelle, { nom: "libellé" }), pleineLargeur ? "FILL" : "HUG");
   return { option, boite };
 }
 
@@ -1069,9 +1088,15 @@ async function sectionAteliers(p, focus, o) {
   const s = section("section ateliers", p, true);
   ajouter(s, await titre(CONTENU.ateliers.titre, p.h2, "titre ateliers"), "FILL");
 
-  // Les filtres : affichés par le JavaScript, demandés par les deux personas (soir, débutants)
-  const filtres = ajouter(s, cadre("filtres", { sens: "HORIZONTAL", retour: true, ecart: "e-6", ecartLignes: "e-2", axe: "SPACE_BETWEEN", travers: "CENTER" }), "FILL");
-  const choix = ajouter(filtres, cadre("filtrer les ateliers", { sens: "HORIZONTAL", retour: true, ecart: "e-6", ecartLignes: "e-2", travers: "CENTER" }));
+  // Les filtres : affichés par le JavaScript, demandés par les deux personas (soir, débutants).
+  // À 360, le résultat passe sous les cases ; dès 48em, il se range à droite (justify-content: space-between).
+  const etroit = p.navigation === "menu";
+  const filtres = ajouter(
+    s,
+    cadre("filtres", etroit ? { ecart: "e-2" } : { sens: "HORIZONTAL", retour: true, ecart: "e-6", ecartLignes: "e-2", axe: "SPACE_BETWEEN", travers: "CENTER" }),
+    "FILL"
+  );
+  const choix = ajouter(filtres, cadre("filtrer les ateliers", { sens: "HORIZONTAL", retour: true, ecart: "e-6", ecartLignes: "e-2", travers: "CENTER" }), "FILL");
   ajouter(choix, await texte(CONTENU.ateliers.filtres.legende, { style: "t-s/600", nom: "légende" }), "HUG");
   const soir = await caseACocher(CONTENU.ateliers.filtres.options[0], vide);
   const debutants = await caseACocher(CONTENU.ateliers.filtres.options[1], vide);
@@ -1227,7 +1252,7 @@ async function construireLanding(largeur, nom) {
   focus["champ-nom"] = zone(nomChamp);
   focus["champ-courriel"] = zone(courriel);
   focus["champ-profil"] = zone(profil);
-  const cgu = await caseACocher(i.cgu, false);
+  const cgu = await caseACocher(i.cgu, false, true);
   ajouter(formulaire, cgu.option, "FILL");
   focus["case-cgu"] = cgu.boite;
   const conditions = ajouter(formulaire, cadre("lire les conditions", { sens: "HORIZONTAL", ecart: "e-2", marge: ["e-2", 0], travers: "CENTER" }));
@@ -1238,14 +1263,14 @@ async function construireLanding(largeur, nom) {
 
   // Pied de page
   const pied = ajouter(f, cadre("pied de page", { marge: ["e-8", p.marge], ecart: "e-4", fond: "texte", travers: "CENTER" }), "FILL");
-  const liens = ajouter(pied, cadre("liens du pied", { sens: "HORIZONTAL", retour: true, ecart: "e-6", ecartLignes: "e-2", axe: "CENTER" }));
+  const liens = ajouter(pied, cadre("liens du pied", { sens: "HORIZONTAL", retour: true, ecart: "e-6", ecartLignes: "e-2", axe: "CENTER" }), "FILL");
   const clesPied = ["pied-haut", "pied-ateliers", "pied-inscription"];
   for (let k = 0; k < CONTENU.pied.liens.length; k++) {
     const l = ajouter(liens, cadre(`lien ${CONTENU.pied.liens[k]} (pied)`, { marge: ["e-2", 0] }));
     ajouter(l, await texte(CONTENU.pied.liens[k], { couleur: "blanc", souligne: true }), "HUG");
     focus[clesPied[k]] = l;
   }
-  ajouter(pied, await texte(CONTENU.pied.mention, { couleur: "pied-texte", aligner: "CENTER" }), "HUG");
+  ajouter(pied, await texte(CONTENU.pied.mention, { couleur: "pied-texte", aligner: "CENTER", nom: "mention du pied" }), "FILL");
 
   // Le lien d'évitement : hors de l'écran, ramené en haut à gauche au focus. Caché ici, montré sur les frames de tabulation.
   const evitement = ajouter(f, cadre("lien d'évitement", { marge: ["e-2", "e-4"], fond: "fond", bordure: "accent", epaisseur: 2, rayon: "rayon-m" }));
@@ -1359,8 +1384,7 @@ async function creerTabulation() {
 
 /* ----- Le prototype du parcours de Jonny (TP 1) ----- */
 
-// Une transition courte. L'unité de duration n'est pas documentée : 0,3 fait 300 ms si c'est la seconde,
-// un fondu instantané si c'est la milliseconde. Dans les deux cas, le parcours reste jouable.
+// Une transition courte : duration est en secondes (relu dans le vrai Figma : 0,3), timeout en millisecondes.
 /** @type {Transition} */
 const FONDU = { type: "DISSOLVE", easing: { type: "EASE_OUT" }, duration: 0.3 };
 
@@ -1471,6 +1495,7 @@ async function creerCasLimites() {
 /** @param {string[]} lignes */
 async function ecrireRapport(lignes) {
   await figma.setCurrentPageAsync(ETAT.pages.systeme);
+  await figma.loadFontAsync({ family: "Inter", style: "Regular" }); // même si l'étape Polices a échoué
   const t = figma.createText();
   t.fontName = { family: "Inter", style: "Regular" };
   t.characters = ["Rapport du plugin SkillHub — " + new Date().toLocaleString("fr-FR")].concat(lignes).join("\n");
@@ -1537,8 +1562,13 @@ async function main(options) {
   }
 
   const echecs = ETAT.rapport.filter((l) => l.startsWith("✗")).length;
-  await ecrireRapport(ETAT.rapport);
-  await figma.setCurrentPageAsync(ETAT.pages.systeme);
+  // Le plugin se ferme toujours, même si le rapport ne peut pas être écrit (il reste alors dans la console)
+  try {
+    await ecrireRapport(ETAT.rapport);
+    await figma.setCurrentPageAsync(ETAT.pages.systeme);
+  } catch (erreur) {
+    console.error("SkillHub : rapport non écrit", erreur, ETAT.rapport);
+  }
   figma.closePlugin(
     echecs === 0
       ? `SkillHub : ${ETAPES.length} étapes sur ${ETAPES.length} réussies.`
