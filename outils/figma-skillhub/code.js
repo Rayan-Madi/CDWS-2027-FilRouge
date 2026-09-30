@@ -349,6 +349,7 @@ function formaterNombre(n) {
  *   images: Record<string, string>,
  *   pages: Record<string, PageNode>,
  *   rapport: string[],
+ *   curseur: number,
  *   options: { delaiImagesMs: number }
  * }} Etat
  */
@@ -363,6 +364,7 @@ function nouvelEtat(options) {
     images: {},
     pages: {},
     rapport: [],
+    curseur: 0,
     options: Object.assign({ delaiImagesMs: 20000 }, options || {}),
   };
 }
@@ -605,6 +607,202 @@ async function creerStylesTexte() {
   }
 }
 
+/* ----- Mise en page de la page 1 : les blocs s'empilent de haut en bas ----- */
+
+/** @param {SceneNode} noeud @param {number} [ecart] */
+function placer(noeud, ecart) {
+  noeud.x = 0;
+  noeud.y = ETAT.curseur;
+  ETAT.curseur += noeud.height + (ecart === undefined ? 120 : ecart);
+}
+
+// Le titre d'un bloc de la page 1, et la règle du cours qu'il illustre
+/** @param {string} titre @param {string} [detail] */
+async function legende(titre, detail) {
+  const bloc = cadre(`légende · ${titre}`, { ecart: "e-1" });
+  ajouter(bloc, await texte(titre, { style: "t-xl/600" }), "HUG");
+  if (detail) ajouter(bloc, await texte(detail, { style: "t-s/400", couleur: "texte-doux" }), 720);
+  placer(bloc, 24);
+}
+
+// Les variantes d'un jeu, rangées en grille : une ligne par type, une colonne par état
+/** @param {ComponentSetNode} jeu @param {number} colonnes */
+function arrangerVariantes(jeu, colonnes) {
+  const variantes = jeu.children;
+  const largeur = Math.max.apply(null, variantes.map((v) => v.width));
+  const hauteur = Math.max.apply(null, variantes.map((v) => v.height));
+  variantes.forEach((v, i) => {
+    v.x = 40 + (i % colonnes) * (largeur + 48);
+    v.y = 40 + Math.floor(i / colonnes) * (hauteur + 48);
+  });
+  const lignes = Math.ceil(variantes.length / colonnes);
+  jeu.resize(80 + colonnes * largeur + (colonnes - 1) * 48, 80 + lignes * hauteur + (lignes - 1) * 48);
+}
+
+// L'anneau de focus : 3 px d'accent, posé à 3 px du bord (outline-offset) donc SUR LE FOND, pas sur le composant.
+// Rectangle en position absolue qui déborde de 6 px et suit le composant quand il change de taille.
+/** @param {FrameNode | ComponentNode} porteur @param {string | number} rayon */
+function anneauDeFocus(porteur, rayon) {
+  const anneau = figma.createRectangle();
+  anneau.name = "anneau de focus";
+  porteur.appendChild(anneau);
+  anneau.layoutPositioning = "ABSOLUTE";
+  anneau.x = -6;
+  anneau.y = -6;
+  anneau.resize(porteur.width + 12, porteur.height + 12);
+  anneau.constraints = { horizontal: "STRETCH", vertical: "STRETCH" };
+  anneau.fills = [];
+  anneau.strokes = [peinture("accent")];
+  anneau.strokeWeight = 3;
+  anneau.strokeAlign = "INSIDE";
+  regler(anneau, "cornerRadius", rayon);
+  return anneau;
+}
+
+/** @param {string} nomJeu @param {Record<string, string>} proprietes @returns {InstanceNode} */
+function instance(nomJeu, proprietes) {
+  const jeu = /** @type {ComponentSetNode} */ (ETAT.composants[nomJeu].jeu);
+  const cible = jeu.children.find((c) => {
+    const vp = /** @type {ComponentNode} */ (c).variantProperties || {};
+    return Object.keys(proprietes).every((k) => vp[k] === proprietes[k]);
+  });
+  if (!cible) throw new Error(`${nomJeu} : aucune variante ${JSON.stringify(proprietes)}`);
+  return /** @type {ComponentNode} */ (cible).createInstance();
+}
+
+const ETATS_BOUTON = ["repos", "survol", "focus", "actif", "désactivé", "chargement"];
+
+// Composant 1 : le bouton (.action). Six états, parce qu'une maquette qui n'en montre qu'un
+// laisse l'intégrateur inventer les cinq autres (cours, 3.4).
+async function creerBouton() {
+  await legende("Bouton — 2 types × 6 états", "Repos, survol, focus (anneau de 3 px posé sur le fond), actif, désactivé (le libellé dit pourquoi), chargement (« … en cours »). Hauteur ≥ 44 px (--cible).");
+  /** @type {ComponentNode[]} */
+  const variantes = [];
+  /** @type {TextNode[]} */
+  const libellesLies = [];
+
+  for (const type of ["principal", "secondaire"]) {
+    for (const etat of ETATS_BOUTON) {
+      const inactif = etat === "désactivé" || etat === "chargement";
+      const appuye = etat === "survol" || etat === "focus" || etat === "actif";
+      const couleur = inactif ? "texte-doux" : appuye ? "accent-fonce" : "accent";
+      const c = composant(`type=${type}, état=${etat}`, {
+        sens: "HORIZONTAL",
+        marge: ["e-3", "e-6"],
+        rayon: "pilule",
+        axe: "CENTER",
+        travers: "CENTER",
+        bordure: couleur,
+        epaisseur: 2,
+      });
+      // Le secondaire au repos est transparent, bordé d'accent ; tous les autres états sont pleins
+      c.fills = type === "secondaire" && etat === "repos" ? [] : [peinture(couleur)];
+      regler(c, "minHeight", "cible");
+      const contenu = etat === "chargement" ? CONTENU.messages.chargement : etat === "désactivé" ? MAQUETTE.desactive : "Réserver";
+      const libelle = await texte(contenu, {
+        style: "t-s/600",
+        couleur: type === "secondaire" && etat === "repos" ? "accent" : "blanc",
+        nom: "libellé",
+      });
+      ajouter(c, libelle, "HUG");
+      if (!inactif) libellesLies.push(libelle);
+      if (etat === "actif") {
+        c.effects = [{ type: "INNER_SHADOW", color: { r: 0, g: 0, b: 0, a: 0.25 }, offset: { x: 0, y: 2 }, radius: 4, spread: 0, visible: true, blendMode: "NORMAL" }];
+      }
+      if (etat === "focus") anneauDeFocus(c, "pilule");
+      c.description = {
+        repos: ".action — fond --accent, texte blanc (6,66:1)",
+        survol: ".action:hover — --accent-fonce (9,35:1), soulevé d'1 px dans le code",
+        focus: ".action:focus-visible — comme le survol + outline 3 px --accent, offset 3 px (6,04:1 sur le fond)",
+        actif: ".action:active — enfoncé d'1 px pendant l'appui (translateY dans le code)",
+        désactivé: ".action:disabled — fond --texte-doux (7,52:1) ; le libellé dit pourquoi",
+        chargement: ".action:disabled pendant l'envoi — « … en cours », pas de double envoi",
+      }[etat] || "";
+      variantes.push(c);
+    }
+  }
+
+  const jeu = figma.combineAsVariants(variantes, figma.currentPage);
+  jeu.name = "bouton";
+  jeu.description = "Composant 1 — .action et .action--secondaire (skillhub.css). Six états par type.";
+  const libelle = jeu.addComponentProperty("libellé", "TEXT", "Réserver");
+  libellesLies.forEach((t) => (t.componentPropertyReferences = { characters: libelle }));
+  arrangerVariantes(jeu, ETATS_BOUTON.length);
+  placer(jeu);
+  ETAT.composants.bouton = { jeu, libelle };
+}
+
+const ETATS_CHAMP = ["repos", "survol", "focus", "rempli", "erreur", "désactivé"];
+
+// Composant 2 : le champ (.champ). L'erreur, c'est une bordure de 2 px ET un message écrit :
+// jamais la couleur seule (WCAG 1.4.1).
+async function creerChamp() {
+  await legende("Champ — 2 types × 6 états", "Libellé toujours visible, bordure --texte-doux (7,52:1), erreur = bordure 2 px + message qui dit quoi faire, saisie conservée.");
+  /** @type {ComponentNode[]} */
+  const variantes = [];
+  /** @type {Array<{libelle: TextNode, aide: TextNode}>} */
+  const aLier = [];
+
+  for (const type of ["texte", "liste"]) {
+    for (const etat of ETATS_CHAMP) {
+      const c = composant(`type=${type}, état=${etat}`, { ecart: "e-1" });
+      c.counterAxisSizingMode = "FIXED";
+      c.resize(300, c.height);
+
+      const libelle = ajouter(c, await texte(type === "liste" ? CONTENU.inscription.profil : CONTENU.inscription.courriel, { style: "t-s/600", nom: "libellé" }), "FILL");
+
+      const bord = etat === "erreur" ? "erreur" : etat === "survol" ? "texte" : etat === "désactivé" ? "bordure" : "texte-doux";
+      const zone = ajouter(
+        c,
+        cadre("zone de saisie", {
+          sens: "HORIZONTAL",
+          marge: ["e-2", "e-3"],
+          ecart: "e-2",
+          travers: "CENTER",
+          fond: etat === "désactivé" ? "fond-teinte" : "fond",
+          bordure: bord,
+          epaisseur: etat === "erreur" ? 2 : 1,
+          rayon: "rayon-s",
+        }),
+        "FILL"
+      );
+      regler(zone, "minHeight", "cible");
+      /** @type {Record<string, string>} */
+      const valeurs =
+        type === "liste"
+          ? { repos: "Choisissez", survol: "Choisissez", focus: "Choisissez", rempli: "En reconversion", erreur: "Choisissez", désactivé: "Choisissez" }
+          : { repos: "", survol: "", focus: "Jonny", rempli: MAQUETTE.jonny.nom, erreur: MAQUETTE.jonny.courrielFaute, désactivé: "" };
+      ajouter(zone, await texte(valeurs[etat], { couleur: etat === "désactivé" ? "texte-doux" : "texte", nom: "valeur" }), "FILL");
+      if (type === "liste") ajouter(zone, icone("chevron"));
+      if (etat === "focus") anneauDeFocus(zone, 14);
+
+      if (type === "texte") {
+        const aide = ajouter(c, await texte(CONTENU.inscription.aideCourriel, { style: "t-xs/400", couleur: "texte-doux", nom: "aide" }), "FILL");
+        aLier.push({ libelle, aide });
+      }
+      const message = type === "liste" ? "Choisissez votre profil." : CONTENU.messages.courrielInvalide;
+      const erreur = ajouter(c, await texte(message, { style: "t-xs/600", couleur: "erreur", nom: "message d'erreur" }), "FILL");
+      erreur.visible = etat === "erreur";
+      c.description = `.champ — ${etat}${etat === "erreur" ? " : aria-invalid=\"true\", message relié par aria-describedby" : ""}`;
+      variantes.push(c);
+    }
+  }
+
+  const jeu = figma.combineAsVariants(variantes, figma.currentPage);
+  jeu.name = "champ";
+  jeu.description = "Composant 2 — .champ (skillhub.css). Le type « liste » est le <select> « Je suis ».";
+  const libelle = jeu.addComponentProperty("libellé", "TEXT", CONTENU.inscription.courriel);
+  const aide = jeu.addComponentProperty("aide", "BOOLEAN", true);
+  const texteAide = jeu.addComponentProperty("texte d'aide", "TEXT", CONTENU.inscription.aideCourriel);
+  for (const n of aLier) {
+    n.libelle.componentPropertyReferences = { characters: libelle };
+    n.aide.componentPropertyReferences = { visible: aide, characters: texteAide };
+  }
+  arrangerVariantes(jeu, ETATS_CHAMP.length);
+  placer(jeu);
+  ETAT.composants.champ = { jeu, libelle, aide, texteAide };
+}
+
 // Le rapport de construction, en haut de la page 1 : à recopier si quelque chose a échoué
 /** @param {string[]} lignes */
 async function ecrireRapport(lignes) {
@@ -628,6 +826,8 @@ const ETAPES = [
   ["Polices", null, chargerPolices],
   ["Variables", null, creerVariables],
   ["Styles de texte", null, creerStylesTexte],
+  ["Composant bouton", "systeme", creerBouton],
+  ["Composant champ", "systeme", creerChamp],
 ];
 
 /** @param {{delaiImagesMs?: number}} [options] @returns {Promise<string[]>} */
