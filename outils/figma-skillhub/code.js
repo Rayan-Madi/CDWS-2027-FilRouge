@@ -1355,6 +1355,95 @@ async function creerTabulation() {
   }
 }
 
+/* ----- Le prototype du parcours de Jonny (TP 1) ----- */
+
+// Une transition courte. L'unité de duration n'est pas documentée : 0,3 fait 300 ms si c'est la seconde,
+// un fondu instantané si c'est la milliseconde. Dans les deux cas, le parcours reste jouable.
+/** @type {Transition} */
+const FONDU = { type: "DISSOLVE", easing: { type: "EASE_OUT" }, duration: 0.3 };
+
+/** @param {SceneNode} destination @param {"NAVIGATE" | "SWAP" | "OVERLAY"} navigation @returns {Action} */
+function aller(destination, navigation) {
+  return { type: "NODE", destinationId: destination.id, navigation, transition: FONDU, preserveScrollPosition: false };
+}
+
+/** @type {Action} */
+const FERMER = { type: "CLOSE" };
+
+// Pose une réaction ; si Figma la refuse sur un calque d'instance, on la pose sur le parent et on le dit
+/** @param {SceneNode} noeud @param {SceneNode | null} secours @param {Reaction[]} reactions */
+async function relier(noeud, secours, reactions) {
+  try {
+    await /** @type {FrameNode} */ (noeud).setReactionsAsync(reactions);
+  } catch (erreur) {
+    if (!secours) throw erreur;
+    await /** @type {FrameNode} */ (secours).setReactionsAsync(reactions);
+    ETAT.rapport.push(`⚠ Prototype : réaction posée sur « ${secours.name} » au lieu de « ${noeud.name} »`);
+  }
+}
+
+/** @param {SceneNode} ecran @param {string} nom @returns {SceneNode} */
+function dans(ecran, nom) {
+  const n = /** @type {FrameNode} */ (ecran).findOne((x) => x.name === nom);
+  if (!n) throw new Error(`${ecran.name} : « ${nom} » introuvable`);
+  return n;
+}
+
+// Landing 360, puis cinq écrans de modale (360 × 800, voile compris) reliés comme dans skillhub.js
+async function creerPrototype() {
+  const page3 = ETAT.pages.parcours;
+  const jonny = MAQUETTE.jonny;
+  const note = await texte("Parcours de Jonny (TP 1) : réserver « Initiation à Git » depuis son téléphone. Réglage conseillé du prototype : appareil de 360 × 800. Faites-le jouer sans aider, notez où l'on hésite.", { style: "t-m/600" });
+  note.x = 0;
+  note.y = -120;
+
+  const { frame: landing, focus } = await construireLanding(360, "Landing 360");
+  landing.x = 0;
+  landing.y = 0;
+
+  /** @type {Array<[string, string, string | null]>} nom de l'écran, étape de la modale, adresse saisie */
+  const definitions = [
+    ["saisie", "saisie", null],
+    ["erreur", "erreur", null],
+    ["corrigée", "saisie", jonny.courriel],
+    ["envoi", "envoi", null],
+    ["confirmée", "confirmée", null],
+  ];
+  /** @type {Record<string, FrameNode>} */
+  const ecrans = {};
+  let x = 360 + 200;
+  for (const [nom, etape, adresse] of definitions) {
+    // Le voile de .modale::backdrop, porté par l'écran : les réglages d'overlay sont en lecture seule pour un plugin
+    const ecran = cadre(`Modale · ${nom}`, { fond: "texte", fondOpacite: 0.6, axe: "CENTER", travers: "CENTER" });
+    ecran.primaryAxisSizingMode = "FIXED";
+    ecran.counterAxisSizingMode = "FIXED";
+    ecran.resize(360, 800);
+    ecran.clipsContent = true;
+    const m = ajouter(ecran, instance("modale", { "étape": etape }));
+    m.name = "modale";
+    if (adresse) remplacerTexte(/** @type {InstanceNode} */ (dans(m, "champ adresse")), "valeur", adresse);
+    ecran.x = x;
+    ecran.y = 0;
+    x += 360 + 80;
+    ecrans[nom] = ecran;
+  }
+
+  const clic = /** @type {Trigger} */ ({ type: "ON_CLICK" });
+  const reserver = focus["reserver-1"];
+  await relier(reserver, reserver.parent && reserver.parent.parent ? /** @type {SceneNode} */ (reserver.parent.parent) : null, [{ trigger: clic, actions: [aller(ecrans["saisie"], "OVERLAY")] }]);
+  await relier(dans(ecrans["saisie"], "bouton Confirmer"), null, [{ trigger: clic, actions: [aller(ecrans["erreur"], "SWAP")] }]);
+  // Toucher le champ en erreur = corriger la faute de frappe (on ne tape pas dans un prototype)
+  await relier(dans(ecrans["erreur"], "champ adresse"), null, [{ trigger: clic, actions: [aller(ecrans["corrigée"], "SWAP")] }]);
+  await relier(dans(ecrans["corrigée"], "bouton Confirmer"), null, [{ trigger: clic, actions: [aller(ecrans["envoi"], "SWAP")] }]);
+  await relier(ecrans["envoi"], null, [{ trigger: { type: "AFTER_TIMEOUT", timeout: DELAI_ENVOI_MS }, actions: [aller(ecrans["confirmée"], "SWAP")] }]);
+  await relier(dans(ecrans["confirmée"], "bouton Fermer"), null, [{ trigger: clic, actions: [FERMER] }]);
+  for (const nom of ["saisie", "erreur", "corrigée"]) {
+    await relier(dans(ecrans[nom], "bouton Annuler"), null, [{ trigger: clic, actions: [FERMER] }]);
+  }
+
+  page3.flowStartingPoints = [{ nodeId: landing.id, name: "Réserver un atelier le soir" }];
+}
+
 // Les cas limites (cours, 4.3, règle 6) : ce qui casse une mise en page
 async function creerCasLimites() {
   await legende("Cas limites", "Un titre de trois lignes, un catalogue vide, des champs en erreur : ce sont eux qui cassent une mise en page.");
@@ -1408,6 +1497,7 @@ const ETAPES = [
   ["Images", null, chargerImages],
   ["Landing aux trois paliers", "landing", creerLanding],
   ["Ordre de tabulation", "landing", creerTabulation],
+  ["Prototype du parcours de Jonny", "parcours", creerPrototype],
 ];
 
 /** @param {{delaiImagesMs?: number}} [options] @returns {Promise<string[]>} */
