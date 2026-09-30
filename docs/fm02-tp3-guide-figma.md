@@ -14,9 +14,11 @@ Le fichier Figma est construit par un plugin du dépôt, [`outils/figma-skillhub
 | 4. Cas limites : titre de trois lignes, catalogue vide, champ en erreur | Page 1, bloc « Cas limites » | `tests/construction.test.js` |
 | 5. Ordre de tabulation numéroté, du lien d'évitement au pied de page | Page 2 : `1280 · tabulation` (1 → 23) et `360 · tabulation` (1 → 20) | `tests/contenu.test.js` |
 | 6. Prototype joué par deux camarades, hésitations notées, une correction | Page 3 : flow « Réserver un atelier le soir » | **à faire en séance** (ci-dessous) |
-| Le fichier Figma partagé | Lien de partage | **à faire** |
+| Le fichier Figma partagé | [« SkillHub — TP 3 (maquette) »](https://www.figma.com/design/U5GPUXYkhMkvnJTPGsbjxT) | construit ; **partage à ouvrir** (étape 7) |
 
 ## 1. Construire le fichier (5 minutes)
+
+> **Déjà fait le 30/09/2026.** Le fichier [« SkillHub — TP 3 (maquette) »](https://www.figma.com/design/U5GPUXYkhMkvnJTPGsbjxT) a été construit par le code de ce plugin, exécuté par le serveur MCP de Figma (`use_figma`) en trois appels, un par page. Les vraies photos ont été téléversées en JPEG. Toutes les étapes sont ✓. Les étapes ci-dessous servent à le **reconstruire** (nouveau fichier), et les étapes 6 et 7 restent à faire.
 
 1. Installer **Figma Desktop** (figma.com/downloads) : les plugins en développement ne tournent pas dans le navigateur.
 2. Créer un **nouveau fichier Design vide** et le nommer « SkillHub — TP 3 ».
@@ -25,7 +27,7 @@ Le fichier Figma est construit par un plugin du dépôt, [`outils/figma-skillhub
 5. Lire le **rapport du plugin** en haut de la page 1 : toutes les lignes doivent commencer par ✓ (un ⚠ signale un repli, par exemple une image non téléchargée).
 6. Page 3, panneau *Prototype* : régler l'appareil sur **360 × 800**.
 7. **Partager** : bouton *Share* → *Anyone with the link* → *can view* → copier le lien ici :
-   - Lien du fichier : _à coller_
+   - Lien du fichier : https://www.figma.com/design/U5GPUXYkhMkvnJTPGsbjxT (à ouvrir en lecture avant de le transmettre)
 
 ## 2. Relire avant de faire jouer (10 minutes) — les règles du cours, 4.3
 
