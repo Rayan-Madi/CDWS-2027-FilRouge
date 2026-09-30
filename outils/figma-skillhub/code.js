@@ -72,6 +72,208 @@ const MESURES = [
   { libelle: "bordure de carte (--bordure) sur --fond", avant: "bordure", sur: "fond" },
 ];
 
+// Les images de la page, servies par GitHub Pages (converties en PNG par ui.html)
+const SITE = "https://rayan-madi.github.io/CDWS-2027-FilRouge/src/";
+
+// Les icônes de la page, en SVG : currentColor devient la couleur d'accent
+const ICONES = {
+  logo:
+    '<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="8" fill="#0b5cad"/><path d="M9 20c1.5 2 4 3 7 3 3.5 0 6-1.6 6-4.2 0-2.4-2-3.4-5.6-4.2-3-.7-4-1.2-4-2.4 0-1.2 1.2-2 3.2-2 1.9 0 3.3.7 4.2 1.8" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  menu:
+    '<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M3 12h18M3 18h18" stroke="#12293f" stroke-width="2" stroke-linecap="round"/></svg>',
+  chevron:
+    '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M3 6l5 5 5-5" fill="none" stroke="#12293f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  coche:
+    '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  proximite:
+    '<svg width="40" height="40" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 11a4 4 0 1 0-8 0M4 20c0-3 3.6-5 8-5s8 2 8 5M12 3v2" fill="none" stroke="#0b5cad" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  transparence:
+    '<svg width="40" height="40" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="3" fill="none" stroke="#0b5cad" stroke-width="1.8"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" fill="none" stroke="#0b5cad" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  exigence:
+    '<svg width="40" height="40" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z" fill="none" stroke="#0b5cad" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+};
+
+// Le contenu réel de src/index.html et src/js/skillhub.js (cours, 4.3, règle 5 : pas de faux texte)
+const CONTENU = {
+  evitement: "Aller au contenu",
+  logo: "SkillHub",
+  menu: "Menu",
+  navigation: [
+    { cle: "nav-valeurs", texte: "Valeurs" },
+    { cle: "nav-ateliers", texte: "Ateliers" },
+    { cle: "nav-formateurs", texte: "Formateurs" },
+    { cle: "nav-inscription", texte: "S'inscrire" },
+  ],
+  accroche: {
+    titre: "Reprenez la main sur votre reconversion",
+    texte: "Des ateliers courts et concrets, animés par des formateurs indépendants qui ont fait le chemin avant vous.",
+    actions: ["Créer mon compte", "Voir les ateliers"],
+    image: { url: SITE + "images/accroche-800.webp", largeur: 800, hauteur: 492, nom: "accroche" },
+  },
+  valeurs: {
+    titre: "Nos valeurs",
+    items: [
+      { titre: "Proximité", icone: "proximite", texte: "Des groupes de huit personnes au maximum : votre formateur connaît votre prénom et votre projet." },
+      { titre: "Transparence", icone: "transparence", texte: "Le prix, le programme et les avis des anciens participants sont affichés avant toute inscription." },
+      { titre: "Exigence", icone: "exigence", texte: "Chaque atelier se termine par une réalisation concrète que vous pouvez montrer à un recruteur." },
+    ],
+  },
+  ateliers: {
+    titre: "Les ateliers du moment",
+    filtres: {
+      legende: "Filtrer les ateliers",
+      options: ["Le soir (à partir de 18 h)", "Ouverts aux débutants"],
+      resultat: "3 ateliers affichés",
+      resultatVide: "0 atelier affiché",
+    },
+    items: [
+      {
+        titre: "Initiation à Git",
+        etiquette: "Développement",
+        description: "Versionner son travail, revenir en arrière et collaborer sur GitHub sans peur de tout casser.",
+        infos: "Niveau débutant · 3 h · en ligne · mercredi 7 octobre, 18 h 30",
+        prix: "25 €",
+      },
+      {
+        titre: "Maquetter une page avec Figma",
+        etiquette: "Design",
+        description: "Passer d'une idée griffonnée à une maquette propre, prête à être intégrée.",
+        infos: "Niveau intermédiaire · 4 h · Paris · samedi 17 octobre, 10 h",
+        prix: "35 €",
+      },
+      {
+        titre: "Construire son portfolio",
+        etiquette: "Carrière",
+        description: "Choisir ses projets, les présenter et les mettre en ligne gratuitement.",
+        infos: "Tous niveaux · 2 h · en ligne · mercredi 21 octobre, 19 h",
+        prix: "Gratuit",
+      },
+    ],
+    vide: "Aucun atelier ne correspond à ces filtres. Décochez-en un pour élargir la recherche.",
+  },
+  formateurs: {
+    titre: "Nos formateurs",
+    items: [
+      { nom: "Sarah Benali", role: "Développeuse web", citation: "J'ai changé de métier à 34 ans. Je transmets ce que j'aurais aimé qu'on m'apprenne.", photo: SITE + "images/sarah-benali-288.webp" },
+      { nom: "Thomas Martin", role: "Designer UX/UI", citation: "Une bonne interface, c'est celle qu'on ne remarque pas. Ça s'apprend.", photo: SITE + "images/thomas-martin-288.webp" },
+      { nom: "Aïcha N'Diaye", role: "Coach en reconversion", citation: "Votre ancien métier n'est pas un poids : c'est votre différence.", photo: SITE + "images/aicha-ndiaye-288.webp" },
+    ],
+    appel: {
+      avant: "Vous êtes formateur indépendant ?",
+      lien: "Créez votre compte",
+      apres: "en choisissant « Formateur indépendant » : vous pourrez proposer vos ateliers.",
+    },
+  },
+  inscription: {
+    titre: "Créer mon compte",
+    texte: "L'inscription est gratuite. Vous ne payez que les ateliers que vous réservez.",
+    nom: "Prénom et nom",
+    courriel: "Adresse électronique",
+    aideCourriel: "Nous ne la transmettons à personne.",
+    profil: "Je suis",
+    profilDefaut: "Choisissez",
+    cgu: "J'accepte les conditions d'utilisation",
+    conditions: "Lire les conditions d'utilisation",
+    bouton: "Créer mon compte",
+  },
+  modale: {
+    titre: "Réserver : ",
+    aideCourriel: "Pour recevoir la date, le lieu et le lien de l'atelier.",
+    confirmer: "Confirmer la réservation",
+    annuler: "Annuler",
+    fermer: "Fermer",
+  },
+  pied: {
+    liens: ["Haut de page", "Ateliers", "S'inscrire"],
+    mention: "SkillHub · IMIE Paris · projet pédagogique · 2026",
+  },
+  messages: {
+    nomManquant: "Indiquez votre prénom et votre nom.",
+    courrielInvalide: "L'adresse doit ressembler à nom@exemple.fr.",
+    chargement: "Réservation en cours…",
+  },
+};
+
+// Textes propres à la maquette : ils ne sont pas (encore) dans la page
+const MAQUETTE = {
+  // « Désactivé » dit pourquoi (cours, 3.4) ; la règle métier elle-même se décide ailleurs (4.4)
+  desactive: "Complet · liste d'attente",
+  // Cas limite : un titre qui tient sur trois lignes à 360 px
+  titreLong: "Maquetter une page responsive avec Figma, de la grille aux composants",
+  jonny: { nom: "Jonny Petit", prenom: "Jonny", courrielFaute: "jonny@gmail", courriel: "jonny@gmail.com" },
+};
+
+/** @param {{infos: string, prix: string}} atelier */
+function recapAtelier(atelier) {
+  return `${atelier.infos} · ${atelier.prix}`;
+}
+
+/** @param {string} prenom @param {{titre: string, infos: string, prix: string}} atelier @param {string} courriel */
+function confirmationReservation(prenom, atelier, courriel) {
+  return `C'est réservé, ${prenom} ! ${atelier.titre} : ${recapAtelier(atelier)}. Le lien de l'atelier arrivera à ${courriel} la veille.`;
+}
+
+// L'ordre de tabulation attendu (cours, 4.3, règle 8), du lien d'évitement au pied de page.
+// cle : le nom sous lequel le constructeur de la landing range l'élément focalisable.
+const ORDRE_APRES_ENTETE = [
+  { cle: "accroche-compte", libelle: "Créer mon compte (accroche)" },
+  { cle: "accroche-ateliers", libelle: "Voir les ateliers" },
+  { cle: "filtre-soir", libelle: "Filtre : le soir" },
+  { cle: "filtre-debutants", libelle: "Filtre : débutants" },
+  { cle: "reserver-1", libelle: "Réserver : Initiation à Git" },
+  { cle: "reserver-2", libelle: "Réserver : Maquetter une page avec Figma" },
+  { cle: "reserver-3", libelle: "Réserver : Construire son portfolio" },
+  { cle: "appel-formateurs", libelle: "Créez votre compte (formateurs)" },
+  { cle: "champ-nom", libelle: "Champ : prénom et nom" },
+  { cle: "champ-courriel", libelle: "Champ : adresse électronique" },
+  { cle: "champ-profil", libelle: "Liste : je suis" },
+  { cle: "case-cgu", libelle: "Case : conditions" },
+  { cle: "conditions", libelle: "Lire les conditions" },
+  { cle: "bouton-inscription", libelle: "Créer mon compte (formulaire)" },
+  { cle: "pied-haut", libelle: "Haut de page" },
+  { cle: "pied-ateliers", libelle: "Ateliers (pied)" },
+  { cle: "pied-inscription", libelle: "S'inscrire (pied)" },
+];
+const ORDRE_TABULATION = {
+  1280: [
+    { cle: "evitement", libelle: "Aller au contenu" },
+    { cle: "logo", libelle: "SkillHub (haut de page)" },
+    { cle: "nav-valeurs", libelle: "Valeurs" },
+    { cle: "nav-ateliers", libelle: "Ateliers" },
+    { cle: "nav-formateurs", libelle: "Formateurs" },
+    { cle: "nav-inscription", libelle: "S'inscrire" },
+  ].concat(ORDRE_APRES_ENTETE),
+  // Menu fermé à 360 : les liens de navigation ne sont pas atteignables avant d'ouvrir le menu
+  360: [
+    { cle: "evitement", libelle: "Aller au contenu" },
+    { cle: "logo", libelle: "SkillHub (haut de page)" },
+    { cle: "menu", libelle: "Menu" },
+  ].concat(ORDRE_APRES_ENTETE),
+};
+
+// Les trois paliers, calés sur les media queries de skillhub.css (48em, 64em).
+// h1 et h2 : les clamp() du CSS calculés à cette largeur. marge : --espace ou le centrage à 1152 px.
+const PALIERS = {
+  360: {
+    largeur: 360, marge: 16, contenu: 328, sectionY: 48, accrocheHaut: 32, accrocheBas: 48,
+    accrocheMarge: 16, accrocheColonnes: [1], accrocheEcart: 32, colonnes: 1, formulaireColonnes: 1,
+    navigation: "menu", h1: 31.25, h2: 25.01, grille: { count: 4, gutter: 16, offset: 16 },
+  },
+  768: {
+    largeur: 768, marge: 32, contenu: 704, sectionY: 64, accrocheHaut: 64, accrocheBas: 64,
+    accrocheMarge: 32, accrocheColonnes: [1, 1], accrocheEcart: 32, colonnes: 2, formulaireColonnes: 2,
+    navigation: "liens", h1: 46.4, h2: 31.04, grille: { count: 8, gutter: 24, offset: 32 },
+  },
+  1280: {
+    largeur: 1280, marge: 64, contenu: 1152, sectionY: 64, accrocheHaut: 64, accrocheBas: 64,
+    accrocheMarge: 96, accrocheColonnes: [1.1, 1], accrocheEcart: 64, colonnes: 3, formulaireColonnes: 2,
+    navigation: "liens", h1: 48.83, h2: 39.06, grille: { count: 12, gutter: 24, offset: 64 },
+  },
+};
+
+// Le délai simulé de skillhub.js (DELAI_SIMULE), repris par le prototype. L'API compte en millisecondes.
+const DELAI_ENVOI_MS = 800;
+
 /* ---------- 2. Outils ---------- */
 
 /** @param {string} nom @returns {string} */
@@ -139,5 +341,5 @@ async function main() {
 
 // Sous Node (tests), on exporte ; dans Figma, module n'existe pas et on construit.
 // @ts-ignore — module n'est déclaré que sous Node
-if (typeof module !== "undefined") module.exports = { JETONS, USAGES, MESURES, hexDe, ratioContraste, formaterRatio, descriptionCouleur, hexVersRgb, main };
+if (typeof module !== "undefined") module.exports = { JETONS, USAGES, MESURES, CONTENU, MAQUETTE, ORDRE_TABULATION, PALIERS, DELAI_ENVOI_MS, hexDe, ratioContraste, formaterRatio, descriptionCouleur, hexVersRgb, recapAtelier, confirmationReservation, main };
 else main();
