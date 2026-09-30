@@ -233,6 +233,25 @@ test("sans réseau, des cadres gris remplacent les images et le rapport le dit",
   assert.equal(nomme(f, "image : accroche").fills[0].type, "SOLID");
 });
 
+/* ---------- Ordre de tabulation ---------- */
+
+test("l'ordre de tabulation est numéroté à 1280 et à 360, du lien d'évitement au pied de page", () => {
+  const landing = page(sim, "2 ·");
+  for (const [largeur, nombre] of [[1280, 23], [360, 20]]) {
+    const f = landing.children.find((n) => n.name === `${largeur} · tabulation`);
+    assert.ok(f, `frame ${largeur} · tabulation absente`);
+    const pastilles = tous(f, (n) => /^pastille \d+$/.test(n.name));
+    assert.deepEqual(pastilles.map((n) => n.name), Array.from({ length: nombre }, (_, i) => `pastille ${i + 1}`));
+    pastilles.forEach((n) => assert.equal(n.layoutPositioning, "ABSOLUTE"));
+    assert.deepEqual(textes(nomme(f, "pastille 1")), ["1"]);
+    assert.ok(nomme(f, "lien d'évitement").visible, "le lien d'évitement doit être montré");
+  }
+  for (const largeur of [360, 768, 1280]) {
+    assert.equal(tous(frameLanding(largeur), (n) => n.name.startsWith("pastille")).length, 0, `pastilles sur la frame ${largeur}`);
+    assert.equal(nomme(frameLanding(largeur), "lien d'évitement").visible, false);
+  }
+});
+
 test("un fichier qui n'est pas vide est laissé intact", async () => {
   const autre = await construire({}, (s) => {
     s.figma.createFrame().name = "travail de l'étudiant";

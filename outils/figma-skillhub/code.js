@@ -1297,6 +1297,64 @@ async function creerLanding() {
   }
 }
 
+// Les pastilles numérotées de l'ordre de tabulation (cours, 4.3, règle 8) : un contour pointillé
+// et un numéro sur chaque élément focalisable, posés en position absolue par-dessus la page.
+/** @param {FrameNode} f @param {Focusables} focus @param {Array<{cle: string, libelle: string}>} ordre */
+async function poserTabulation(f, focus, ordre) {
+  const origine = f.absoluteBoundingBox;
+  if (!origine) throw new Error(`${f.name} : position introuvable`);
+  for (let i = 0; i < ordre.length; i++) {
+    const cible = focus[ordre[i].cle];
+    if (!cible) throw new Error(`Tabulation : « ${ordre[i].cle} » introuvable sur ${f.name}`);
+    const boite = cible.absoluteBoundingBox;
+    if (!boite) throw new Error(`Tabulation : « ${ordre[i].cle} » n'a pas de position`);
+    const x = boite.x - origine.x;
+    const y = boite.y - origine.y;
+
+    const contour = figma.createRectangle();
+    contour.name = `repère ${i + 1} · ${ordre[i].libelle}`;
+    f.appendChild(contour);
+    contour.layoutPositioning = "ABSOLUTE";
+    contour.x = x - 3;
+    contour.y = y - 3;
+    contour.resize(boite.width + 6, boite.height + 6);
+    contour.fills = [];
+    contour.strokes = [peinture("erreur")];
+    contour.strokeWeight = 1.5;
+    contour.dashPattern = [4, 3];
+    regler(contour, "cornerRadius", "rayon-s");
+
+    const pastille = cadre(`pastille ${i + 1}`, { fond: "erreur", rayon: "pilule", axe: "CENTER", travers: "CENTER" });
+    f.appendChild(pastille);
+    pastille.layoutPositioning = "ABSOLUTE";
+    pastille.primaryAxisSizingMode = "FIXED";
+    pastille.counterAxisSizingMode = "FIXED";
+    pastille.resize(24, 24);
+    pastille.x = x - 12;
+    pastille.y = y - 12;
+    ajouter(pastille, await texte(String(i + 1), { style: "t-xs/600", couleur: "blanc", nom: String(i + 1) }), "HUG");
+  }
+}
+
+// Deux copies de la landing, 1280 et 360, avec l'ordre de tabulation attendu. Les frames propres restent propres.
+async function creerTabulation() {
+  const landing = ETAT.pages.landing;
+  const bas = Math.max.apply(null, landing.children.map((n) => n.y + n.height));
+  const legendeTab = await texte("Ordre de tabulation attendu — du lien d'évitement (1) au pied de page. À 360, le menu est fermé : les liens de navigation ne sont atteints qu'après « Menu ».", { style: "t-m/600" });
+  landing.appendChild(legendeTab);
+  legendeTab.x = 0;
+  legendeTab.y = bas + 240;
+  let x = 0;
+  for (const largeur of /** @type {Array<360 | 1280>} */ ([1280, 360])) {
+    const { frame, focus } = await construireLanding(largeur, `${largeur} · tabulation`);
+    frame.x = x;
+    frame.y = bas + 320;
+    focus.evitement.visible = true;
+    await poserTabulation(frame, focus, ORDRE_TABULATION[largeur]);
+    x += largeur + 200;
+  }
+}
+
 // Les cas limites (cours, 4.3, règle 6) : ce qui casse une mise en page
 async function creerCasLimites() {
   await legende("Cas limites", "Un titre de trois lignes, un catalogue vide, des champs en erreur : ce sont eux qui cassent une mise en page.");
@@ -1349,6 +1407,7 @@ const ETAPES = [
   ["Cas limites", "systeme", creerCasLimites],
   ["Images", null, chargerImages],
   ["Landing aux trois paliers", "landing", creerLanding],
+  ["Ordre de tabulation", "landing", creerTabulation],
 ];
 
 /** @param {{delaiImagesMs?: number}} [options] @returns {Promise<string[]>} */
