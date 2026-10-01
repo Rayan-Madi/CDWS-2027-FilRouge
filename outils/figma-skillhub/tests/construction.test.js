@@ -329,6 +329,15 @@ test("même quand les polices manquent, le plugin se ferme et rend son rapport",
   assert.ok(sansPolice.rapport.some((l) => l.startsWith("✗ Polices")), "l'échec des polices doit figurer au rapport");
 });
 
+test("aucun calque ne garde un nom par défaut (cours, 4.3, règle 1)", () => {
+  // Relevé dans le vrai Figma : les tracés des icônes SVG s'appelaient « Vector »
+  const parDefaut = /^(vector|rectangle|frame|ellipse|text|group|component|instance)(\s*\d+)?$/i;
+  for (const p of sim.figma.root.children) {
+    const fautifs = tous(p, (n) => parDefaut.test(n.name)).map((n) => `${n.name} (${n.parent.name})`);
+    assert.deepEqual(fautifs, [], `calques sans nom sur « ${p.name} »`);
+  }
+});
+
 test("une étape en panne n'arrête pas les suivantes, et le rapport la nomme", async () => {
   const panne = await construire({ panne: "createNodeFromSvg" });
   const ligne = (debut) => panne.rapport.find((l) => l.slice(2).startsWith(debut));

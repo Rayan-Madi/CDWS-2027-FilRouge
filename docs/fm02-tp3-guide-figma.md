@@ -31,15 +31,17 @@ Le fichier Figma est construit par un plugin du dépôt, [`outils/figma-skillhub
 
 ## 2. Relire avant de faire jouer (10 minutes) — les règles du cours, 4.3
 
-- [ ] **Nommer** : aucun `Rectangle 47`. Les variantes s'appellent `type=principal, état=focus`.
-- [ ] **Grille** : afficher les grilles (Ctrl + G) sur les trois frames ; les blocs tombent sur les colonnes.
-- [ ] **Trois paliers** : menu « Menu » à 360, liens dès 768, accroche en deux colonnes dès 768, trois cartes par rangée à 1280.
-- [ ] **Six états** : ouvrir `bouton` et `champ`. Le focus est un anneau posé **sur le fond** (3 px, décalé de 3 px).
-- [ ] **Contenu réel** : les titres, prix, dates et formateurs sont ceux de la page.
-- [ ] **Cas limites** : la carte au titre de trois lignes garde son bouton aligné ; le catalogue vide dit quoi faire.
-- [ ] **Contrastes** : sélectionner un texte → onglet de contraste de Figma. Les chiffres sont aussi dans la description des variables.
-- [ ] **Ordre de lecture** : les pastilles vont de 1 (lien d'évitement) au dernier lien du pied de page, sans saut.
-- [ ] **Liaisons** : sélectionner un bouton → le fond affiche `accent` (variable), pas un hexadécimal.
+Relu le 01/10/2026 dans le fichier, par des scripts de lecture passés par le serveur MCP de Figma. La preuve de chaque case est notée à côté.
+
+- [x] **Nommer** : aucun `Rectangle 47`. Les variantes s'appellent `type=principal, état=focus`. *Relecture : 53 tracés d'icônes s'appelaient encore « Vector » ; ils sont renommés (« tracé 1 »…), et le plugin les nomme désormais lui-même (test « aucun calque ne garde un nom par défaut »).*
+- [x] **Grille** : afficher les grilles (Ctrl + G) sur les trois frames ; les blocs tombent sur les colonnes. *4 colonnes (marge 16, gouttière 16) à 360, 8 (32, 24) à 768, 12 (64, 24) à 1280 ; les marges des sections valent la marge de la grille.*
+- [x] **Trois paliers** : menu « Menu » à 360, liens dès 768, accroche en deux colonnes dès 768, trois cartes par rangée à 1280. *Relevé : Menu seul à 360 ; liens à 768 et 1280 ; accroche verticale à 360, horizontale ensuite ; 1, 2 puis 3 cartes par rangée, boutons alignés à 1280.*
+- [x] **Six états** : ouvrir `bouton` et `champ`. Le focus est un anneau posé **sur le fond** (3 px, décalé de 3 px). *bouton : repos, survol, focus, actif, désactivé, chargement ; champ : repos, survol, focus, rempli, erreur, désactivé ; anneau de 3 px lié à `accent`, posé à 6 px du bord (3 px d'écart + 3 px d'épaisseur).*
+- [x] **Contenu réel** : les titres, prix, dates et formateurs sont ceux de la page. *Vérifié par `tests/contenu.test.js`.*
+- [x] **Cas limites** : la carte au titre de trois lignes garde son bouton aligné ; le catalogue vide dit quoi faire. *Capture du 30/09 : titre sur trois lignes, bouton dans la carte ; filtres cochés, « 0 atelier affiché » et message en pointillés.*
+- [x] **Contrastes** : sélectionner un texte → onglet de contraste de Figma. Les chiffres sont aussi dans la description des variables. *Chaque couleur porte ses ratios mesurés (ex. `accent` : 6,66:1 sur fond, 6,04:1 sur fond-teinte) ; ils sont recalculés par `tests/jetons.test.js`.*
+- [x] **Ordre de lecture** : les pastilles vont de 1 (lien d'évitement) au dernier lien du pied de page, sans saut. *1 → 23 à 1280, 1 → 20 à 360, sans trou ; c'est aussi l'ordre réel de la page, rejoué au clavier le 01/10 (rapport du TP 4, § 4).*
+- [x] **Liaisons** : sélectionner un bouton → le fond affiche `accent` (variable), pas un hexadécimal. *Bouton au repos : fond `couleurs/accent`, marge `espace/e-6`, rayon `forme/pilule`, hauteur min. `forme/cible` ; aucune couleur brute dans les composants (hors le blanc des libellés, `#fff` dans le CSS aussi).*
 
 ## 3. Faire jouer le parcours à deux camarades (20 minutes)
 

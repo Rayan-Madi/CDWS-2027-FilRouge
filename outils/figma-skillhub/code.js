@@ -536,6 +536,8 @@ function icone(nom) {
   const f = figma.createNodeFromSvg(ICONES[nom]);
   f.name = `icône ${nom}`;
   f.fills = [];
+  // L'import SVG nomme ses tracés « Vector » : un nom illisible (cours, 4.3, règle 1)
+  f.findAll(() => true).forEach((n, i) => (n.name = `tracé ${i + 1}`));
   return f;
 }
 
