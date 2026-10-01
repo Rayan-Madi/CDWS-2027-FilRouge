@@ -2,7 +2,7 @@
 
 > Quatre composants, trois paliers, six états, contrastes mesurés. Livrable : **le fichier Figma partagé**.
 
-Le fichier Figma est construit par un plugin du dépôt, [`outils/figma-skillhub/`](../outils/figma-skillhub/), à partir des **mêmes jetons et du même contenu que la page**. Des tests vérifient que les jetons du plugin sont ceux de `skillhub.css` et que chaque texte vient de `index.html` ou de `skillhub.js` : la maquette et le code ne peuvent pas diverger sans que ça se voie.
+Le fichier Figma est construit par un plugin du dépôt, [`outils/figma-skillhub/`](../outils/figma-skillhub/), à partir des **mêmes jetons et du même contenu que la page**. Des tests vérifient que les jetons du plugin sont ceux de `skillhub.css` et que chaque texte repris de la page figure bien dans `index.html` ou `skillhub.js` (les quelques textes propres à la maquette, comme le titre long du cas limite ou la saisie de Jonny, sont rangés à part) : la maquette et le code ne peuvent pas diverger sans que ça se voie.
 
 ## Ce que contient le fichier, exigence par exigence
 
@@ -10,9 +10,9 @@ Le fichier Figma est construit par un plugin du dépôt, [`outils/figma-skillhub
 |---|---|---|
 | 1. Jetons : tailles de texte, pas d'espacement, couleurs, **ratio mesuré à côté** | Page 1 : 31 variables (collection `SkillHub`) aux noms du CSS, avec la syntaxe de code `var(--…)` ; la description de chaque couleur donne ses ratios ; planche des jetons ; 12 styles de texte (10 crans liés aux variables de taille, 2 titres fluides à 768) | `tests/jetons.test.js` : jetons == `:root`, ratios == [`fm02-contrastes.md`](fm02-contrastes.md) |
 | 2. Quatre composants et leurs variantes, six états pour les interactifs | Page 1 : `bouton` (principal, secondaire × repos, survol, focus, actif, désactivé, chargement), `champ` (texte, liste × repos, survol, focus, rempli, erreur, désactivé), `carte-atelier`, `modale` (saisie, erreur, envoi, confirmée) | `tests/construction.test.js` |
-| 3. La landing aux **trois paliers**, en auto-layout, contenu réel | Page 2 : frames `360`, `768`, `1280`, grille de colonnes, vraies photos, vrais titres et vrais prix | `tests/contenu.test.js` |
+| 3. La landing aux **trois paliers**, en auto-layout, contenu réel | Page 2 : frames `360`, `768`, `1280`, grille de colonnes, vraies photos, vrais titres et vrais prix | `tests/construction.test.js` (frames, grille, images) et `tests/contenu.test.js` (textes) |
 | 4. Cas limites : titre de trois lignes, catalogue vide, champ en erreur | Page 1, bloc « Cas limites » | `tests/construction.test.js` |
-| 5. Ordre de tabulation numéroté, du lien d'évitement au pied de page | Page 2 : `1280 · tabulation` (1 → 23) et `360 · tabulation` (1 → 20) | `tests/contenu.test.js` |
+| 5. Ordre de tabulation numéroté, du lien d'évitement au pied de page | Page 2 : `1280 · tabulation` (1 → 23) et `360 · tabulation` (1 → 20) | `tests/contenu.test.js` (l'ordre) et `tests/construction.test.js` (les pastilles) |
 | 6. Prototype joué par deux camarades, hésitations notées, une correction | Page 3 : flow « Réserver un atelier le soir » | **à faire en séance** (ci-dessous) |
 | Le fichier Figma partagé | [« SkillHub — TP 3 (maquette) »](https://www.figma.com/design/U5GPUXYkhMkvnJTPGsbjxT) | construit et **partagé en lecture** (ouvert sans compte le 30/09/2026) |
 
@@ -70,5 +70,5 @@ Le fichier Figma est construit par un plugin du dépôt, [`outils/figma-skillhub
 Le plugin a été écrit avec un assistant de code (cours, 4.5 : « l'assistant, puis vous »). Ce que je peux montrer au jury :
 
 - **Les jetons ne sont pas recopiés à la main** : un test compare chaque variable au `:root` de `skillhub.css`, et chaque ratio au rapport de contrastes.
-- **Le contenu n'est pas du faux texte** : un test retrouve chaque texte de la maquette dans `index.html` ou `skillhub.js`.
+- **Le contenu n'est pas du faux texte** : un test retrouve dans `index.html` ou `skillhub.js` chaque texte que la maquette reprend de la page ; les rares textes propres à la maquette (titre long du cas limite, saisie de Jonny, libellé « Complet · liste d'attente ») sont rangés à part, dans `MAQUETTE` (`code.js`).
 - **Ce qu'aucun outil ne vérifie à ma place** : le contraste perçu, la lisibilité à 150 % de zoom (Mélanie), l'ordre de tabulation réel dans le navigateur (TP 4, au clavier et au lecteur d'écran), et le test avec de vraies personnes (section 3).

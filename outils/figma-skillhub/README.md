@@ -48,7 +48,7 @@ npm run types     # chaque appel à l'API Figma vérifié contre @figma/plugin-t
 ```
 
 - `tests/jetons.test.js` : les jetons du plugin sont ceux du `:root` de `skillhub.css`, et chaque ratio recalculé est celui de `docs/fm02-contrastes.md`.
-- `tests/contenu.test.js` : chaque texte vient de `index.html` ou de `skillhub.js` ; l'ordre de tabulation va de 1 à 23 (1280) et de 1 à 20 (360).
+- `tests/contenu.test.js` : chaque texte de `CONTENU` vient de `index.html` ou de `skillhub.js` (les textes propres à la maquette sont à part, dans `MAQUETTE`) ; l'ordre de tabulation va de 1 à 23 (1280) et de 1 à 20 (360).
 - `tests/figma-simule.js` : un simulateur de l'API qui lève les erreurs d'**exécution** de Figma que le typage ne voit pas. Par exemple : police non chargée, `FILL` hors auto-layout, enfant ajouté dans une instance, `width` en écriture, plus de 3 pages.
 - `tests/construction.test.js` : `main()` de bout en bout sur ce simulateur.
 
