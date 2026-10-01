@@ -132,7 +132,8 @@ Sans JavaScript, la page reste complète : le menu est déplié, le bouton Menu 
 - [x] Textes de remplacement par catégorie : [`docs/textes-alternatifs.md`](docs/textes-alternatifs.md)
 - [x] Trois erreurs commentées (TP 1) : [`docs/tp1-erreurs-commentees.md`](docs/tp1-erreurs-commentees.md)
 - [x] Rapports Lighthouse accessibilité avant et après exportés dans `docs/` (`lighthouse-a11y-avant.html`, `lighthouse-a11y-apres.html`)
-- [ ] Rapports Wave avant et après exportés dans `docs/` (`wave-avant.pdf`, `wave-apres.pdf`)
+- [x] Rapports Wave avant et après exportés dans `docs/` ([`wave-avant.pdf`](docs/wave-avant.pdf), [`wave-apres.pdf`](docs/wave-apres.pdf)) : 0 erreur, 0 erreur de contraste, 0 alerte dans les deux cas
+- [x] Parcours clavier rejoué sur la page en ligne (Tab, Maj+Tab, modale, menu mobile) : [`docs/fm02-tp4-accessibilite.md`](docs/fm02-tp4-accessibilite.md), § 4
 - [x] Plugin Figma (TP 3) : `cd outils/figma-skillhub && npm install && npm test && npm run types`. Il vérifie que les jetons sont ceux du CSS, que le contenu est celui de la page, et qu'une construction complète passe sur un simulateur de l'API. Les appels à l'API sont vérifiés contre ses types officiels.
 
 ## Crédits

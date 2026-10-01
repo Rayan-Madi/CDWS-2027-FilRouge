@@ -19,6 +19,7 @@
 | [`fm02-contrastes.md`](fm02-contrastes.md) | Contrastes mesurés par la formule WCAG (script : `outils/contrastes.js`) |
 | [`fm02-tp4-accessibilite.md`](fm02-tp4-accessibilite.md) | TP 4 : rapport d'analyse d'accessibilité — mesures, changements, parcours clavier, améliorations possibles |
 | [`lighthouse-a11y-avant.html`](lighthouse-a11y-avant.html) · [`lighthouse-a11y-apres.html`](lighthouse-a11y-apres.html) | TP 4 : rapports Lighthouse Accessibilité exportés |
+| [`wave-avant.pdf`](wave-avant.pdf) · [`wave-apres.pdf`](wave-apres.pdf) | TP 4 : rapports Wave exportés (fin de FM01, puis page en ligne) |
 | [`arbre-accessibilite.md`](arbre-accessibilite.md) | TP 4 : l'arbre d'accessibilité relevé (rôle, nom, état) |
 | [`fm02-tp2-audit-nielsen.md`](fm02-tp2-audit-nielsen.md) | TP 2 : la grille d'audit Nielsen, à remplir sur une plateforme réelle |
 | [`design-system.html`](design-system.html) | TP 3 : jetons, les 4 composants et leurs états, cas limites, 3 paliers, ordre de tabulation |
@@ -28,4 +29,4 @@
 | [`test-nvda.md`](test-nvda.md) | TP 4 : le parcours à faire au lecteur d'écran NVDA, et ce qu'on doit entendre |
 | [`revision-oral-ec01.md`](revision-oral-ec01.md) | Fiche de révision : les questions du correcteur, et où le montrer dans le code |
 
-À faire par moi : l'audit Nielsen (TP 2) ; faire jouer le prototype Figma à deux camarades et remplir les retours d'essai, régler l'appareil du prototype sur 360 × 800 et cocher la checklist de relecture (TP 3) ; l'export Wave, la capture de l'arbre d'accessibilité, le parcours clavier refait moi-même et le test NVDA (TP 4).
+À faire par moi : faire jouer le prototype Figma à deux camarades et remplir les retours d'essai, régler l'appareil du prototype sur 360 × 800 (TP 3) ; la capture de l'arbre d'accessibilité dans Chrome et le test NVDA (TP 4) ; relire l'audit Nielsen et rejouer ses deux tâches moi-même (TP 2).
