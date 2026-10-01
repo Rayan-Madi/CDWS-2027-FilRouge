@@ -51,9 +51,9 @@ Les deux rapports Lighthouse ont été produits le 25/09/2026, dans les mêmes c
 | Menu avec `aria-expanded` et `aria-controls` | `<button class="menu-bouton" aria-expanded="false" aria-controls="menu">`. Le JS met `aria-expanded` à jour dans la même fonction que l'affichage |
 | Deux navigations distinguées | `<nav aria-label="Navigation principale">` ; le pied de page n'est qu'une liste de liens, pas une `nav` |
 | Modale en `dialog`, ouverte par `showModal()` | `<dialog id="modale-reservation" aria-labelledby="t-modale">`, annoncée par son titre |
-| Libellés réellement liés | chaque champ a un `<label for>` ; aides et erreurs reliées par `aria-describedby` ; erreurs annoncées par `aria-live="polite"` ; `aria-invalid` sur le champ fautif |
+| Libellés réellement liés | chaque champ des formulaires a un `<label for>`, et chaque case du filtre est enveloppée dans son `<label>` ; aides et erreurs reliées par `aria-describedby` ; erreurs annoncées par `aria-live="polite"` ; `aria-invalid` sur le champ fautif |
 | Lien d'évitement visible au focus | premier arrêt de tabulation, déplacé à l'écran au focus (jamais `display: none`) ; il mène à `<main id="contenu" tabindex="-1">` |
-| Focus visible partout | `:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px }`, blanc sur le pied de page sombre ; aucun `outline: none` |
+| Focus visible partout | `:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px }`, blanc sur le pied de page sombre ; aucun `outline: none` sur un élément atteint par Tab (le seul est sur `main`, la cible du lien d'évitement, en `tabindex="-1"`) |
 | Icônes | décoratives en `aria-hidden="true" focusable="false"`, le texte voisin porte le sens |
 | Aucun ARIA inutile | pas de `role` sur un élément natif, pas d'`aria-hidden` sur un élément focusable |
 
@@ -112,3 +112,4 @@ C'est la partie que la fiche d'épreuve demande explicitement.
 - [ ] Exporter **Wave** avant et après, et reporter les chiffres dans le tableau 1
 - [ ] Faire la **capture** de l'arbre d'accessibilité dans Chrome (DevTools → Elements → onglet Accessibility, bouton « Réserver » sélectionné) : `docs/arbre-accessibilite.png`
 - [ ] Refaire le **parcours clavier** moi-même, sans souris, puis en Maj+Tab
+- [ ] Faire le **test NVDA** en suivant [`test-nvda.md`](test-nvda.md), et noter dans ce rapport les écarts constatés (ou l'absence d'écart)

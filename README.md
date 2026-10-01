@@ -46,7 +46,7 @@ Séparation des responsabilités : la structure dans le HTML, la présentation d
 ### Structure HTML sémantique (critère C2.1)
 
 - `header`, `nav` principale (avec `aria-label`), `main` unique, `section`, `article`, `footer`. Les trois liens du pied de page restent une simple liste : ce n'est pas une navigation majeure.
-- Dans chaque fiche, le titre `h3` vient en premier : c'est lui qui ouvre la fiche, dans le code comme à l'écran.
+- Dans chaque fiche d'atelier, le titre `h3` vient en premier, avant l'étiquette : c'est lui qui ouvre la fiche, dans le code comme à l'écran.
 - `div` réservées aux crochets sans sens propre, quatre en tout : `.page` (la grille de page), le bloc texte de l'accroche, le groupe des filtres (affiché ou caché d'un coup) et le contenu de la modale (pour distinguer un clic sur le fond).
 - Chaque `section` porte un titre `h2` et un `aria-labelledby` qui pointe dessus.
 - Les fiches d'atelier, de valeur et de formateur sont des `article` : elles gardent leur sens hors de la page.
@@ -100,9 +100,9 @@ Vérifié à 375, 800 et 1280 px : `scrollWidth === innerWidth`, **aucune barre 
 Rapport complet : [`docs/fm02-tp4-accessibilite.md`](docs/fm02-tp4-accessibilite.md).
 
 
-- Étiquettes `label for` liées à chaque champ, `autocomplete`, aide lue avec le champ via `aria-describedby`.
+- Étiquettes `label for` liées à chaque champ des formulaires (les cases du filtre sont enveloppées dans leur `label`), `autocomplete`, aide lue avec le champ via `aria-describedby`.
 - Messages d'erreur annoncés (`aria-live`), `aria-invalid` sur les champs fautifs, focus renvoyé au premier champ invalide.
-- `:focus-visible` sur tout élément interactif ; cibles de clic d'au moins 44 px.
+- `:focus-visible` sur tout élément interactif ; boutons et champs d'au moins 44 px de haut, cases à cocher de 24 × 24 px (WCAG 2.5.8).
 - Menu mobile : vrai `button`, `aria-expanded`, `aria-controls`, fermeture par Échap.
 - Modale de réservation en `<dialog>` ouverte par `showModal()` : focus piégé dans la modale tant qu'elle est ouverte, Échap ferme, le focus revient au bouton « Réserver ».
 - Boutons d'envoi désactivés pendant l'envoi (« … en cours ») : pas de double envoi.
@@ -131,7 +131,8 @@ Sans JavaScript, la page reste complète : le menu est déplié, le bouton Menu 
 - [x] Bilan avant / après : [`docs/tp2-bilan-performance.md`](docs/tp2-bilan-performance.md)
 - [x] Textes de remplacement par catégorie : [`docs/textes-alternatifs.md`](docs/textes-alternatifs.md)
 - [x] Trois erreurs commentées (TP 1) : [`docs/tp1-erreurs-commentees.md`](docs/tp1-erreurs-commentees.md)
-- [ ] Rapport Wave ou Lighthouse accessibilité exporté dans `docs/`
+- [x] Rapports Lighthouse accessibilité avant et après exportés dans `docs/` (`lighthouse-a11y-avant.html`, `lighthouse-a11y-apres.html`)
+- [ ] Rapports Wave avant et après exportés dans `docs/` (`wave-avant.pdf`, `wave-apres.pdf`)
 - [x] Plugin Figma (TP 3) : `cd outils/figma-skillhub && npm install && npm test && npm run types`. Il vérifie que les jetons sont ceux du CSS, que le contenu est celui de la page, et qu'une construction complète passe sur un simulateur de l'API. Les appels à l'API sont vérifiés contre ses types officiels.
 
 ## Crédits

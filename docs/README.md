@@ -28,4 +28,4 @@
 | [`test-nvda.md`](test-nvda.md) | TP 4 : le parcours à faire au lecteur d'écran NVDA, et ce qu'on doit entendre |
 | [`revision-oral-ec01.md`](revision-oral-ec01.md) | Fiche de révision : les questions du correcteur, et où le montrer dans le code |
 
-À faire par moi : l'audit Nielsen (TP 2), lancer le plugin puis partager et faire jouer le fichier Figma (TP 3), l'export Wave et le test NVDA (TP 4).
+À faire par moi : l'audit Nielsen (TP 2) ; faire jouer le prototype Figma à deux camarades et remplir les retours d'essai, régler l'appareil du prototype sur 360 × 800 et cocher la checklist de relecture (TP 3) ; l'export Wave, la capture de l'arbre d'accessibilité, le parcours clavier refait moi-même et le test NVDA (TP 4).

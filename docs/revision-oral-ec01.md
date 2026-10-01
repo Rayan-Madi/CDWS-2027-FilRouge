@@ -45,7 +45,7 @@ Utile : `aria-expanded` sur le bouton du menu, mis à jour dans la même fonctio
 `aria-expanded` attend la chaîne « true » ou « false ». Et `getAttribute` rend une chaîne : « false » est une chaîne non vide, donc **vraie** dans un `if`. D'où la comparaison `=== "true"`.
 
 **Ta modale : pourquoi `showModal()` et pas `show()` ?**
-`showModal()` apporte gratuitement le focus dans la modale, Échap qui ferme, et le reste de la page inerte. Ma seule ligne en plus : rendre le focus au bouton « Réserver » à la fermeture (événement `close`).
+`showModal()` apporte gratuitement le focus dans la modale, Échap qui ferme, et le reste de la page inerte. Ce que j'ajoute : rendre le focus au bouton « Réserver » à la fermeture (événement `close`), et fermer la modale d'un clic sur le fond, que `<dialog>` ne fait pas seul.
 
 **Comment les erreurs de formulaire sont-elles annoncées ?**
 Le message est dans une zone reliée au champ par `aria-describedby`, avec `aria-live="polite"` ; `aria-invalid="true"` marque le champ ; le focus va au premier champ fautif. La saisie n'est jamais effacée.
