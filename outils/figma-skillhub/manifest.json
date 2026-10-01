@@ -1,0 +1,13 @@
+{
+  "name": "SkillHub — maquette du TP 3",
+  "id": "skillhub-fm02-tp3",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["https://rayan-madi.github.io"],
+    "reasoning": "Télécharge les vraies photos de la landing SkillHub publiée sur GitHub Pages."
+  }
+}

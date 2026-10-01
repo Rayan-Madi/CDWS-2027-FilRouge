@@ -43,4 +43,4 @@ Autres mesures : First Contentful Paint 1,0 s → 0,9 s ; Speed Index 1,3 s → 
 | 5. `defer` sur les scripts | `js/skillhub.js` |
 | 6. Police auto-hébergée | Sora en woff2, 2 graisses, `font-display: swap`, 600 préchargée |
 
-C'est pour cela que la mesure « avant » était déjà à 97 : les gestes ont été posés à l'écriture, pas en fin de projet. Le cours le dit : « la performance est une fonctionnalité ».
+C'est pour cela que la mesure « avant » était déjà à 97 : les gestes ont été posés à l'écriture, pas en fin de projet. Les photos des formateurs, ajoutées juste après les deux mesures, ont suivi les mêmes gestes dès leur arrivée. Le cours le dit : « la performance est une fonctionnalité ».

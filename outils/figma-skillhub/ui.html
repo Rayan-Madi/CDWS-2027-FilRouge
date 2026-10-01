@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>SkillHub — images</title>
+<!-- Iframe cachée du plugin. Figma n'importe que du PNG, du JPEG ou du GIF : les photos du site sont en WebP.
+     Le navigateur de l'iframe sait décoder le WebP ; on redessine chaque image dans un canvas et on renvoie du PNG. -->
+<script>
+  onmessage = async (evenement) => {
+    const message = evenement.data.pluginMessage;
+    if (!message || message.type !== "charger-images") return;
+
+    const resultats = await Promise.all(
+      message.urls.map(async (url) => {
+        try {
+          const reponse = await fetch(url);
+          if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
+          const image = await createImageBitmap(await reponse.blob());
+          const canvas = document.createElement("canvas");
+          canvas.width = image.width;
+          canvas.height = image.height;
+          canvas.getContext("2d").drawImage(image, 0, 0);
+          const png = await new Promise((resoudre) => canvas.toBlob(resoudre, "image/png"));
+          return { url, octets: new Uint8Array(await png.arrayBuffer()) };
+        } catch (erreur) {
+          return { url, erreur: String(erreur) };
+        }
+      })
+    );
+
+    parent.postMessage({ pluginMessage: { type: "images", resultats } }, "*");
+  };
+</script>

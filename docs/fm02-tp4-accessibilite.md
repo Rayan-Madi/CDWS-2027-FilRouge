@@ -11,10 +11,12 @@ Page auditée : `https://rayan-madi.github.io/CDWS-2027-FilRouge/src/` · niveau
 | Outil | Avant (page de fin de FM01) | Après (TP 4) | Rapport exporté |
 |---|---|---|---|
 | **Lighthouse**, onglet Accessibilité, mobile | **100** — 25 contrôles réussis, 0 échec, 10 à vérifier à la main | **100** — 29 contrôles réussis (la modale et le filtre en ajoutent), 0 échec, 10 à vérifier à la main | [`lighthouse-a11y-avant.html`](lighthouse-a11y-avant.html) · [`lighthouse-a11y-apres.html`](lighthouse-a11y-apres.html) |
-| **Wave** (extension WebAIM) : erreurs / erreurs de contraste / alertes | _à compléter_ | _à compléter_ | `wave-avant.pdf` · `wave-apres.pdf` |
+| **Wave** (WebAIM, version en ligne) : erreurs / erreurs de contraste / alertes | **0 / 0 / 0** — 9 éléments d'accessibilité, 23 de structure, 23 ARIA ; score AIM 10/10 | **0 / 0 / 0** — 14 éléments d'accessibilité (+4 étiquettes : la modale ; +1 fieldset : le filtre), 25 de structure, 30 ARIA ; score AIM 10/10 | [`wave-avant.pdf`](wave-avant.pdf) · [`wave-apres.pdf`](wave-apres.pdf) |
 | **axe-core 4** (le moteur de Lighthouse), 375 et 1280 px | 0 violation, 43 contrôles réussis | 0 violation, 48 contrôles réussis, **modale ouverte comprise** | — |
 
 Les deux rapports Lighthouse ont été produits le 25/09/2026, dans les mêmes conditions (Lighthouse en ligne de commande, mobile, serveur local) : « avant » sur la version de fin de FM01, « après » sur la version du TP 4.
+
+Les deux rapports Wave ont été produits le 01/10/2026 avec la version en ligne de Wave (wave.webaim.org) : « avant » sur la version de fin de FM01 (commit `1131049`, servie telle quelle depuis le dépôt par raw.githack.com), « après » sur la page en ligne. Wave ne relève aucune erreur dans les deux cas. Ce qui change, ce sont les éléments d'accessibilité qu'il reconnaît : les étiquettes de la modale, le fieldset du filtre, les zones annoncées (`aria-live`, `role="status"`).
 
 **Ce que ces chiffres ne disent pas.** La page partait déjà sans erreur détectable : le HTML sémantique de FM01 fait l'essentiel du travail. Mais le cours le rappelle : aucun outil automatique ne voit plus d'un tiers des critères, et un score de 100 prouve seulement l'absence des fautes qu'une machine sait voir. **Ce TP a donc surtout changé ce que les outils ne mesurent pas** : le comportement au clavier, la modale, l'état des boutons pendant l'envoi.
 
@@ -51,9 +53,9 @@ Les deux rapports Lighthouse ont été produits le 25/09/2026, dans les mêmes c
 | Menu avec `aria-expanded` et `aria-controls` | `<button class="menu-bouton" aria-expanded="false" aria-controls="menu">`. Le JS met `aria-expanded` à jour dans la même fonction que l'affichage |
 | Deux navigations distinguées | `<nav aria-label="Navigation principale">` ; le pied de page n'est qu'une liste de liens, pas une `nav` |
 | Modale en `dialog`, ouverte par `showModal()` | `<dialog id="modale-reservation" aria-labelledby="t-modale">`, annoncée par son titre |
-| Libellés réellement liés | chaque champ a un `<label for>` ; aides et erreurs reliées par `aria-describedby` ; erreurs annoncées par `aria-live="polite"` ; `aria-invalid` sur le champ fautif |
+| Libellés réellement liés | chaque champ des formulaires a un `<label for>`, et chaque case du filtre est enveloppée dans son `<label>` ; aides et erreurs reliées par `aria-describedby` ; erreurs annoncées par `aria-live="polite"` ; `aria-invalid` sur le champ fautif |
 | Lien d'évitement visible au focus | premier arrêt de tabulation, déplacé à l'écran au focus (jamais `display: none`) ; il mène à `<main id="contenu" tabindex="-1">` |
-| Focus visible partout | `:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px }`, blanc sur le pied de page sombre ; aucun `outline: none` |
+| Focus visible partout | `:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px }`, blanc sur le pied de page sombre ; aucun `outline: none` sur un élément atteint par Tab (le seul est sur `main`, la cible du lien d'évitement, en `tabindex="-1"`) |
 | Icônes | décoratives en `aria-hidden="true" focusable="false"`, le texte voisin porte le sens |
 | Aucun ARIA inutile | pas de `role` sur un élément natif, pas d'`aria-hidden` sur un élément focusable |
 
@@ -82,6 +84,17 @@ Relevé à 1280 px, touche Tab, du premier au dernier élément ; numéroté sur
 
 **Vérifié aussi :** aucun débordement horizontal à 320, 375, 800 et 1280 px (reflow, WCAG 1.4.10) ; sans JavaScript, le menu est affiché, « Réserver » reste un lien vers le formulaire, et la modale n'apparaît pas.
 
+**Rejoué le 01/10/2026 sur la page en ligne**, au clavier seulement, avec l'assistant de code. Les touches étaient réellement envoyées à un navigateur Chromium, et l'élément focalisé était relevé à chaque arrêt.
+
+| Ce qui a été rejoué | Résultat |
+|---|---|
+| Tab × 24, à 1024 px | Les 23 arrêts du tableau ci-dessus, **dans cet ordre**, chacun avec son anneau (bleu `--accent`, blanc dans le pied de page) ; le 24ᵉ Tab revient au lien d'évitement |
+| Position du focus (défilement doux coupé, comme en `prefers-reduced-motion`) | Chaque arrêt est **sous l'en-tête collant**, jamais derrière. Seul le n° 11 tombe au ras du bas de la fenêtre : l'anneau y est rogné par le bord de l'écran, pas par un contenu de la page |
+| Maj+Tab × 10 depuis le n° 21, puis × 22 depuis le n° 23 | Retour exact au n° 11, puis au n° 1 |
+| Entrée sur le lien d'évitement | Le focus passe sur `main#contenu` (sans anneau, voir § 3) |
+| Entrée sur « Réserver » (Initiation à Git) | La modale s'ouvre sur « Réserver : Initiation à Git », focus sur « Prénom et nom » ; Tab passe à l'adresse ; Échap ferme et **rend le focus au bouton d'origine** |
+| À 375 px : Tab × 3, Entrée, Tab, Échap, Tab | « Menu » (`aria-expanded="false"`) → menu ouvert (`true`) → « Valeurs » → Échap referme et **rend le focus à « Menu »** → Tab passe à « Créer mon compte » |
+
 ---
 
 ## 5. Les contrastes
@@ -109,6 +122,7 @@ C'est la partie que la fiche d'épreuve demande explicitement.
 
 - [x] Rapports **Lighthouse Accessibilité** avant et après, exportés en HTML
 - [x] Arbre d'accessibilité relevé : [`arbre-accessibilite.md`](arbre-accessibilite.md)
-- [ ] Exporter **Wave** avant et après, et reporter les chiffres dans le tableau 1
+- [x] Exporter **Wave** avant et après, et reporter les chiffres dans le tableau 1 : [`wave-avant.pdf`](wave-avant.pdf), [`wave-apres.pdf`](wave-apres.pdf)
 - [ ] Faire la **capture** de l'arbre d'accessibilité dans Chrome (DevTools → Elements → onglet Accessibility, bouton « Réserver » sélectionné) : `docs/arbre-accessibilite.png`
-- [ ] Refaire le **parcours clavier** moi-même, sans souris, puis en Maj+Tab
+- [x] Refaire le **parcours clavier** sans souris, puis en Maj+Tab : rejoué le 01/10/2026 (§ 4, tableau « Rejoué »). À refaire soi-même une fois avant l'oral, pour pouvoir le montrer.
+- [ ] Faire le **test NVDA** en suivant [`test-nvda.md`](test-nvda.md), et noter dans ce rapport les écarts constatés (ou l'absence d'écart)

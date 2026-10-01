@@ -1,0 +1,13 @@
+{
+  "name": "figma-skillhub",
+  "private": true,
+  "description": "Plugin Figma de développement : construit la maquette SkillHub du TP 3 (FM02). Ces dépendances ne servent qu'à vérifier le code ; le plugin se lance sans elles.",
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\"",
+    "types": "tsc -p ."
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.139.0",
+    "typescript": "^7.0.2"
+  }
+}
