@@ -76,6 +76,6 @@ Tâche : « Je découvre SkillHub par un lien partagé et je réserve un atelier
 | 5 | Confirmation **sans détail** | Jonny (étape 6) | 1 et 9 | Corrigé au TP 4 |
 | 6 | **Rien pour les formateurs**, sauf une option du menu « Je suis » | Mélanie | 2 — correspondance avec le monde réel | Corrigé au TP 4 (appel aux formateurs, profil présélectionné) |
 | 7 | Case « J'accepte les conditions » **sans accès aux conditions** | Mélanie (« être prise pour une simple d'esprit » : on ne signe pas à l'aveugle) | 3 — contrôle et liberté ; 10 — aide | Corrigé au TP 4 |
-| 8 | **Aucune heure** sur les ateliers, aucun filtre (soir, débutant) | Jonny (job étudiant), Mélanie (le soir) | 7 — souplesse et efficacité | **Reste à faire** (voir le rapport du TP 4) |
+| 8 | **Aucune heure** sur les ateliers, aucun filtre (soir, débutant) | Jonny (job étudiant), Mélanie (le soir) | 7 — souplesse et efficacité | Corrigé au TP 4 (heure sur chaque carte, filtres « Le soir » / « Ouverts aux débutants ») |
 
-**Ce que la page faisait déjà bien, et qu'on garde :** l'accroche qui dit à qui s'adresse le service ; la page légère (image d'accroche de 28 Kio en 4G) ; les messages d'erreur écrits en clair, qui conservent la saisie ; la navigation au clavier ; les contrastes, tous mesurés au-dessus de 4,5:1 (voir [`fm02-contrastes.md`](fm02-contrastes.md)).
+**Ce que la page faisait déjà bien, et qu'on garde :** l'accroche qui dit à qui s'adresse le service ; la page légère (image d'accroche de 28 Kio en 4G) ; les messages d'erreur écrits en clair, qui conservent la saisie ; la navigation au clavier ; les contrastes de texte, tous mesurés au-dessus de 4,5:1 (voir [`fm02-contrastes.md`](fm02-contrastes.md)).
