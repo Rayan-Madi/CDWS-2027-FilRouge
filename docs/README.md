@@ -21,7 +21,8 @@
 | [`lighthouse-a11y-avant.html`](lighthouse-a11y-avant.html) · [`lighthouse-a11y-apres.html`](lighthouse-a11y-apres.html) | TP 4 : rapports Lighthouse Accessibilité exportés |
 | [`wave-avant.pdf`](wave-avant.pdf) · [`wave-apres.pdf`](wave-apres.pdf) | TP 4 : rapports Wave exportés (fin de FM01, puis page en ligne) |
 | [`arbre-accessibilite.md`](arbre-accessibilite.md) | TP 4 : l'arbre d'accessibilité relevé (rôle, nom, état) |
-| [`fm02-tp2-audit-nielsen.md`](fm02-tp2-audit-nielsen.md) | TP 2 : la grille d'audit Nielsen, à remplir sur une plateforme réelle |
+| [`fm02-tp2-audit-nielsen.md`](fm02-tp2-audit-nielsen.md) | TP 2 : audit Nielsen de Studi — deux tâches, dix heuristiques notées, trois recommandations vérifiables, le défaut partagé avec SkillHub (les prérequis) |
+| [`audit/`](audit/) | TP 2 : les captures de l'audit |
 | [`design-system.html`](design-system.html) | TP 3 : jetons, les 4 composants et leurs états, cas limites, 3 paliers, ordre de tabulation |
 | [`ordre-tabulation-1280.png`](ordre-tabulation-1280.png) · [`ordre-tabulation-375.png`](ordre-tabulation-375.png) | TP 3 : l'ordre de tabulation numéroté sur la page |
 | [`fm02-tp3-guide-figma.md`](fm02-tp3-guide-figma.md) | TP 3 : construire le fichier Figma avec le plugin, le relire (règles du 4.3), faire jouer le parcours à deux camarades, les retours d'essai |
