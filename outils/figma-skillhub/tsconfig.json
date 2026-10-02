@@ -9,5 +9,5 @@
     "noImplicitAny": false,
     "types": ["@figma/plugin-typings"]
   },
-  "files": ["code.js"]
+  "files": ["code.js", "correctif-prototype/code.js"]
 }

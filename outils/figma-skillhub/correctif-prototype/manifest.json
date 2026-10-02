@@ -1,0 +1,8 @@
+{
+  "name": "SkillHub — correctif du prototype",
+  "id": "skillhub-fm02-tp3-correctif-prototype",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page"
+}
