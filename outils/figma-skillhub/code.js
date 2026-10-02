@@ -1394,13 +1394,13 @@ async function creerTabulation() {
 /** @type {Transition} */
 const FONDU = { type: "DISSOLVE", easing: { type: "EASE_OUT" }, duration: 0.3 };
 
-/** @param {SceneNode} destination @param {"NAVIGATE" | "SWAP" | "OVERLAY"} navigation @returns {Action} */
-function aller(destination, navigation) {
-  return { type: "NODE", destinationId: destination.id, navigation, transition: FONDU, preserveScrollPosition: false };
+// Toujours « Naviguer vers », jamais de superposition. Relevé sur téléphone (02/10/2026) : dans une superposition
+// remplacée (« Swap overlay »), le « After delay » de l'écran d'envoi ne se déclenche pas (bug connu de Figma) et
+// le prototype reste sur « Réservation en cours… ». Les écrans de modale portent leur voile : ce sont de vrais écrans.
+/** @param {SceneNode} destination @returns {Action} */
+function aller(destination) {
+  return { type: "NODE", destinationId: destination.id, navigation: "NAVIGATE", transition: FONDU, preserveScrollPosition: false };
 }
-
-/** @type {Action} */
-const FERMER = { type: "CLOSE" };
 
 // Pose une réaction ; si Figma la refuse sur un calque d'instance, on la pose sur le parent et on le dit
 /** @param {SceneNode} noeud @param {SceneNode | null} secours @param {Reaction[]} reactions */
@@ -1445,7 +1445,7 @@ async function creerPrototype() {
   const ecrans = {};
   let x = 360 + 200;
   for (const [nom, etape, adresse] of definitions) {
-    // Le voile de .modale::backdrop, porté par l'écran : les réglages d'overlay sont en lecture seule pour un plugin
+    // Un écran complet : le voile de .modale::backdrop (60 % de --texte), puis la modale centrée
     const ecran = cadre(`Modale · ${nom}`, { fond: "texte", fondOpacite: 0.6, axe: "CENTER", travers: "CENTER" });
     ecran.primaryAxisSizingMode = "FIXED";
     ecran.counterAxisSizingMode = "FIXED";
@@ -1462,15 +1462,16 @@ async function creerPrototype() {
 
   const clic = /** @type {Trigger} */ ({ type: "ON_CLICK" });
   const reserver = focus["reserver-1"];
-  await relier(reserver, reserver.parent && reserver.parent.parent ? /** @type {SceneNode} */ (reserver.parent.parent) : null, [{ trigger: clic, actions: [aller(ecrans["saisie"], "OVERLAY")] }]);
-  await relier(dans(ecrans["saisie"], "bouton Confirmer"), null, [{ trigger: clic, actions: [aller(ecrans["erreur"], "SWAP")] }]);
+  await relier(reserver, reserver.parent && reserver.parent.parent ? /** @type {SceneNode} */ (reserver.parent.parent) : null, [{ trigger: clic, actions: [aller(ecrans["saisie"])] }]);
+  await relier(dans(ecrans["saisie"], "bouton Confirmer"), null, [{ trigger: clic, actions: [aller(ecrans["erreur"])] }]);
   // Toucher le champ en erreur = corriger la faute de frappe (on ne tape pas dans un prototype)
-  await relier(dans(ecrans["erreur"], "champ adresse"), null, [{ trigger: clic, actions: [aller(ecrans["corrigée"], "SWAP")] }]);
-  await relier(dans(ecrans["corrigée"], "bouton Confirmer"), null, [{ trigger: clic, actions: [aller(ecrans["envoi"], "SWAP")] }]);
-  await relier(ecrans["envoi"], null, [{ trigger: { type: "AFTER_TIMEOUT", timeout: DELAI_ENVOI_MS }, actions: [aller(ecrans["confirmée"], "SWAP")] }]);
-  await relier(dans(ecrans["confirmée"], "bouton Fermer"), null, [{ trigger: clic, actions: [FERMER] }]);
+  await relier(dans(ecrans["erreur"], "champ adresse"), null, [{ trigger: clic, actions: [aller(ecrans["corrigée"])] }]);
+  await relier(dans(ecrans["corrigée"], "bouton Confirmer"), null, [{ trigger: clic, actions: [aller(ecrans["envoi"])] }]);
+  await relier(ecrans["envoi"], null, [{ trigger: { type: "AFTER_TIMEOUT", timeout: DELAI_ENVOI_MS }, actions: [aller(ecrans["confirmée"])] }]);
+  // « Fermer » et « Annuler » ramènent à la page, comme la fermeture du <dialog>
+  await relier(dans(ecrans["confirmée"], "bouton Fermer"), null, [{ trigger: clic, actions: [aller(landing)] }]);
   for (const nom of ["saisie", "erreur", "corrigée"]) {
-    await relier(dans(ecrans[nom], "bouton Annuler"), null, [{ trigger: clic, actions: [FERMER] }]);
+    await relier(dans(ecrans[nom], "bouton Annuler"), null, [{ trigger: clic, actions: [aller(landing)] }]);
   }
 
   page3.flowStartingPoints = [{ nodeId: landing.id, name: "Réserver un atelier le soir" }];

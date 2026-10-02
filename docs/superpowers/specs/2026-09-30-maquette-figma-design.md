@@ -14,7 +14,7 @@ Le fichier est construit par un **plugin Figma de développement** que l'étudia
 - **Compte Starter possible** : au plus **3 pages** dans le fichier.
 - **Mêmes jetons, mêmes noms que `src/css/skillhub.css`**. La source de vérité reste le CSS ; un test vérifie l'égalité.
 - `figma.createImage` n'accepte que **PNG, JPEG, GIF** : les photos WebP du site sont converties en PNG par l'iframe du plugin (canvas), puis transmises au code principal.
-- Les réglages d'overlay (`overlayBackground`, `overlayPositionType`) sont **en lecture seule** pour un plugin : la frame de modale porte elle-même son voile (`rgba(18, 41, 63, 0.6)`, comme `.modale::backdrop`) et fait la taille de l'écran (360 × 800).
+- Les réglages d'overlay (`overlayBackground`, `overlayPositionType`) sont **en lecture seule** pour un plugin : la frame de modale porte elle-même son voile (`rgba(18, 41, 63, 0.6)`, comme `.modale::backdrop`) et fait la taille de l'écran (360 × 800). *Mise à jour du 02/10/2026 :* ces écrans sont reliés par « Naviguer vers ». En superposition remplacée, Figma ne déclenchait pas le « After delay » de l'écran d'envoi (relevé sur téléphone, bug connu).
 - Police **Sora** 400 (Regular) et 600 (SemiBold), disponible dans Figma (Google Fonts). Si elle manque, repli sur Inter avec un avertissement.
 
 ## 3. Le fichier Figma produit
@@ -65,13 +65,13 @@ Prototype à 360 px (Jonny est sur mobile). Flow nommé **« Réserver un atelie
 
 | Écran | Interaction | Destination |
 |---|---|---|
-| `Landing 360` | clic sur « Réserver » (carte Initiation à Git) | overlay `Modale · saisie` |
-| `Modale · saisie` | clic sur « Confirmer la réservation » | swap → `Modale · erreur` (adresse mal tapée : `jonny@gmail` ) |
-| `Modale · erreur` | clic sur le champ adresse | swap → `Modale · corrigée` |
-| `Modale · corrigée` | clic sur « Confirmer la réservation » | swap → `Modale · envoi` |
-| `Modale · envoi` | après 800 ms (le `DELAI_SIMULE` de `skillhub.js`) | swap → `Modale · confirmée` |
-| `Modale · confirmée` | clic sur « Fermer » | fermer l'overlay |
-| toutes les modales | clic sur « Annuler » | fermer l'overlay |
+| `Landing 360` | clic sur « Réserver » (carte Initiation à Git) | naviguer vers `Modale · saisie` |
+| `Modale · saisie` | clic sur « Confirmer la réservation » | naviguer vers `Modale · erreur` (adresse mal tapée : `jonny@gmail`) |
+| `Modale · erreur` | clic sur le champ adresse | naviguer vers `Modale · corrigée` |
+| `Modale · corrigée` | clic sur « Confirmer la réservation » | naviguer vers `Modale · envoi` |
+| `Modale · envoi` | après 800 ms (le `DELAI_SIMULE` de `skillhub.js`) | naviguer vers `Modale · confirmée` |
+| `Modale · confirmée` | clic sur « Fermer » | naviguer vers `Landing 360` |
+| toutes les modales | clic sur « Annuler » | naviguer vers `Landing 360` |
 
 Chaque écran de modale est une frame 360 × 800 (voile + instance de `modale` centrée). `Modale · saisie` et `Modale · corrigée` sont deux instances de `étape=saisie`, champs remplis : adresse `jonny@gmail` (faute de frappe) dans la première, `jonny@gmail.com` dans la seconde. Nom : « Jonny Petit ».
 
