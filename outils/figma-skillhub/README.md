@@ -26,7 +26,7 @@ Les couleurs, marges, espacements et rayons des composants sont **liés aux vari
 
 ## Réglages conseillés
 
-- **Prototype** : page 3, panneau *Prototype* → *Device* : une taille de 360 × 800 (ou un Android de cette largeur). Les écrans de modale font 360 × 800 et portent eux-mêmes leur voile sombre. Un plugin ne peut pas régler le fond d'un overlay.
+- **Prototype** : facultatif, page 3, panneau *Prototype* → *Device* : une taille de 360 × 800. Sans réglage, Figma présente chaque écran à sa taille réelle, déjà 360 px de large. Les écrans de modale font 360 × 800, portent eux-mêmes leur voile sombre et sont reliés par « Naviguer vers », jamais en superposition (voir « Correctif » plus bas).
 - **Police** : Sora (Google Fonts) est disponible dans Figma. Si elle manque, le plugin passe en Inter et le signale (⚠).
 
 ## Dépannage
@@ -36,7 +36,19 @@ Les couleurs, marges, espacements et rayons des composants sont **liés aux vari
 | « lance le plugin dans un nouveau fichier Figma vide » | le fichier contient déjà un calque ou plusieurs pages | nouveau fichier |
 | ⚠ Images : pas de réponse du réseau | GitHub Pages injoignable | relancer connecté ; les cadres gris gardent la bonne taille en attendant |
 | ✗ sur une étape | une règle de Figma que les tests n'ont pas prévue | recopier la ligne du rapport ; les autres étapes ont quand même été construites |
-| La modale « envoi » ne passe pas seule à « confirmée » | l'unité de `timeout` (la doc de Figma dit millisecondes) | dans `code.js`, `DELAI_ENVOI_MS` ; ou régler *After delay* à 800 ms dans le panneau *Prototype* |
+| Le prototype reste sur « Réservation en cours… » | fichier construit avant le 02/10/2026 : l'envoi était une superposition remplacée, et Figma n'y déclenche pas le « After delay » | lancer le correctif ci-dessous, une fois |
+
+## Correctif du prototype (02/10/2026)
+
+Testé sur téléphone, le parcours de Jonny restait bloqué sur « Réservation en cours… ». L'écran d'envoi était ouvert en **superposition remplacée** (« Swap overlay »), et dans ce cas Figma ne déclenche pas son « After delay ». C'est un bug connu, signalé sur le forum de Figma. Le plugin relie désormais les écrans par **« Naviguer vers »**, et un test l'exige.
+
+Pour corriger un fichier déjà construit, sans tout reconstruire :
+
+1. Ouvre le fichier dans **Figma Desktop**.
+2. Clic droit sur le canevas → **Plugins → Development → Import plugin from manifest…** → `outils/figma-skillhub/correctif-prototype/manifest.json`.
+3. Clic droit → **Plugins → Development → SkillHub — correctif du prototype**.
+
+Le message attendu est « SkillHub : 9 liens corrigés ». Sur la page 3 seulement, « Open overlay » et « Swap overlay » deviennent « Naviguer vers » (même destination, même déclencheur), et « Fermer » et « Annuler » ramènent à *Landing 360*. Relancé, le correctif ne change plus rien. Son test : `tests/correctif.test.js`.
 
 ## Vérifier le code (développement seulement)
 

@@ -277,14 +277,19 @@ test("le prototype joue le parcours de Jonny, de « Réserver » à la confirmat
 
   const carte = nomme(landing, "carte · Initiation à Git");
   const reserver = carte.findOne((n) => n.reactions.length > 0) || carte;
-  vers(reserver, saisie, "OVERLAY");
-  vers(nomme(saisie, "bouton Confirmer"), erreur, "SWAP");
-  vers(nomme(erreur, "champ adresse"), corrigee, "SWAP");
-  vers(nomme(corrigee, "bouton Confirmer"), envoi, "SWAP");
+  // Relevé sur téléphone le 02/10/2026 : en superposition remplacée (SWAP), le « After delay » de
+  // l'écran d'envoi ne se déclenchait pas (bug connu de Figma) et l'on restait sur « Réservation en cours… ».
+  // Les écrans de modale portent déjà leur voile : ce sont de vrais écrans, reliés par « Naviguer vers ».
+  vers(reserver, saisie, "NAVIGATE");
+  vers(nomme(saisie, "bouton Confirmer"), erreur, "NAVIGATE");
+  vers(nomme(erreur, "champ adresse"), corrigee, "NAVIGATE");
+  vers(nomme(corrigee, "bouton Confirmer"), envoi, "NAVIGATE");
   assert.deepEqual(envoi.reactions[0].trigger, { type: "AFTER_TIMEOUT", timeout: plugin.DELAI_ENVOI_MS });
-  vers(envoi, confirmee, "SWAP");
-  assert.equal(action(nomme(confirmee, "bouton Fermer")).type, "CLOSE");
-  for (const e of [saisie, erreur, corrigee]) assert.equal(action(nomme(e, "bouton Annuler")).type, "CLOSE");
+  vers(envoi, confirmee, "NAVIGATE");
+  vers(nomme(confirmee, "bouton Fermer"), landing, "NAVIGATE");
+  for (const e of [saisie, erreur, corrigee]) vers(nomme(e, "bouton Annuler"), landing, "NAVIGATE");
+  const superpositions = tous(parcours, (n) => n.reactions.some((r) => r.actions.some((a) => a.type === "CLOSE" || a.navigation === "OVERLAY" || a.navigation === "SWAP")));
+  assert.deepEqual(superpositions.map((n) => n.name), [], "plus aucune superposition dans le prototype");
 
   assert.equal(nomme(nomme(saisie, "champ adresse"), "valeur").characters, "jonny@gmail");
   assert.equal(nomme(nomme(corrigee, "champ adresse"), "valeur").characters, "jonny@gmail.com");

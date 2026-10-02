@@ -18,7 +18,9 @@ Le fichier Figma est construit par un plugin du dépôt, [`outils/figma-skillhub
 
 ## 1. Construire le fichier (5 minutes)
 
-> **Déjà fait le 30/09/2026.** Le fichier [« SkillHub — TP 3 (maquette) »](https://www.figma.com/design/U5GPUXYkhMkvnJTPGsbjxT) a été construit par le code de ce plugin, exécuté par le serveur MCP de Figma (`use_figma`) en trois appels, un par page. Les vraies photos ont été téléversées en JPEG. Toutes les étapes sont ✓. Les étapes ci-dessous servent à le **reconstruire** (nouveau fichier). Le partage (étape 7) est fait ; le réglage de l'appareil du prototype (étape 6) reste à faire.
+> **Déjà fait le 30/09/2026.** Le fichier [« SkillHub — TP 3 (maquette) »](https://www.figma.com/design/U5GPUXYkhMkvnJTPGsbjxT) a été construit par le code de ce plugin, exécuté par le serveur MCP de Figma (`use_figma`) en trois appels, un par page. Les vraies photos ont été téléversées en JPEG. Toutes les étapes sont ✓. Les étapes ci-dessous servent à le **reconstruire** (nouveau fichier). Le partage (étape 7) est fait ; le réglage de l'appareil du prototype (étape 6) est facultatif.
+
+> **Correctif du 02/10/2026, à lancer une fois.** Testé sur téléphone, le prototype restait bloqué sur « Réservation en cours… ». L'écran d'envoi était une superposition remplacée, et Figma n'y déclenche pas le « After delay ». Le plugin est corrigé. Pour le fichier déjà construit, lance le correctif dans Figma Desktop : Plugins → Development → Import plugin from manifest… → `outils/figma-skillhub/correctif-prototype/manifest.json`, puis lance-le (message attendu : « 9 liens corrigés »). Le détail est dans le [README du plugin](../outils/figma-skillhub/README.md#correctif-du-prototype-02102026).
 
 1. Installer **Figma Desktop** (figma.com/downloads) : les plugins en développement ne tournent pas dans le navigateur.
 2. Créer un **nouveau fichier Design vide** et le nommer « SkillHub — TP 3 ».
