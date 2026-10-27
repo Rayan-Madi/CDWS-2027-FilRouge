@@ -1,0 +1,33 @@
+{
+  // TP 2 : strict dès le premier jour (l'activer plus tard coûte dix fois plus, cours 3.1).
+  // Sources dans src/ts, JavaScript produit dans src/js : c'est lui que la page charge, et il est commité
+  // pour que GitHub Pages serve le site sans étape de construction.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    // NodeNext impose l'extension .js dans les imports relatifs : sans elle, le navigateur ne trouve pas le fichier
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": "src/ts",
+    "outDir": "src/js",
+    "sourceMap": true,
+    "newLine": "lf",
+
+    "strict": true,
+    // Un tableau[i] ou un objet[clé] peut être undefined : le compilateur oblige à le traiter
+    "noUncheckedIndexedAccess": true,
+    // « facultatif » veut dire absent, pas « undefined écrit à la main »
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // Un import de type disparaît à la compilation : on l'écrit « import type », pour que ça se voie
+    "verbatimModuleSyntax": true,
+    "forceConsistentCasingInFileNames": true,
+    // Code de navigateur : pas de types Node.js mêlés au DOM
+    "types": []
+  },
+  "include": ["src/ts"]
+}

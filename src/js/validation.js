@@ -1,104 +1,99 @@
 /* Validation des formulaires, au fil de la saisie.
    Un confort pour la personne, jamais une sécurité : le serveur revalide.
    L'ordre : la validation native d'abord (checkValidity), puis nos règles par-dessus. */
-
-export const MESSAGES = {
-  nom: {
-    valueMissing: "Indiquez votre prénom et votre nom.",
-  },
-  courriel: {
-    valueMissing: "Indiquez votre adresse électronique.",
-    typeMismatch: "L'adresse doit ressembler à nom@exemple.fr.",
-  },
-  profil: {
-    valueMissing: "Choisissez votre profil.",
-  },
-  cgu: {
-    valueMissing: "Vous devez accepter les conditions pour continuer.",
-  },
-};
-
+import { trouverTous } from "./dom.js";
+const DEFAUTS = ["valueMissing", "typeMismatch", "patternMismatch", "tooShort", "tooLong", "badInput"];
+const MESSAGE_NOM = "Indiquez votre prénom et votre nom.";
+const MESSAGE_COURRIEL = "L'adresse doit ressembler à nom@exemple.fr.";
+// Des Map et non des objets : MESSAGES[nom] sur un objet trouve aussi « constructor » ou « valueOf »,
+// hérités de Object.prototype — un champ nommé ainsi serait toujours invalide, ou ferait planter la validation.
+const MESSAGES = new Map([
+    ["nom", { valueMissing: MESSAGE_NOM }],
+    ["courriel", { valueMissing: "Indiquez votre adresse électronique.", typeMismatch: MESSAGE_COURRIEL }],
+    ["profil", { valueMissing: "Choisissez votre profil." }],
+    ["cgu", { valueMissing: "Vous devez accepter les conditions pour continuer." }],
+]);
 // Nos règles bouchent deux trous du navigateur : required accepte un nom fait d'espaces,
-// et type="email" accepte « a@b » (une adresse sans domaine valable). Chaque règle rend "" si tout va bien.
-const REGLES = {
-  nom: (valeur) => (valeur.trim().length < 2 ? MESSAGES.nom.valueMissing : ""),
-  courriel: (valeur) => (/^[^@\s]+@[^@\s]+\.[^@\s.]{2,}$/.test(valeur.trim()) ? "" : MESSAGES.courriel.typeMismatch),
-};
-
+// et type="email" accepte « a@b » (une adresse sans domaine valable).
+const REGLES = new Map([
+    ["nom", (valeur) => (valeur.trim().length < 2 ? MESSAGE_NOM : "")],
+    ["courriel", (valeur) => (/^[^@\s]+@[^@\s]+\.[^@\s.]{2,}$/.test(valeur.trim()) ? "" : MESSAGE_COURRIEL)],
+]);
+function estChamp(element) {
+    return element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement;
+}
 // Le message d'un champ invalide : le nôtre s'il existe, sinon celui du navigateur
 function messageDe(champ) {
-  if (champ.validity.customError) {
-    return champ.validationMessage; // posé par setCustomValidity : c'est déjà notre texte
-  }
-  const messagesDuChamp = MESSAGES[champ.name] || {};
-  const cle = Object.keys(messagesDuChamp).find((nom) => champ.validity[nom]);
-  return cle ? messagesDuChamp[cle] : champ.validationMessage;
+    if (champ.validity.customError) {
+        return champ.validationMessage; // posé par setCustomValidity : c'est déjà notre texte
+    }
+    const messages = MESSAGES.get(champ.name);
+    const defaut = DEFAUTS.find((d) => champ.validity[d] && messages?.[d] !== undefined);
+    return (defaut && messages?.[defaut]) || champ.validationMessage;
 }
-
 // La zone d'erreur est celle que le champ désigne par aria-describedby : le lien du code est le lien
 // annoncé au lecteur d'écran, il ne peut pas y en avoir deux.
 function zoneErreurDe(champ) {
-  const ids = (champ.getAttribute("aria-describedby") || "").split(" ");
-  return ids.map((id) => document.getElementById(id)).find((zone) => zone && zone.classList.contains("champ__erreur"));
+    const ids = (champ.getAttribute("aria-describedby") ?? "").split(/\s+/);
+    return ids
+        .map((id) => document.getElementById(id))
+        .find((zone) => zone instanceof HTMLElement && zone.classList.contains("champ__erreur"));
 }
-
 export function brancherValidation(formulaire) {
-  const champs = [...formulaire.querySelectorAll("input, select, textarea")].filter((champ) => champ.name);
-  const enErreur = new Set(); // l'état : les champs dont l'erreur est affichée (on ne relit pas aria-invalid)
-
-  // Le JavaScript prend le relais des bulles du navigateur, pour des messages en français
-  formulaire.noValidate = true;
-
-  function verifierChamp(champ) {
-    champ.setCustomValidity(""); // 1. on repart de la validation native…
-    if (champ.checkValidity()) {
-      // 2. … et seulement si elle passe, nos règles
-      const regle = REGLES[champ.name];
-      champ.setCustomValidity(regle ? regle(champ.value) : "");
+    const champs = trouverTous(formulaire, "input, select, textarea", Element).filter(estChamp).filter((champ) => champ.name);
+    const zones = new Map(champs.map((champ) => [champ, zoneErreurDe(champ)]));
+    const enErreur = new Set(); // l'état : les champs dont l'erreur est affichée (on ne relit pas aria-invalid)
+    // Le JavaScript prend le relais des bulles du navigateur, pour des messages en français
+    formulaire.noValidate = true;
+    function verifierChamp(champ) {
+        champ.setCustomValidity(""); // 1. on repart de la validation native…
+        if (champ.checkValidity()) {
+            // 2. … et seulement si elle passe, nos règles
+            champ.setCustomValidity(REGLES.get(champ.name)?.(champ.value) ?? "");
+        }
+        const valide = champ.validity.valid;
+        champ.setAttribute("aria-invalid", String(!valide));
+        const zone = zones.get(champ);
+        if (zone) {
+            zone.textContent = valide ? "" : messageDe(champ); // à côté du champ, relié par aria-describedby
+        }
+        if (valide)
+            enErreur.delete(champ);
+        else
+            enErreur.add(champ);
+        return valide;
     }
-    const valide = champ.validity.valid;
-    champ.setAttribute("aria-invalid", String(!valide));
-    const zone = zoneErreurDe(champ);
-    if (zone) {
-      zone.textContent = valide ? "" : messageDe(champ); // à côté du champ, relié par aria-describedby
-    }
-    if (valide) enErreur.delete(champ);
-    else enErreur.add(champ);
-    return valide;
-  }
-
-  // Aider, pas punir : l'erreur apparaît quand on quitte le champ, puis se met à jour à chaque frappe
-  // tant qu'elle est affichée, et disparaît dès que la saisie devient valide.
-  // focusout et non blur : blur ne remonte pas, focusout si — un écouteur sur le formulaire suffit.
-  formulaire.addEventListener("focusout", (evenement) => {
-    if (champs.includes(evenement.target)) {
-      verifierChamp(evenement.target);
-    }
-  });
-  formulaire.addEventListener("input", (evenement) => {
-    if (enErreur.has(evenement.target)) {
-      verifierChamp(evenement.target);
-    }
-  });
-
-  return {
-    // Vrai si tout est valide ; sinon le focus va au premier champ fautif
-    toutVerifier() {
-      const invalides = champs.filter((champ) => !verifierChamp(champ));
-      if (invalides.length > 0) {
-        invalides[0].focus();
-        return false;
-      }
-      return true;
-    },
-    effacer() {
-      champs.forEach((champ) => {
-        champ.setCustomValidity("");
-        champ.removeAttribute("aria-invalid");
-        const zone = zoneErreurDe(champ);
-        if (zone) zone.textContent = "";
-      });
-      enErreur.clear();
-    },
-  };
+    // Le champ visé par un événement, s'il fait partie des nôtres
+    const champDe = (evenement) => champs.find((champ) => champ === evenement.target);
+    // Aider, pas punir : l'erreur apparaît quand on quitte le champ, puis se met à jour à chaque frappe
+    // tant qu'elle est affichée, et disparaît dès que la saisie devient valide.
+    // focusout et non blur : blur ne remonte pas, focusout si — un écouteur sur le formulaire suffit.
+    formulaire.addEventListener("focusout", (evenement) => {
+        const champ = champDe(evenement);
+        if (champ)
+            verifierChamp(champ);
+    });
+    formulaire.addEventListener("input", (evenement) => {
+        const champ = champDe(evenement);
+        if (champ && enErreur.has(champ))
+            verifierChamp(champ);
+    });
+    return {
+        toutVerifier() {
+            const invalides = champs.filter((champ) => !verifierChamp(champ));
+            invalides[0]?.focus(); // le premier champ fautif, s'il y en a un
+            return invalides.length === 0;
+        },
+        effacer() {
+            for (const champ of champs) {
+                champ.setCustomValidity("");
+                champ.removeAttribute("aria-invalid");
+                const zone = zones.get(champ);
+                if (zone)
+                    zone.textContent = "";
+            }
+            enErreur.clear();
+        },
+    };
 }
+//# sourceMappingURL=validation.js.map
