@@ -482,60 +482,113 @@ ul {
   margin-bottom: var(--e-3);
 }
 
-/* ---------- Filtre des ateliers ---------- */
+/* ---------- Catalogue : filtres, compteur et les quatre états ---------- */
+/* Une colonne sur téléphone ; les commandes alignées par le bas, sur la ligne des champs */
 .filtres {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--e-3) var(--e-4);
+  align-items: end;
+  margin-top: var(--e-4);
+  padding: var(--e-4);
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-m);
+}
+
+.filtres .champ {
+  max-width: none;
+  margin: 0;
+}
+
+.filtres__soir {
+  min-height: var(--cible); /* la case est centrée sur la hauteur d'un champ */
+}
+
+/* Le compteur : il nomme le résultat ET les critères, d'où une annonce à chaque changement */
+.catalogue__statut {
+  margin-top: var(--e-4);
+  margin-bottom: 0;
+  font-weight: 600;
+  color: var(--texte-doux);
+}
+
+.catalogue__statut:empty {
+  margin: 0;
+}
+
+/* La panne : une phrase, un bouton ; bordure ET texte, jamais la couleur seule */
+.catalogue__panne {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--e-2) var(--e-6);
-  margin-top: var(--e-4);
+  gap: var(--e-3) var(--e-6);
+  margin-top: var(--e-6);
+  padding: var(--e-4) var(--e-6);
+  background: var(--fond);
+  border: 1px solid var(--erreur);
+  border-left-width: 4px;
+  border-radius: var(--rayon-m);
 }
 
-.filtres__choix {
+.catalogue__panne p {
+  margin: 0;
+}
+
+.catalogue__panne strong {
+  color: var(--erreur);
+}
+
+/* Le vide n'est pas une panne : une bordure tiretée, un conseil, une action */
+.ateliers__vide {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--e-2) var(--e-6);
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.filtres__choix legend {
-  float: left; /* la légende sur la même ligne que les cases, sans perdre son rôle */
-  margin-right: var(--e-2);
-  padding: 0;
-  font-weight: 600;
-  line-height: var(--cible); /* même hauteur que les options : alignée sur leur centre */
-}
-
-.filtres__option {
-  display: inline-flex;
   align-items: center;
-  gap: var(--e-2);
-  min-height: var(--cible);
-  cursor: pointer;
-}
-
-.filtres__option input {
-  width: 1.5rem;       /* 24 px : taille minimale d'une cible (WCAG 2.5.8) */
-  height: 1.5rem;
-  margin: 0;
-  accent-color: var(--accent);
-}
-
-.filtres__resultat {
-  margin: 0;
-  font-size: var(--t-xs);
-  color: var(--texte-doux);
-}
-
-.ateliers__vide {
+  justify-content: space-between;
+  gap: var(--e-3) var(--e-6);
   margin-top: var(--e-6);
-  padding: var(--e-4);
+  padding: var(--e-4) var(--e-6);
   background: var(--fond);
   border: 1px dashed var(--texte-doux);
   border-radius: var(--rayon-m);
+}
+
+.ateliers__vide p {
+  margin: 0;
+}
+
+/* Le chargement : des cartes fantômes à la taille des vraies, pour que rien ne saute à l'arrivée */
+.atelier-fantome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-3);
+  min-height: 24rem;
+  padding: var(--e-6);
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-m);
+}
+
+.atelier-fantome span {
+  display: block;
+  height: 1rem;
+  background: var(--fond-teinte);
+  border-radius: var(--rayon-s);
+  animation: fantome 1.2s ease-in-out infinite alternate;
+}
+
+.atelier-fantome span:nth-child(1) { width: 75%; height: 1.5rem; }
+.atelier-fantome span:nth-child(2) { width: 30%; }
+.atelier-fantome span:nth-child(3) { height: 3rem; }
+.atelier-fantome span:nth-child(4) { width: 85%; }
+.atelier-fantome span:nth-child(5) { width: 50%; }
+.atelier-fantome span:nth-child(6) { width: 9rem; height: var(--cible); margin-top: auto; border-radius: var(--pilule); }
+
+@keyframes fantome {
+  to {
+    opacity: 0.4;
+  }
 }
 
 /* ---------- Carte d'atelier (composant 3) : Flexbox en colonne, bouton collé en pied ---------- */
@@ -565,9 +618,30 @@ ul {
   color: var(--texte-doux);
 }
 
+.atelier__formateur,
+.atelier__prerequis,
+.atelier__places {
+  font-size: var(--t-xs);
+}
+
+.atelier__libelle {
+  font-weight: 600;
+}
+
+/* Peu de places : écrit en toutes lettres et en gras, pas seulement en couleur (WCAG 1.4.1) */
+.atelier__places--rares {
+  font-weight: 600;
+  color: var(--accent-fonce);
+}
+
 .atelier__prix {
   font-size: var(--t-m);
   font-weight: 600;
+}
+
+/* Complet : le bouton est inerte et le dit ; pas le curseur « en cours » d'un envoi */
+.action[data-complet]:disabled {
+  cursor: not-allowed;
 }
 
 .atelier > .action {
@@ -767,6 +841,23 @@ ul {
   color: var(--texte-doux);
 }
 
+/* La fiche : des paires terme-définition, en deux colonnes alignées */
+.modale__fiche {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--e-1) var(--e-3);
+  margin: 0 0 var(--e-4);
+  font-size: var(--t-xs);
+}
+
+.modale__fiche dt {
+  font-weight: 600;
+}
+
+.modale__fiche dd {
+  margin: 0;
+}
+
 .formulaire--modale {
   margin-top: var(--e-4);
   padding: 0;
@@ -895,6 +986,16 @@ ul {
   .formulaire--modale {
     grid-template-columns: 1fr;
   }
+
+  /* Le filtre sur deux colonnes : la recherche et la case du soir sur toute la largeur */
+  .filtres {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filtres__recherche,
+  .filtres__soir {
+    grid-column: 1 / -1;
+  }
 }
 
 /* Palier 3 — ordinateur : au-delà de 64em les lignes de l'accroche deviennent
@@ -915,6 +1016,16 @@ ul {
 
   .entete {
     padding-inline: max(var(--espace), (100% - var(--largeur-max)) / 2);
+  }
+
+  /* Sur une ligne : la recherche prend deux parts, puis le niveau, le tri et la case */
+  .filtres {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+
+  .filtres__recherche,
+  .filtres__soir {
+    grid-column: auto;
   }
 }
 

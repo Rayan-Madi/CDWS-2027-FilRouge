@@ -38,7 +38,7 @@ function codeSeul(texte) {
 }
 
 const INTERDITS = [
-  [/\bany\b/, "any"],
+  [/(?<![.\w])any\b/, "any"], // et non AbortSignal.any, qui est une méthode
   [/@ts-(?:ignore|expect-error|nocheck)/, "directive qui fait taire le compilateur"],
   [/\bas\s+(?!const\b)[A-Za-z_{[(]/, "assertion de type « as » (elle ne vérifie rien)"],
   [/[\w)\]]!(?=\s*[.[;,)])/, "assertion de non-nullité « ! »"],
@@ -71,7 +71,7 @@ test("le filet attrape bien ce qu'il doit attraper", () => {
     const ligne = codeSeul(essai);
     assert.ok(INTERDITS.some(([motif]) => motif.test(ligne)), `non détecté : ${essai}`);
   }
-  const permis = ['const s = "Jonny !";', "if (a !== b) {}", "const c = [1] as const;", "// any est un mot anglais", "if (!ok) return;", "x = /a!b/.test(s);"];
+  const permis = ['const s = "Jonny !";', "if (a !== b) {}", "const c = [1] as const;", "// any est un mot anglais", "if (!ok) return;", "x = /a!b/.test(s);", "AbortSignal.any([a, b]);"];
   for (const essai of permis) {
     const ligne = codeSeul(essai);
     assert.ok(!INTERDITS.some(([motif]) => motif.test(ligne)), `faux positif : ${essai}`);

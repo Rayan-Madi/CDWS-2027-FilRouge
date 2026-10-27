@@ -24,6 +24,7 @@ export async function ouvrirNavigateur() {
       return await puppeteer.launch({
         executablePath,
         headless: true,
+        protocolTimeout: 30000, // un appel au navigateur qui ne revient pas échoue, au lieu de tout bloquer
         // Sur les machines d'intégration continue (Ubuntu 24), le bac à sable de Chrome est refusé par AppArmor
         args: process.env.CI ? ["--no-sandbox"] : [],
       });
@@ -50,6 +51,7 @@ export async function nouvellePage(navigateur, url, { largeur = 1280, hauteur = 
   });
   page.on("pageerror", (erreur) => erreurs.push(String(erreur)));
   Object.assign(page, { erreurs });
+  page.setDefaultTimeout(15000);
   await page.setViewport({ width: largeur, height: hauteur });
   if (url) {
     await page.goto(url, { waitUntil: attendre ? "load" : "domcontentloaded" });

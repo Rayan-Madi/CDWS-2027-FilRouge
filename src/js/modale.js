@@ -1,26 +1,23 @@
-/* Modale de réservation : un <dialog> ouvert par showModal().
-   showModal() et non show() : le focus entre dans la modale, Échap ferme, et le reste de la page
-   devient inerte, gratuitement. */
-import { trouver, trouverTous, elementCible } from "./dom.js";
+import { trouver, trouverTous } from "./dom.js";
 import { brancherValidation } from "./validation.js";
 import { envoyer } from "./envoi.js";
 import { texteDu, prenomDe } from "./formulaire.js";
+import { formaterPlaces, recapAtelier } from "./format.js";
 import { reserver, ErreurServeur } from "./serveur-simule.js";
-const texteDe = (racine, selecteur) => (trouver(racine, selecteur, HTMLElement).textContent ?? "").trim();
-function ficheDe(carte) {
-    return {
-        id: carte.dataset.id ?? "",
-        titre: texteDe(carte, "h3"),
-        recap: `${texteDe(carte, ".atelier__infos")} · ${texteDe(carte, ".atelier__prix")}`,
-    };
+/** La suite de la confirmation dépend du lieu : un lien de connexion, ou une adresse. */
+function suiteConfirmation(atelier, courriel) {
+    return atelier.lieu === "En ligne"
+        ? `Le lien de connexion arrivera à ${courriel} la veille.`
+        : `L'adresse exacte, à ${atelier.lieu}, arrivera à ${courriel} la veille.`;
 }
-// modale : le <dialog> ; liste : la liste des ateliers, où sont les boutons « Réserver »
-export function brancherModale(modale, liste) {
-    if (typeof modale.showModal !== "function")
-        return; // sans <dialog>, « Réserver » reste un lien
+export function brancherModale(modale, rappels) {
     const formulaire = trouver(modale, "#form-reservation", HTMLFormElement);
     const titreAtelier = trouver(modale, ".modale__atelier", HTMLElement);
     const recap = trouver(modale, ".modale__recap", HTMLElement);
+    const description = trouver(modale, ".modale__description", HTMLElement);
+    const formateur = trouver(modale, ".modale__formateur", HTMLElement);
+    const prerequis = trouver(modale, ".modale__prerequis", HTMLElement);
+    const places = trouver(modale, ".modale__places", HTMLElement);
     const zonesSaisie = trouverTous(formulaire, ".champ, .modale__actions", HTMLElement);
     const boutonReserver = trouver(formulaire, "button[value=reserver]", HTMLButtonElement);
     const confirmation = trouver(formulaire, ".formulaire__confirmation", HTMLElement);
@@ -28,16 +25,18 @@ export function brancherModale(modale, liste) {
     const fin = trouver(formulaire, ".modale__fin", HTMLElement);
     const boutonFermer = trouver(fin, "button", HTMLButtonElement);
     const { toutVerifier, effacer } = brancherValidation(formulaire);
-    // L'état de la modale : quel atelier, ouvert depuis quel bouton, envoi en cours ou non
+    // L'état de la modale : l'atelier affiché, et l'envoi en cours ou non
     let atelier = null;
-    let declencheur = null;
     let enCours = false;
-    function ouvrir(fiche, bouton) {
-        atelier = fiche;
-        declencheur = bouton;
+    function ouvrir(choisi) {
+        atelier = choisi;
         // L'atelier choisi est repris dans la modale : on n'a pas à s'en souvenir (Nielsen, heuristique 6)
-        titreAtelier.textContent = fiche.titre;
-        recap.textContent = fiche.recap;
+        titreAtelier.textContent = choisi.titre;
+        recap.textContent = recapAtelier(choisi);
+        description.textContent = choisi.description;
+        formateur.textContent = choisi.formateur;
+        prerequis.textContent = choisi.prerequis;
+        places.textContent = formaterPlaces(choisi.places);
         formulaire.reset();
         effacer();
         zonesSaisie.forEach((zone) => (zone.hidden = false));
@@ -46,24 +45,6 @@ export function brancherModale(modale, liste) {
         fin.hidden = true;
         modale.showModal();
     }
-    // Sans JavaScript, « Réserver » est un lien vers le formulaire. Avec, il devient un vrai bouton.
-    // On DÉPLACE son contenu (le texte masqué compris) au lieu de le recopier par innerHTML.
-    trouverTous(liste, "a[data-reserver]", HTMLAnchorElement).forEach((lien) => {
-        const bouton = document.createElement("button");
-        bouton.type = "button"; // sinon, dans un formulaire, il soumettrait
-        bouton.className = lien.className;
-        bouton.dataset.reserver = "";
-        bouton.append(...lien.childNodes);
-        lien.replaceWith(bouton);
-    });
-    // UN écouteur pour toutes les cartes, présentes et futures (délégation)
-    liste.addEventListener("click", (evenement) => {
-        const bouton = elementCible(evenement)?.closest("button[data-reserver]");
-        const carte = bouton?.closest(".atelier");
-        if (bouton instanceof HTMLButtonElement && carte instanceof HTMLElement) {
-            ouvrir(ficheDe(carte), bouton);
-        }
-    });
     formulaire.addEventListener("submit", async (evenement) => {
         const envoyeur = evenement.submitter;
         const action = envoyeur instanceof HTMLButtonElement ? envoyeur.value : "";
@@ -76,15 +57,15 @@ export function brancherModale(modale, liste) {
         alerte.textContent = "";
         if (!toutVerifier())
             return;
-        const fiche = atelier;
+        const choisi = atelier;
         const donnees = new FormData(formulaire);
-        const reservation = { atelierId: fiche.id, nom: texteDu(donnees, "nom"), courriel: texteDu(donnees, "courriel") };
+        const reservation = { atelierId: choisi.id, nom: texteDu(donnees, "nom"), courriel: texteDu(donnees, "courriel") };
         enCours = true;
         try {
-            // Les cartes écrites dans la page n'annoncent pas leurs places : on n'en limite pas le nombre ici
-            await envoyer(boutonReserver, "Réservation en cours…", () => reserver(reservation, Infinity));
+            await envoyer(boutonReserver, "Réservation en cours…", () => reserver(reservation, choisi.places));
+            rappels.surReservee(choisi);
             zonesSaisie.forEach((zone) => (zone.hidden = true));
-            confirmation.textContent = `C'est réservé, ${prenomDe(reservation.nom)} ! ${fiche.titre} : ${fiche.recap}. Le lien de l'atelier arrivera à ${reservation.courriel} la veille.`;
+            confirmation.textContent = `C'est réservé, ${prenomDe(reservation.nom)} ! ${choisi.titre} : ${recapAtelier(choisi)}. ${suiteConfirmation(choisi, reservation.courriel)}`;
             fin.hidden = false;
             boutonFermer.focus(); // le focus ne reste pas sur un bouton devenu caché
         }
@@ -101,10 +82,12 @@ export function brancherModale(modale, liste) {
             enCours = false;
         }
     });
-    // La seule chose que <dialog> ne garantit pas partout : rendre le focus au déclencheur.
-    // L'événement close part quelle que soit la façon de fermer (bouton, Échap, fond).
+    // La seule chose que <dialog> ne garantit pas partout : rendre le focus là d'où l'on vient.
+    // L'événement close part quelle que soit la façon de fermer (bouton, Échap, fond). Le catalogue,
+    // qui a pu reconstruire ses cartes entre-temps, retrouve la bonne par l'identifiant de l'atelier.
     modale.addEventListener("close", () => {
-        declencheur?.focus();
+        if (atelier)
+            rappels.surFermee(atelier);
     });
     // Un clic sur le fond sombre ferme : la cible est alors le <dialog> lui-même,
     // car tout le contenu est dans .modale__contenu et le dialog n'a pas de marge interne.
@@ -113,5 +96,6 @@ export function brancherModale(modale, liste) {
             modale.close();
         }
     });
+    return { ouvrir };
 }
 //# sourceMappingURL=modale.js.map
