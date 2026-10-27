@@ -18,10 +18,19 @@
   </style>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/skillhub.css">
-  <!-- Signale que le JavaScript est disponible, avant la première peinture (pas de flash du menu) -->
-  <script>document.documentElement.classList.add("js");</script>
-  <!-- defer : téléchargé en parallèle, exécuté après l'analyse du HTML -->
-  <script src="js/skillhub.js" defer></script>
+  <!-- Signale que le JavaScript est disponible, avant la première peinture (pas de flash du menu).
+       Seulement si le navigateur sait charger les modules ; et si le module ne se charge pas
+       (page ouverte en file://, réseau coupé), la classe est retirée : la page reste complète, menu déplié. -->
+  <script>
+    if ("noModule" in HTMLScriptElement.prototype) {
+      document.documentElement.classList.add("js");
+      addEventListener("error", (e) => {
+        if (e.target instanceof HTMLScriptElement) document.documentElement.classList.remove("js");
+      }, true);
+    }
+  </script>
+  <!-- Un seul point d'entrée ; type="module" implique defer : exécuté après l'analyse du HTML -->
+  <script type="module" src="js/main.js"></script>
 </head>
 <body>
   <a class="evitement" href="#contenu">Aller au contenu</a>
@@ -47,7 +56,22 @@
         </button>
         <ul class="navigation__liste" id="menu" data-ferme>
           <li><a href="#valeurs">Valeurs</a></li>
-          <li><a href="#ateliers">Ateliers</a></li>
+          <!-- Le lien reste un lien ; le bouton à côté ouvre les raccourcis (motif « disclosure » de l'APG).
+               Sans JavaScript, bouton et sous-menu n'apparaissent pas : ils n'ont de sens qu'avec le filtre. -->
+          <li class="navigation__groupe">
+            <a href="#ateliers">Ateliers</a>
+            <button class="navigation__deplier" type="button" aria-expanded="false" aria-controls="sous-menu-ateliers">
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="visuellement-masque">Raccourcis vers les ateliers</span>
+            </button>
+            <ul class="navigation__sous-menu" id="sous-menu-ateliers" data-ferme>
+              <li><a href="#ateliers" data-raccourci="tous">Tout le catalogue</a></li>
+              <li><a href="#ateliers" data-raccourci="debutant">Pour débutants</a></li>
+              <li><a href="#ateliers" data-raccourci="soir">Le soir</a></li>
+            </ul>
+          </li>
           <li><a href="#formateurs">Formateurs</a></li>
           <li><a class="navigation__action" href="#inscription">S'inscrire</a></li>
         </ul>
@@ -123,7 +147,7 @@
         </div>
         <ul class="ateliers">
           <li>
-            <article class="atelier" data-moment="soir" data-niveau="debutant">
+            <article class="atelier" data-id="git-initiation" data-moment="soir" data-niveau="debutant">
               <h3>Initiation à Git</h3>
               <p class="atelier__etiquette">Développement</p>
               <p>Versionner son travail, revenir en arrière et collaborer sur GitHub sans peur de tout casser.</p>
@@ -133,7 +157,7 @@
             </article>
           </li>
           <li>
-            <article class="atelier" data-moment="journee" data-niveau="intermediaire">
+            <article class="atelier" data-id="figma-maquette" data-moment="journee" data-niveau="intermediaire">
               <h3>Maquetter une page avec Figma</h3>
               <p class="atelier__etiquette">Design</p>
               <p>Passer d'une idée griffonnée à une maquette propre, prête à être intégrée.</p>
@@ -143,7 +167,7 @@
             </article>
           </li>
           <li>
-            <article class="atelier" data-moment="soir" data-niveau="tous">
+            <article class="atelier" data-id="portfolio" data-moment="soir" data-niveau="tous">
               <h3>Construire son portfolio</h3>
               <p class="atelier__etiquette">Carrière</p>
               <p>Choisir ses projets, les présenter et les mettre en ligne gratuitement.</p>
@@ -259,7 +283,8 @@
           <p>
             <button class="action" type="submit">Créer mon compte</button>
           </p>
-          <p class="formulaire__confirmation" role="status" hidden></p>
+          <p class="formulaire__confirmation" role="status"></p>
+          <p class="formulaire__erreur" role="alert"></p>
         </form>
       </section>
     </main>
@@ -274,7 +299,7 @@
     </footer>
   </div>
 
-  <!-- Modale de réservation : fermée par défaut, ouverte par showModal() (js/skillhub.js) -->
+  <!-- Modale de réservation : fermée par défaut, ouverte par showModal() (js/modale.js) -->
   <dialog id="modale-reservation" class="modale" aria-labelledby="t-modale">
     <div class="modale__contenu">
       <h2 id="t-modale">Réserver : <span class="modale__atelier">un atelier</span></h2>
@@ -297,7 +322,8 @@
           <button class="action" type="submit" value="reserver">Confirmer la réservation</button>
           <button class="action action--secondaire" type="submit" value="annuler" formnovalidate>Annuler</button>
         </p>
-        <p class="formulaire__confirmation" role="status" hidden></p>
+        <p class="formulaire__erreur" role="alert"></p>
+        <p class="formulaire__confirmation" role="status"></p>
         <p class="modale__fin" hidden>
           <button class="action" type="submit" value="fermer" formnovalidate>Fermer</button>
         </p>

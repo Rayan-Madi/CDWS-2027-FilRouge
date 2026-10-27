@@ -298,6 +298,62 @@ ul {
   display: none;
 }
 
+/* Sous-menu « Ateliers » : le lien, puis le bouton qui déplie les raccourcis.
+   Bouton et sous-menu n'existent qu'avec le JavaScript (sans lui, le filtre non plus). */
+.navigation__groupe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.navigation__groupe > a {
+  flex: 1;
+}
+
+.navigation__deplier,
+.navigation__sous-menu {
+  display: none;
+}
+
+.js .navigation__deplier {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--cible);
+  min-height: var(--cible);
+  padding: 0;
+  color: var(--texte);
+  background: transparent;
+  border: 0;
+  border-radius: var(--rayon-s);
+  cursor: pointer;
+}
+
+.js .navigation__deplier:hover {
+  background: var(--accent-clair);
+}
+
+.navigation__deplier svg {
+  flex: none; /* sans lui, l'icône rétrécit dans le bouton (et la règle svg { height: auto } l'écrase) */
+  width: 1rem;
+  height: 1rem;
+  transition: transform 0.2s;
+}
+
+/* La flèche suit l'état annoncé : ce que voit l'œil et ce qu'entend le lecteur d'écran restent d'accord */
+.navigation__deplier[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* Sur téléphone, dans le panneau du menu : les raccourcis s'emboîtent sous « Ateliers » */
+.js .navigation__sous-menu:not([data-ferme]) {
+  display: block;
+  flex-basis: 100%;
+  margin-left: var(--e-4);
+  padding-left: var(--e-2);
+  border-left: 2px solid var(--bordure);
+}
+
 /* ---------- Bouton (composant 1) — six états ---------- */
 .action {
   display: inline-block;
@@ -663,6 +719,25 @@ ul {
   border-radius: var(--rayon-s);
 }
 
+/* Le refus du serveur : bordure ET texte, jamais la couleur seule (--erreur sur --fond : 6,53:1) */
+.formulaire__erreur {
+  padding: var(--e-3) var(--e-4);
+  font-weight: 600;
+  color: var(--erreur);
+  background: var(--fond);
+  border-left: 4px solid var(--erreur);
+  border-radius: var(--rayon-s);
+}
+
+/* Zones annoncées (role="status", role="alert") : toujours dans la page, pour que le lecteur d'écran
+   les suive dès le départ ; vides, elles ne prennent aucune place. Jamais hidden : une zone cachée
+   puis montrée n'est pas toujours annoncée. */
+.formulaire__confirmation:empty,
+.formulaire__erreur:empty {
+  padding: 0;
+  border: 0;
+}
+
 /* ---------- Modale de réservation (composant 4) ---------- */
 /* padding: 0 sur le dialog : tout le contenu est dans .modale__contenu,
    si bien qu'un clic dont la cible est le dialog lui-même vient du fond */
@@ -769,6 +844,30 @@ ul {
 
   .navigation__action {
     border: 2px solid var(--accent);
+  }
+
+  /* Sur grand écran, le sous-menu se déroule sous « Ateliers », par-dessus la page */
+  .navigation__groupe {
+    position: relative;
+    flex-wrap: nowrap;
+  }
+
+  .js .navigation__deplier {
+    min-width: 1.75rem; /* 28 px de large, 44 de haut : au-delà des 24 × 24 de WCAG 2.5.8 */
+  }
+
+  .js .navigation__sous-menu:not([data-ferme]) {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1;
+    min-width: 14rem;
+    margin: var(--e-1) 0 0;
+    padding: var(--e-2);
+    background: var(--fond);
+    border: 1px solid var(--bordure);
+    border-radius: var(--rayon-m);
+    box-shadow: var(--ombre-1);
   }
 
   .accroche {
