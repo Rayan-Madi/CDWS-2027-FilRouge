@@ -51,12 +51,14 @@ test("téléphone, au clavier seul : menu, sous-menu, raccourci, réservation, r
   await r.touche("Tab", /"Le soir"/);
   await r.touche("Enter");
   assert.equal(await page.$eval(".menu-bouton", (b) => b.getAttribute("aria-expanded")), "false", "le raccourci referme le menu");
-  assert.equal(await texteDe(page, ".filtres__resultat"), "2 ateliers affichés");
+  assert.match(await texteDe(page, ".catalogue__statut"), / · le soir · par date$/);
 
   // Le lien suivi a déplacé le point de départ du clavier sur la section des ateliers
-  await r.touche("Tab", /^input/);
-  assert.equal(await page.$eval(".filtres [name=soir]", (c) => c.checked), true);
-  await r.touche("Tab", /^input/);
+  await r.touche("Tab", /^input#recherche/);
+  await r.touche("Tab", /^select#niveau/);
+  await r.touche("Tab", /^select#tri/);
+  await r.touche("Tab", /^input#soir/);
+  assert.equal(await page.$eval("#soir", (c) => c.checked), true);
   await r.touche("Tab", /"Réserver l'atelier Initiation à Git"/);
   await r.touche("Enter", /^input#r-nom/);
   await r.taper("Jonny Martin");
@@ -68,6 +70,57 @@ test("téléphone, au clavier seul : menu, sous-menu, raccourci, réservation, r
   r.etapes.push(`(confirmation) → ${await elementActif(page)}`);
   await r.touche("Enter", /"Réserver l'atelier Initiation à Git"/);
   await r.touche("Tab", /"Réserver l'atelier Construire son portfolio"/);
+
+  if (process.env.CLAVIER_VERBEUX) console.log(r.etapes.join("\n"));
+  assert.deepEqual(page.erreurs, []);
+  await page.close();
+});
+
+test("TP 3, au clavier seul : filtrer, trier, ouvrir une fiche, revenir — le compteur change à chaque étape", async () => {
+  const page = await nouvellePage(navigateur, serveur.url, { largeur: 1280, hauteur: 900 });
+  await page.waitForFunction(() => document.querySelector(".ateliers").getAttribute("aria-busy") === "false");
+  const r = relevé(page);
+  const annonces = [await texteDe(page, ".catalogue__statut")];
+  const noter = async () => {
+    await page.waitForFunction((t) => document.querySelector(".catalogue__statut").textContent !== t, {}, annonces.at(-1));
+    const texte = await texteDe(page, ".catalogue__statut");
+    annonces.push(texte);
+    r.etapes.push(`(annonce) « ${texte} »`);
+  };
+
+  await page.focus(".accroche__actions .action--secondaire"); // « Voir les ateliers »
+  await r.touche("Enter");
+  await r.touche("Tab", /^input#recherche/);
+  await r.taper("sarah"); // les ateliers de Sarah Benali
+  await noter();
+  await r.touche("Tab", /^select#niveau/);
+  await r.touche("ArrowDown", /^select#niveau/); // débutant
+  await noter();
+  await r.touche("Tab", /^select#tri/);
+  await r.touche("ArrowDown", /^select#tri/); // prix croissant
+  await noter();
+  await r.touche("Tab", /^input#soir/);
+  await r.touche("Space", /^input#soir/);
+  await noter();
+  await r.touche("Space", /^input#soir/);
+  await noter();
+  // Une zone polie n'annonce qu'un texte qui change : chaque annonce diffère de la précédente
+  annonces.slice(1).forEach((texte, i) => assert.notEqual(texte, annonces[i], `étape ${i + 1} : ${annonces.join(" | ")}`));
+  assert.equal(annonces.length, 6);
+
+  assert.deepEqual(annonces.slice(1), [
+    "5 ateliers · « sarah » · par date",
+    "2 ateliers · « sarah » · niveau débutant · par date",
+    "2 ateliers · « sarah » · niveau débutant · par prix croissant",
+    "1 atelier · « sarah » · niveau débutant · le soir · par prix croissant",
+    "2 ateliers · « sarah » · niveau débutant · par prix croissant",
+  ]);
+
+  const carte = await r.touche("Tab", /^button\.action "Réserver l'atelier HTML et CSS/);
+  await r.touche("Enter", /^input#r-nom/);
+  assert.equal(await page.$eval("#modale-reservation", (d) => d.open), true);
+  await r.touche("Escape");
+  assert.equal(await elementActif(page), carte, "revenu sur la carte d'où l'on était parti");
 
   if (process.env.CLAVIER_VERBEUX) console.log(r.etapes.join("\n"));
   assert.deepEqual(page.erreurs, []);

@@ -106,8 +106,13 @@ Messages en français à côté du champ (`aria-describedby`, `aria-invalid`). L
 **Composant catalogue.** État unique :
 
 ```ts
-{ chargement: "en-cours" | "erreur" | "pret", ateliers, erreur, criteres: { recherche, niveau, soir, tri } }
+{
+  chargement: { statut: "en-cours" } | { statut: "erreur", erreur } | { statut: "pret", ateliers },
+  criteres: { recherche, niveau, soir, tri }
+}
 ```
+
+(Une union plutôt que trois champs séparés : un catalogue « prêt » a forcément ses ateliers, une « erreur » sa panne.)
 
 `majEtat(Partial<Etat>)` est le seul point d'entrée ; `rendre()` calcule la vue (`chargement`, `erreur`, `vide`, `succes`) et la rend par un `switch` exhaustif (une branche oubliée ne compile pas). Écouteurs délégués : `input`/`change` sur le formulaire de filtres, `click` sur la liste et sur la zone d'état.
 

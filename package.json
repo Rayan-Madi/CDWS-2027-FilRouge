@@ -8,7 +8,7 @@
     "verifier": "tsc -p . --noEmit",
     "test": "npm run build && npm run test:unitaires && npm run test:e2e",
     "test:unitaires": "node --test \"tests/unitaires/*.test.js\"",
-    "test:e2e": "node --test --test-concurrency=1 \"tests/e2e/*.test.js\"",
+    "test:e2e": "node --test --test-concurrency=1 --test-timeout=90000 \"tests/e2e/*.test.js\"",
     "captures": "node tests/captures.js",
     "servir": "node tests/outils/serveur.js"
   },
