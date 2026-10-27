@@ -30,4 +30,18 @@
 | [`test-nvda.md`](test-nvda.md) | TP 4 : le parcours à faire au lecteur d'écran NVDA, et ce qu'on doit entendre |
 | [`revision-oral-ec01.md`](revision-oral-ec01.md) | Fiche de révision : les questions du correcteur, et où le montrer dans le code |
 
-À faire par moi : faire jouer le prototype Figma à deux camarades et remplir les retours d'essai, régler l'appareil du prototype sur 360 × 800 (TP 3) ; la capture de l'arbre d'accessibilité dans Chrome et le test NVDA (TP 4) ; relire l'audit Nielsen et rejouer ses deux tâches moi-même (TP 2).
+## FM03 — Applications web dynamiques et interactives
+
+| Fichier | Contenu |
+|---|---|
+| [`fm03-tp1-comportement.md`](fm03-tp1-comportement.md) | TP 1 : modules, menu en délégation avec sous-menu, état sorti du DOM, validation au fil de la saisie, envoi, parcours au clavier relevé, ma gestion du focus en cinq phrases |
+| [`fm03-tp1-code-fm02-annote.md`](fm03-tp1-code-fm02-annote.md) | TP 1 : le `skillhub.js` de FM02, annoté ligne par ligne, et ce que FM03 en a fait |
+| [`fm03-tp2-typescript.md`](fm03-tp2-typescript.md) | TP 2 : tsconfig strict, les erreurs relevées et les bugs qu'elles cachaient, `types.ts`, le DOM typé sans `as`, zéro `any` |
+| [`fm03-tp2-sortie-tsc.txt`](fm03-tp2-sortie-tsc.txt) | TP 2 : la sortie brute de `tsc`, avant toute correction (72 + 79 erreurs) |
+| [`fm03-tp3-catalogue.md`](fm03-tp3-catalogue.md) | TP 3 : `ateliers.json`, `chargerAteliers()`, le filtre à état unique, les quatre états, les pannes provoquées, le parcours au clavier |
+| [`captures/fm03/`](captures/fm03/) | TP 3 : les quatre états (chargement, vide, erreur 404, erreur hors ligne, succès), à 1280 et 375 px |
+| [`superpowers/specs/2026-10-27-fm03-applications-dynamiques-design.md`](superpowers/specs/2026-10-27-fm03-applications-dynamiques-design.md) | La conception des trois TP |
+
+À faire par moi (FM02) : faire jouer le prototype Figma à deux camarades et remplir les retours d'essai, régler l'appareil du prototype sur 360 × 800 (TP 3) ; la capture de l'arbre d'accessibilité dans Chrome et le test NVDA (TP 4) ; relire l'audit Nielsen et rejouer ses deux tâches moi-même (TP 2).
+
+À faire par moi (FM03) : rejouer le parcours au clavier sur la page en ligne et expliquer ma gestion du focus à un voisin sans regarder l'écran (TP 1, § 8) ; provoquer moi-même les pannes dans les outils de développement : case *Offline*, fichier renommé (TP 3, § 5) ; renommer un fichier `.ts` et lire une erreur à voix haute (TP 2).
