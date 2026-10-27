@@ -5,15 +5,17 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { CONTENU, recapAtelier, confirmationReservation, ORDRE_TABULATION, PALIERS } = require("../code.js");
 
-const racine = path.join(__dirname, "..", "..", "..");
-const html = fs.readFileSync(path.join(racine, "src/index.html"), "utf8");
-const js = fs.readFileSync(path.join(racine, "src/js/skillhub.js"), "utf8");
+// La maquette reproduit la page de FIN FM02 (commit 3d96c47), livrable de FM02 : on la compare à cet
+// instantané figé, pas à la page vivante, qui a évolué en FM03 (catalogue chargé, TypeScript).
+const fm02 = path.join(__dirname, "fm02");
+const html = fs.readFileSync(path.join(fm02, "index.html"), "utf8");
+const js = fs.readFileSync(path.join(fm02, "skillhub.js"), "utf8");
 // Le texte de la page, balises retirées et espaces normalisés (y compris insécables)
 const textePage = html.replace(/<[^>]+>/g, " ").replace(/[\s  ]+/g, " ");
 const normaliser = (texte) => texte.replace(/[\s  ]+/g, " ");
 
 function dansLaPage(texte) {
-  assert.ok(textePage.includes(normaliser(texte)), `absent de index.html : « ${texte} »`);
+  assert.ok(textePage.includes(normaliser(texte)), `absent de index.html (FM02) : « ${texte} »`);
 }
 
 test("l'en-tête, l'accroche et le pied viennent de la page", () => {
@@ -48,7 +50,7 @@ test("le formulaire d'inscription vient de la page", () => {
 test("les messages et les états viennent du script", () => {
   const m = CONTENU.messages;
   [m.nomManquant, m.courrielInvalide, m.chargement].forEach((texte) => {
-    assert.ok(js.includes(texte), `absent de skillhub.js : « ${texte} »`);
+    assert.ok(js.includes(texte), `absent de skillhub.js (FM02) : « ${texte} »`);
   });
   assert.ok(js.includes("ateliers affichés") && js.includes("atelier affiché"));
 });
