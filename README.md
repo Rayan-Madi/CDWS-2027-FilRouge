@@ -102,7 +102,7 @@ La maquette Figma (TP 3) est construite par le plugin [`outils/figma-skillhub/`]
 
 - **Mobile-first** : le cas téléphone s'écrit sans media query, les paliers s'ajoutent en `min-width`, en `em`.
 - Structure de page en `grid-template-areas`.
-- Grilles de cartes en `repeat(auto-fit, minmax(min(16rem, 100%), 1fr))` : jusqu'à 4 colonnes pour les ateliers (3 pour les valeurs et les formateurs, qui ont 3 cartes), puis 2, puis 1, sans point de rupture.
+- Grilles de cartes en `repeat(auto-fit, minmax(min(16rem, 100%), 1fr))` : 4, 3, 2 puis 1 colonne pour les ateliers (au plus 3 pour les valeurs et les formateurs, qui ont 3 cartes), sans point de rupture.
 - Carte d'atelier en Flexbox colonne, bouton poussé en pied par `margin-top: auto`.
 - Titre d'accroche en `clamp()`, paragraphes bornés à `65ch`, tailles en `rem`.
 - `box-sizing: border-box`, `img { max-width: 100% }`, `overflow-wrap: break-word`.
@@ -163,7 +163,7 @@ Sans JavaScript, la page reste complète : le menu est déplié, le bouton Menu 
 - [x] Rapports Lighthouse accessibilité avant et après exportés dans `docs/` (`lighthouse-a11y-avant.html`, `lighthouse-a11y-apres.html`)
 - [x] Rapports Wave avant et après exportés dans `docs/` ([`wave-avant.pdf`](docs/wave-avant.pdf), [`wave-apres.pdf`](docs/wave-apres.pdf)) : 0 erreur, 0 erreur de contraste, 0 alerte dans les deux cas
 - [x] Parcours clavier rejoué sur la page en ligne (Tab, Maj+Tab, modale, menu mobile) : [`docs/fm02-tp4-accessibilite.md`](docs/fm02-tp4-accessibilite.md), § 4
-- [x] FM03 : `npm test` — TypeScript strict sans erreur, 35 tests unitaires, 50 tests de bout en bout (menu et délégation, validation, envoi, modale, catalogue et ses pannes, parcours clavier, axe-core sans violation dans les quatre états)
+- [x] FM03 : `npm test` — TypeScript strict sans erreur, 35 tests unitaires, 52 tests de bout en bout (menu et délégation, validation, envoi, modale, catalogue et ses pannes, parcours clavier, axe-core sans violation dans les quatre états)
 - [x] FM03 : captures des quatre états, hors ligne et 404 comprises : [`docs/captures/fm03/`](docs/captures/fm03/)
 - [x] Plugin Figma (TP 3) : `cd outils/figma-skillhub && npm install && npm test && npm run types`. Il vérifie que les jetons sont ceux du CSS, que le contenu est celui de la page, et qu'une construction complète passe sur un simulateur de l'API. Les appels à l'API sont vérifiés contre ses types officiels.
 

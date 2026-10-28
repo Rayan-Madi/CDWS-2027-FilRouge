@@ -37,6 +37,12 @@ export async function demarrerServeur({ racine = RACINE_SRC, port = 0 } = {}) {
       reponse.writeHead(400).end(); // « /% » : une adresse mal encodée ne doit pas faire tomber le serveur
       return;
     }
+    // Une barre oblique inverse (%5c) ou un octet nul n'ont rien à faire dans une adresse : refusés partout,
+    // car Windows lit « \ » comme un séparateur de dossiers et Linux comme un caractère ordinaire
+    if (chemin.includes("\\") || chemin.includes("\0")) {
+      reponse.writeHead(400).end();
+      return;
+    }
     const panne = pannes.get(chemin);
     if (panne?.delai) {
       await new Promise((fin) => setTimeout(fin, panne.delai));

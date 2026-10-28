@@ -48,14 +48,15 @@ Un seul point d'entrée (`main`), un fichier par responsabilité. Chaque composa
 | `serveur-simule` | tient le rôle du serveur absent (délai, « déjà inscrit », « complet ») | `types` |
 | `inscription` | formulaire « Créer mon compte » | `validation`, `envoi`, `serveur-simule` |
 | `modale` | fiche de l'atelier + réservation dans le `<dialog>` | `validation`, `envoi`, `serveur-simule`, `format` |
-| `types` | `Niveau`, `Atelier`, `Inscription`, `Reservation`, `Criteres`, `Tri` | — |
+| `types` | `Niveau`, `Atelier`, `Profil`, `Inscription`, `Reservation` | — |
+| `formulaire` | lire un `FormData` sans `any` (`texteDu`, `prenomDe`) | — |
 | `api` | `chargerAteliers(signal, options)` et la garde `estAtelier` | `types` |
-| `filtre` | logique pure : normaliser, filtrer, trier, décrire les critères | `types`, `format` |
+| `filtre` | `Criteres`, `Tri` et la logique pure : normaliser, filtrer, trier, décrire les critères | `types`, `format` |
 | `format` | prix, durée, date (fuseau Europe/Paris), places | `types` |
 | `carte` | `carteAtelier(atelier)` : rend un `<li>`, ne l'insère pas | `format` |
 | `catalogue` | le composant : un état, `majEtat(Partial)`, un `rendre()` avec un `switch` sur les quatre états | `api`, `filtre`, `carte`, `attendre-la-fin` |
 | `attendre-la-fin` | anti-rebond de 300 ms (cours, 5.6) | — |
-| `navigation-courante` | `aria-current` sur le lien de la section visible (FM02, inchangé) | — |
+| `navigation-courante` | `aria-current` sur le lien de la section visible ; suit toutes les sections (accroche comprise : plus aucun lien marqué en haut de page) | — |
 
 Le TP 1 crée `main`, `menu`, `validation`, `envoi`, `serveur-simule`, `inscription`, `modale`, `filtre` (version FM02 : soir, débutants), `navigation-courante`. Le TP 2 ajoute `dom` (la réponse typée au cas `null`), `types` et `formulaire` (lire un `FormData` sans `any`). Le TP 3 ajoute le reste et remplace le filtre FM02 par le catalogue ; `Criteres` et `Tri` vivent dans `filtre`, avec la logique qui les applique.
 
@@ -98,7 +99,7 @@ Messages en français à côté du champ (`aria-describedby`, `aria-invalid`). L
 **Chargement.** `chargerAteliers(signal?, { url, delaiMax })` :
 
 - `response.ok` testé (fetch ne rejette pas sur 404/500) ;
-- délai maximal de 8 s (`AbortSignal.timeout`, combiné au signal de l'appelant par `AbortSignal.any`) ;
+- délai maximal de 8 s : un `AbortController` unique, abandonné par une minuterie ou par le signal de l'appelant (relayé), sans `AbortSignal.any` ni `AbortSignal.timeout`, trop récents pour tous les navigateurs ;
 - `AbortError` de l'appelant relancé tel quel : une annulation n'est pas une panne ;
 - la réponse est **vérifiée** par `estAtelier` (« le type est une promesse ») ;
 - toute panne devient une `ErreurChargement` avec sa `raison` (`reseau`, `http` + statut, `delai`, `format`).

@@ -23,7 +23,8 @@ function codeSeul(texte) {
   const finsDExpression = []; // pour chaque ${ ouvert : la profondeur où sa } le referme
 
   // Une barre oblique ouvre une expression régulière si le code qui précède attend une valeur
-  const attendUneValeur = () => /(^|[=(,:!&|?;{}[+\-*%<>~^]|\breturn|\btypeof)\s*$/.test(sortie);
+  const attendUneValeur = () =>
+    /(^|[=(,:!&|?;{}[+\-*%<>~^]|\b(?:return|typeof|else|of|in|case|do|await|yield|throw|void|delete|new))\s*$/.test(sortie);
 
   while (i < texte.length) {
     const c = texte[i];
@@ -72,31 +73,60 @@ function codeSeul(texte) {
       i += 1;
     }
   }
+  // Une désynchronisation (gabarit jamais refermé) masquerait la suite du fichier : elle doit se voir
+  if (mode !== "code" || finsDExpression.length > 0) throw new Error("codeSeul : gabarit non refermé, découpage désynchronisé");
   return sortie;
 }
 
-// Les lignes d'import et d'export renommés ont des « as » qui ne sont pas des assertions
-const IMPORT_EXPORT = /^\s*(?:import\b|export\s*[{*])/;
+// Les mots après lesquels vient une valeur : « return !ok » n'est pas une assertion, « return <T>x » en est une
+const MOT_AVANT_VALEUR = /\b(?:return|typeof|else|of|in|case|do|await|yield|throw|void|delete|new)$/;
+
+/** « x! » : un « ! » collé (ou non) à ce qui le précède, si ce qui précède est une valeur et que ce n'est pas « != ». */
+function nonNullite(ligne) {
+  for (const m of ligne.matchAll(/!(?!=)/g)) {
+    const avant = ligne.slice(0, m.index).trimEnd();
+    if (/[)\]]$/.test(avant)) return true;
+    const mot = /[\w$]+$/.exec(avant)?.[0];
+    if (mot !== undefined && !MOT_AVANT_VALEUR.test(avant)) return true;
+  }
+  return false;
+}
+
+/** « <T>valeur » : des chevrons suivis d'une valeur, là où l'on attend une valeur (pas après un nom : f<T>(x), Map<K, V>). */
+function assertionChevrons(ligne) {
+  for (const m of ligne.matchAll(/<[A-Za-z_$][\w$.]*(?:<[^<>]*>)?(?:\[\])*>\s*[\w$(\["'!+\-]/g)) {
+    const avant = ligne.slice(0, m.index).trimEnd();
+    if (avant === "" || /=>$/.test(avant) || MOT_AVANT_VALEUR.test(avant) || !/[\w$.)\]>]$/.test(avant)) return true;
+  }
+  return false;
+}
 
 const INTERDITS = [
-  [/(?<![.\w$])any\b/, "any"], // et non AbortSignal.any, qui est une méthode
-  [/\bas\s+(?!const\b)\S/, "assertion de type « as » (elle ne vérifie rien)", IMPORT_EXPORT],
-  [/[\w$)\]]!(?!=)/, "assertion de non-nullité « ! »"],
-  [/(?:[=(,:?&|]|\breturn)\s*<[A-Za-z_$][\w$.]*(?:\[\])?>\s*[\w$(]/, "assertion de type <T>valeur"],
+  [(l) => /(?<![.\w$])any\b/.test(l), "any"], // et non AbortSignal.any, qui est une méthode
+  [(l) => /(?<![.\w$])as\b(?!\s*const\b)/.test(l), "assertion de type « as » (elle ne vérifie rien)"],
+  [nonNullite, "assertion de non-nullité « ! »"],
+  [assertionChevrons, "assertion de type <T>valeur"],
 ];
+
+// Les « as » des imports et exports renommés (import { a as b }, import * as ns) ne sont pas des assertions :
+// on efface ces spécificateurs, et seulement eux (import.meta, import(…) restent analysés)
+function sansSpecificateurs(code) {
+  const blanc = (morceau) => morceau.replace(/[^\n]/g, " ");
+  return code
+    .replace(/\b(?:import|export)\s+(?:type\s+)?\{[^}]*\}/g, blanc)
+    .replace(/\b(?:import|export)\s+\*\s+as\s+[\w$]+/g, blanc);
+}
 
 function fautesDe(texte) {
   const fautes = [];
   texte.split("\n").forEach((ligne, n) => {
     if (/@ts-(?:ignore|expect-error|nocheck)/.test(ligne)) fautes.push(`${n + 1} directive @ts-…`);
   });
-  const brutes = texte.split("\n");
-  codeSeul(texte)
+  sansSpecificateurs(codeSeul(texte))
     .split("\n")
     .forEach((ligne, n) => {
-      for (const [motif, nom, sauf] of INTERDITS) {
-        if (sauf && sauf.test(brutes[n] ?? "")) continue;
-        if (motif.test(ligne)) fautes.push(`${n + 1} ${nom} : ${ligne.trim()}`);
+      for (const [regle, nom] of INTERDITS) {
+        if (regle(ligne)) fautes.push(`${n + 1} ${nom} : ${ligne.trim()}`);
       }
     });
   return fautes;
@@ -127,6 +157,16 @@ test("le filet attrape bien ce qu'il doit attraper", () => {
     "const v = m.get(k)!",
     "const s = `a ${`b ${c as any}`} d`;",
     "// @ts-ignore",
+    "const f = (e: Event) => <HTMLElement>e.target;",
+    "const l = brutes.map((e) => <Atelier>e);",
+    "const v = await <Promise<void>>x;",
+    "const t = [<T>x];",
+    "const o = { a: <T>x };",
+    "const b = !<T>x;",
+    "return <T>x;",
+    "const y = x as",
+    "const u = import.meta.url as any;",
+    "el !.focus();",
   ];
   for (const essai of essais) assert.ok(fautesDe(essai).length > 0, `non détecté : ${essai}`);
 
@@ -153,6 +193,12 @@ test("le filet ne crie pas à tort", () => {
     "function f<T extends Element>(x: T): T { return x; }",
     "const p: Promise<void> = attendre();",
     "const s = `Merci ${prenom} !`;",
+    "return !ok;",
+    "if (typeof x !== \"string\") return;",
+    "const r = a < b && c > d;",
+    "const t: ReturnType<typeof setTimeout> = x;",
+    "const u = new URL(\"a\", import.meta.url);",
+    "else !fini && relancer();",
   ];
   for (const essai of permis) assert.deepEqual(fautesDe(essai), [], `faux positif : ${essai}`);
 });

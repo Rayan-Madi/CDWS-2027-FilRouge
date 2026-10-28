@@ -289,7 +289,7 @@ Annotations rédigées avec un assistant de code, relues ligne à ligne : je doi
 - **L321** `if (section) observateur.observe(section);` — commence l'observation. À l'appel d'`observe()`, le rappel reçoit une première entrée pour la section : le lien courant est donc marqué dès le chargement, sans attendre un défilement.
 - **L322–323** ferment le `forEach`, puis le `if` de la L300.
 
-**Ce que FM03 change.** `src/ts/navigation-courante.ts` ne prend que les liens de premier niveau, car les raccourcis du sous-menu visent tous `#ateliers`. Il cherche la section par `getElementById` au lieu de `querySelector(href)`, qui lève une erreur sur un lien `href="#"` et arrêterait tout le module.
+**Ce que FM03 change.** `src/ts/navigation-courante.ts` ne prend que les liens de premier niveau, car les raccourcis du sous-menu visent tous `#ateliers`. Il observe directement toutes les sections de la page, accroche comprise, et tient l'ensemble de celles qui traversent le milieu de l'écran : remonté en haut, plus aucun lien n'est marqué. Il compare leur `id` à `lien.hash`, toujours une chaîne : plus de `querySelector(href)`, qui lève une erreur sur un lien `href="#"` et arrêterait tout le module.
 
 ## Année du pied de page (L325–329)
 

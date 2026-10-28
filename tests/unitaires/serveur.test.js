@@ -27,7 +27,8 @@ test("sert la page et le catalogue", async () => {
 
 test("refuse de sortir de src/, et ne tombe pas sur une adresse mal encodée", async () => {
   assert.equal(await statutDe("/..%2f..%2fpackage.json"), 403);
-  assert.equal(await statutDe("/..%5c..%5cpackage.json"), 403);
+  assert.equal(await statutDe("/..%5c..%5cpackage.json"), 400, "la barre oblique inverse est refusée, sous Windows comme sous Linux");
+  assert.equal(await statutDe("/%00"), 400);
   assert.equal(await statutDe("/%"), 400);
   assert.equal(await statutDe("/"), 200, "toujours debout");
 });

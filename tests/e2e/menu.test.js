@@ -145,6 +145,23 @@ test("aria-current suit la section visible, et disparaît quand on remonte à l'
   await page.close();
 });
 
+test("aria-current : un cran de molette vers le bas puis vers le haut, et plus rien n'est marqué", async () => {
+  // L'accroche reste dans la bande du milieu pendant que « Valeurs » y entre puis en sort : seul le
+  // suivi de TOUTES les sections présentes dans la bande retire la marque au retour
+  const page = await nouvellePage(navigateur, serveur.url, { largeur: 1280, hauteur: 900 });
+  await page.waitForFunction(() => document.querySelector(".ateliers").getAttribute("aria-busy") === "false");
+  const marque = () => page.$$eval(".navigation__liste [aria-current]", (l) => l.map((a) => a.textContent.trim()));
+  await page.mouse.move(640, 600);
+  await page.mouse.wheel({ deltaY: 100 });
+  await page.waitForFunction(() => window.scrollY >= 100 && document.querySelector('.navigation__liste a[href="#valeurs"]').hasAttribute("aria-current"));
+  assert.deepEqual(await marque(), ["Valeurs"]);
+  await page.mouse.wheel({ deltaY: -100 });
+  await page.waitForFunction(() => window.scrollY === 0);
+  await page.evaluate(() => new Promise((fin) => requestAnimationFrame(() => requestAnimationFrame(fin))));
+  assert.deepEqual(await marque(), [], "revenu en haut : plus aucun lien marqué");
+  await page.close();
+});
+
 test("ouverte en file://, où les modules ne se chargent pas, la page garde son menu déplié", async () => {
   const fichier = pathToFileURL(path.join(RACINE_SRC, "index.html")).href;
   const page = await nouvellePage(navigateur, fichier, { largeur: 375 });
