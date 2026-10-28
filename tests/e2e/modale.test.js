@@ -116,6 +116,25 @@ test("quitter un champ vide pour « Annuler » : un seul clic suffit, sans messa
   await page.close();
 });
 
+test("« Annuler » à la façon de Safari (le bouton cliqué ne prend pas le focus) : pas de validation non plus", async () => {
+  const page = await nouvellePage(navigateur, serveur.url);
+  await pret(page);
+  await page.click(reserverGit);
+  // Safari : appui sur le bouton, puis le champ perd le focus SANS relatedTarget
+  await page.evaluate(() => {
+    const annuler = document.querySelector("#form-reservation button[value=annuler]");
+    annuler.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    document.querySelector("#r-nom").blur();
+  });
+  assert.equal(await texteDe(page, "#erreur-r-nom"), "", "pas de message qui pousserait le bouton");
+  // Le geste fini, un départ ordinaire du champ valide à nouveau
+  await page.evaluate(() => document.dispatchEvent(new PointerEvent("pointerup", { bubbles: true })));
+  await page.focus("#r-nom");
+  await page.focus("#r-courriel");
+  assert.equal(await texteDe(page, "#erreur-r-nom"), "Indiquez votre prénom et votre nom.");
+  await page.close();
+});
+
 test("à Paris, la confirmation annonce l'adresse et non un lien", async () => {
   const page = await nouvellePage(navigateur, serveur.url);
   await pret(page);

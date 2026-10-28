@@ -68,11 +68,24 @@ export function brancherValidation(formulaire) {
     // Aider, pas punir : l'erreur apparaît quand on quitte le champ, puis se met à jour à chaque frappe
     // tant qu'elle est affichée, et disparaît dès que la saisie devient valide.
     // focusout et non blur : blur ne remonte pas, focusout si — un écouteur sur le formulaire suffit.
+    // On quitte un champ pour « Annuler » (formnovalidate) : on abandonne, on ne valide pas. Sinon le message
+    // qui apparaît pousserait le bouton sous le pointeur, et le clic serait perdu. L'appui sur le bouton est
+    // repéré AVANT le focusout (pointerdown) : Safari ne donne pas le focus à un bouton cliqué, relatedTarget
+    // y vaut null ; au clavier, c'est relatedTarget qui désigne le bouton.
+    let abandon = false;
+    const estAbandon = (cible) => {
+        const bouton = cible instanceof Element ? cible.closest("button") : null;
+        return bouton instanceof HTMLButtonElement && bouton.formNoValidate;
+    };
+    formulaire.addEventListener("pointerdown", (evenement) => {
+        abandon = estAbandon(evenement.target);
+        // Le focusout tombe entre l'appui et le relâchement ; au relâchement, où qu'il ait lieu, le geste
+        // est fini. { once: true } : l'écouteur se retire de lui-même (cours, 2.4).
+        if (abandon)
+            document.addEventListener("pointerup", () => (abandon = false), { once: true });
+    });
     formulaire.addEventListener("focusout", (evenement) => {
-        // Le focus part vers « Annuler » (formnovalidate) : on abandonne, on ne valide pas. Sinon le message
-        // qui apparaît pousserait le bouton sous le pointeur, et le clic serait perdu.
-        const vers = evenement.relatedTarget;
-        if (vers instanceof HTMLButtonElement && vers.formNoValidate)
+        if (abandon || estAbandon(evenement.relatedTarget))
             return;
         const champ = champDe(evenement);
         if (champ)

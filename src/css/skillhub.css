@@ -722,7 +722,7 @@ ul {
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--e-2);
+  gap: 0 var(--e-2); /* pas d'écart entre les lignes : l'erreur, sur sa ligne, porte sa propre marge */
 }
 
 .champ--case input {
@@ -752,13 +752,19 @@ ul {
 }
 
 /* Vide, la zone reste rendue (une zone aria-live absente de l'arbre d'accessibilité n'est pas toujours
-   suivie quand son texte arrive) ; une marge négative annule l'écart qu'elle ajouterait dans le champ */
+   suivie quand son texte arrive) ; une marge négative annule l'écart qu'elle ajouterait dans le champ
+   en colonne. Dans la case à cocher (en ligne), l'erreur passe à la ligne : elle n'y prend de la place
+   que remplie. */
 .champ__erreur:empty {
   margin-top: calc(-1 * var(--e-1));
 }
 
 .champ--case .champ__erreur:empty {
-  margin-top: calc(-1 * var(--e-2));
+  margin-top: 0;
+}
+
+.champ--case .champ__erreur:not(:empty) {
+  margin-top: var(--e-2);
 }
 
 /* État erreur : bordure plus épaisse ET message écrit, jamais la couleur seule.

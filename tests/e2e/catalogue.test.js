@@ -189,14 +189,24 @@ test("vide : une phrase polie et « Tout afficher », qui remet tout et renvoie 
 });
 
 test("taper pendant le chargement : la frappe n'est pas effacée quand le catalogue arrive", async () => {
-  serveur.pannes.set(JSON_ATELIERS, { delai: 900 });
-  const page = await nouvellePage(navigateur, serveur.url, { attendre: false });
+  // La réponse est RETENUE, puis lâchée juste après la frappe : elle arrive pendant les 300 ms de
+  // l'anti-rebond, au moment où le champ a de l'avance sur l'état — le cas qui effaçait la saisie
+  const page = await nouvellePage(navigateur, "");
+  await page.setRequestInterception(true);
+  let lacher;
+  const retenue = new Promise((fin) => (lacher = fin));
+  page.on("request", (requete) => {
+    if (requete.url().endsWith(JSON_ATELIERS)) retenue.then(() => requete.continue());
+    else requete.continue();
+  });
+  await page.goto(serveur.url, { waitUntil: "load" });
   await page.waitForSelector(".atelier-fantome");
   await page.click("#recherche");
-  await page.keyboard.type("fig", { delay: 30 });
-  await chargementFini(page); // le catalogue arrive au milieu du mot
-  await page.keyboard.type("ma", { delay: 30 });
-  assert.equal(await page.$eval("#recherche", (c) => c.value), "figma");
+  await page.keyboard.type("fig");
+  lacher();
+  await chargementFini(page);
+  assert.equal(await page.$eval("#recherche", (c) => c.value), "fig", "le catalogue est arrivé sans effacer la frappe");
+  await page.keyboard.type("ma");
   await page.waitForFunction(() => document.querySelector(".catalogue__statut").textContent.includes("figma"));
   assert.equal(await statut(page), "2 ateliers · « figma » · par date");
   await page.close();
