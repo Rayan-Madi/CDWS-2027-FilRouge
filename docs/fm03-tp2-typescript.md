@@ -37,7 +37,7 @@ J'ai renommé les modules du TP 1 (`git mv src/js/x.js src/ts/x.ts`) puis lancé
 | `TS2339` propriété inexistante sur `Element` / `EventTarget` | 6 | 30 |
 | Autres (`TS2322`, `TS2551`, `TS2554`, `TS2769`) | 1 | 5 |
 
-La plupart des erreurs du TP 1 sont des paramètres non typés : c'est attendu, le JavaScript n'en a pas. Celles de FM02 sont surtout des `querySelector` qui peuvent rendre `null` ou un `Element` trop large. **Cinq de ces erreurs cachaient un vrai bug** :
+La plupart des erreurs du TP 1 sont des paramètres non typés : c'est attendu, le JavaScript n'en a pas. Celles de FM02 sont surtout des `querySelector` qui peuvent rendre `null` ou un `Element` trop large. **Cinq de ces erreurs méritent d'être racontées : les trois premières cachaient un vrai bug, les deux dernières une fragilité** :
 
 ### Erreur 1 — `TS7053` : `REGLES[champ.name]`, un champ nommé « constructor » toujours invalide
 
@@ -64,7 +64,7 @@ skillhub.ts(320,44): error TS2769: No overload matches this call. … Argument o
 ```
 
 **Ce qu'elle cachait.** Le compilateur signale le `null` ; en regardant la ligne, le vrai problème est pire : un lien `href="#"` dans la navigation donne `querySelector("#")`, qui **lève** `SyntaxError: '#' is not a valid selector` (vérifié dans Chrome). Tout le bloc `aria-current` s'arrête. Dans le TP 1, la même ligne (`navigation-courante.ts(28)`) n'a **pas** été signalée : `lien` était implicitement `any`, et un `any` éteint toutes les vérifications qui suivent. C'est exactement la dette dont parle le cours.
-**Correction :** `document.getElementById(lien.hash.slice(1))`, qui ne lève jamais.
+**Correction :** plus aucune recherche par l'attribut. Les sections de la page sont observées directement, et leur `id` est comparé à `lien.hash`, qui est toujours une chaîne : rien ne peut lever.
 
 ### Erreur 3 — `TS2531` + `TS2339` : `donnees.get("nom").trim()`
 
@@ -76,17 +76,17 @@ src/ts/inscription.ts(24,31): error TS2339: Property 'trim' does not exist on ty
 **Ce qu'elle cachait.** `FormData.get()` rend `null` si le champ n'existe pas (renommé dans le HTML), ou un `File` pour un champ de fichier. Dans les deux cas, `.trim()` lève une `TypeError` **après** `preventDefault()` : le formulaire ne fait plus rien, sans un mot pour la personne.
 **Correction :** `texteDu(donnees, nom)` dans [`formulaire.ts`](../src/ts/formulaire.ts) rend toujours une chaîne. Le profil est en plus vérifié par une garde (`estProfil`), qui affiche un message si une option a été ajoutée au HTML sans passer par le type `Profil`.
 
-### Erreur 4 — `TS18047` : `boutonMenu` « possiblement null » dans `ouvrirMenu`
+### Erreur 4 — `TS18047` : `boutonMenu` « possiblement null » dans `ouvrirMenu` (une fragilité)
 
 ```
 skillhub.ts(13,3): error TS18047: 'boutonMenu' is possibly 'null'.
 skillhub.ts(18,10): error TS18047: 'boutonMenu' is possibly 'null'.
 ```
 
-**Ce qu'elle cachait.** Dans FM02, le garde-fou `if (boutonMenu && menu)` (ligne 21) ne protège que le bloc qui suit. Les fonctions `ouvrirMenu` et `menuOuvert`, déclarées **au-dessus**, restent appelables partout : sur une page sans bouton, le premier appel plante (« Cannot read properties of null »).
+**Ce qu'elle cachait.** Pas un bug aujourd'hui : dans FM02, ces deux fonctions ne sont appelées que dans le bloc gardé (lignes 21 à 49). Mais le garde-fou `if (boutonMenu && menu)` ne protège que ce bloc : `ouvrirMenu` et `menuOuvert`, déclarées **au-dessus**, restent appelables partout. Le premier appel ajouté ailleurs planterait sur une page sans bouton (« Cannot read properties of null »). Le compilateur voit ce que le garde-fou ne garantit pas.
 **Correction :** le menu est un composant qui reçoit sa `<nav>` en argument et trouve ses éléments par `trouver()` (§ 4). Il n'existe pas de fonction du menu appelable sans menu.
 
-### Erreur 5 — `TS2322` : `annee.textContent = new Date().getFullYear()`
+### Erreur 5 — `TS2322` : `annee.textContent = new Date().getFullYear()` (une fragilité)
 
 ```
 src/ts/main.ts(58,3): error TS2322: Type 'number' is not assignable to type 'string'.
@@ -130,13 +130,13 @@ Pour les éléments facultatifs de la page (la modale, le formulaire), `main.ts`
 
 ## 5. Zéro `any`
 
-[`tests/unitaires/source.test.js`](../tests/unitaires/source.test.js) lit chaque `.ts`, sans les commentaires ni les chaînes, et refuse : `any`, `as Type` (seul `as const` est permis), l'assertion de non-nullité `!`, `<Type>valeur` et `@ts-ignore` / `@ts-expect-error` / `@ts-nocheck`. Un second test vérifie que ce filet attrape bien chaque cas.
+[`tests/unitaires/source.test.js`](../tests/unitaires/source.test.js) lit chaque `.ts` et refuse : `any`, `as Type`, l'assertion de non-nullité `!` (y compris `let x!: T`), `<Type>valeur` et `@ts-ignore` / `@ts-expect-error` / `@ts-nocheck`. TypeScript 7 n'offre pas encore son analyseur en JavaScript : un petit découpeur retire commentaires, chaînes et texte des gabarits, mais garde le code des `${…}`, gabarits imbriqués compris. Deux autres tests vérifient que ce filet attrape une quinzaine de formes fautives, et qu'il ne crie pas à tort (`a !== b`, `import { a as b }`, `AbortSignal.any`, une regex qui contient `!`). Seul `as const`, qui fige un littéral sans rien affirmer, serait permis ; le code n'en contient aucun.
 
 Un `any` qu'aucun test textuel ne voit : `formulaire.nom`. Le DOM type l'accès par nom d'un `HTMLFormElement` en `any` (`[name: string]: any`). Écrire `formulaire.nom.value` compilerait sans un mot. Je lis donc les formulaires par `FormData` et `texteDu()`.
 
 ## 6. Le comportement est-il identique ?
 
-Oui, et c'est vérifié par la **même** suite de tests, sans en changer une ligne : les 24 tests de bout en bout du TP 1 (menu et sous-menu, délégation relevée par le protocole DevTools, validation, envoi, modale, filtre, parcours au clavier, `file://`) passent sur le JavaScript écrit à la main (commit du TP 1) **et** sur le JavaScript compilé depuis TypeScript (commit du TP 2). `npm test` les relance.
+Oui, et c'est vérifié par la **même** suite de tests, sans en changer une ligne : les 24 tests de bout en bout du TP 1 (menu et sous-menu, délégation relevée par le protocole DevTools, validation, envoi, modale, filtre, parcours au clavier, `file://`) passent sur le JavaScript écrit à la main (commit du TP 1, `1534039`) **et** sur le JavaScript compilé depuis TypeScript (commit du TP 2, `0aff632`) : `npm run test:e2e` à chacun de ces deux commits. Depuis, le TP 3 a remplacé le test du filtre FM02 par ceux du catalogue et enrichi la suite.
 
 ## 7. Ce que TypeScript n'attrapera jamais
 

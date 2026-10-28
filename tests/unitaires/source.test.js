@@ -1,5 +1,7 @@
 // TP 2, point 5 : aucun any, et rien qui fasse taire le compilateur.
-// On lit le code sans ses commentaires ni ses chaînes (où « any » ou « ! » sont du français).
+// TypeScript 7 n'offre pas encore son analyseur en JavaScript : on découpe le code nous-mêmes, sans ses
+// commentaires, ses chaînes ni le texte de ses gabarits (où « any » ou « ! » sont du français), mais
+// en gardant le code des ${…}, gabarits imbriqués compris.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -11,71 +13,148 @@ const dossierTs = path.join(racine, "src/ts");
 const dossierJs = path.join(racine, "src/js");
 const sources = fs.readdirSync(dossierTs).filter((f) => f.endsWith(".ts"));
 
-/** Le code seul : commentaires, chaînes et gabarits remplacés par des blancs (les lignes restent à leur place). */
+/** Le code seul : commentaires, chaînes et texte des gabarits remplacés par des blancs (les lignes restent à leur place). */
 function codeSeul(texte) {
+  const blanc = (morceau) => morceau.replace(/[^\n]/g, " ");
   let sortie = "";
   let i = 0;
-  const blanc = (morceau) => morceau.replace(/[^\n]/g, " ");
+  let mode = "code"; // "code" ou "gabarit"
+  let profondeur = 0; // accolades ouvertes dans le code
+  const finsDExpression = []; // pour chaque ${ ouvert : la profondeur où sa } le referme
+
+  // Une barre oblique ouvre une expression régulière si le code qui précède attend une valeur
+  const attendUneValeur = () => /(^|[=(,:!&|?;{}[+\-*%<>~^]|\breturn|\btypeof)\s*$/.test(sortie);
+
   while (i < texte.length) {
+    const c = texte[i];
     const reste = texte.slice(i);
-    const motif =
-      /^\/\/[^\n]*/.exec(reste) ||
-      /^\/\*[\s\S]*?\*\//.exec(reste) ||
-      /^"(?:\\.|[^"\\\n])*"/.exec(reste) ||
-      /^'(?:\\.|[^'\\\n])*'/.exec(reste) ||
-      /^`(?:\\.|\$\{[^}]*\}|[^`\\])*`/.exec(reste) ||
-      // une expression régulière littérale, après un opérateur ou une parenthèse
-      (/[=(,:!&|?;{}\n]\s*$/.test(sortie) || sortie.trim() === "" ? /^\/(?![/*])(?:\\.|\[(?:\\.|[^\]\\])*\]|[^/\\\n])+\/[a-z]*/.exec(reste) : null);
-    if (motif) {
-      sortie += blanc(motif[0]);
-      i += motif[0].length;
+
+    if (mode === "gabarit") {
+      if (c === "\\") {
+        sortie += blanc(texte.slice(i, i + 2));
+        i += 2;
+      } else if (c === "`") {
+        sortie += " ";
+        i += 1;
+        mode = "code";
+      } else if (reste.startsWith("${")) {
+        sortie += "  ";
+        i += 2;
+        finsDExpression.push(profondeur);
+        mode = "code";
+      } else {
+        sortie += blanc(c);
+        i += 1;
+      }
+      continue;
+    }
+
+    const commentaire = /^\/\/[^\n]*/.exec(reste) || /^\/\*[\s\S]*?\*\//.exec(reste);
+    const chaine = /^"(?:\\.|[^"\\\n])*"/.exec(reste) || /^'(?:\\.|[^'\\\n])*'/.exec(reste);
+    const regex = c === "/" && attendUneValeur() ? /^\/(?![/*])(?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^/\\\n[])+\/[a-z]*/.exec(reste) : null;
+    const morceau = commentaire || chaine || regex;
+    if (morceau) {
+      sortie += blanc(morceau[0]);
+      i += morceau[0].length;
+    } else if (c === "`") {
+      sortie += " ";
+      i += 1;
+      mode = "gabarit";
+    } else if (c === "}" && finsDExpression.length > 0 && finsDExpression.at(-1) === profondeur) {
+      finsDExpression.pop(); // fin d'un ${…} : retour dans le texte du gabarit
+      sortie += " ";
+      i += 1;
+      mode = "gabarit";
     } else {
-      sortie += texte[i];
+      if (c === "{") profondeur += 1;
+      if (c === "}") profondeur -= 1;
+      sortie += c;
       i += 1;
     }
   }
   return sortie;
 }
 
+// Les lignes d'import et d'export renommés ont des « as » qui ne sont pas des assertions
+const IMPORT_EXPORT = /^\s*(?:import\b|export\s*[{*])/;
+
 const INTERDITS = [
-  [/(?<![.\w])any\b/, "any"], // et non AbortSignal.any, qui est une méthode
-  [/@ts-(?:ignore|expect-error|nocheck)/, "directive qui fait taire le compilateur"],
-  [/\bas\s+(?!const\b)[A-Za-z_{[(]/, "assertion de type « as » (elle ne vérifie rien)"],
-  [/[\w)\]]!(?=\s*[.[;,)])/, "assertion de non-nullité « ! »"],
-  [/<[A-Z]\w*>\s*\w/, "assertion de type <T>valeur"],
+  [/(?<![.\w$])any\b/, "any"], // et non AbortSignal.any, qui est une méthode
+  [/\bas\s+(?!const\b)\S/, "assertion de type « as » (elle ne vérifie rien)", IMPORT_EXPORT],
+  [/[\w$)\]]!(?!=)/, "assertion de non-nullité « ! »"],
+  [/(?:[=(,:?&|]|\breturn)\s*<[A-Za-z_$][\w$.]*(?:\[\])?>\s*[\w$(]/, "assertion de type <T>valeur"],
 ];
+
+function fautesDe(texte) {
+  const fautes = [];
+  texte.split("\n").forEach((ligne, n) => {
+    if (/@ts-(?:ignore|expect-error|nocheck)/.test(ligne)) fautes.push(`${n + 1} directive @ts-…`);
+  });
+  const brutes = texte.split("\n");
+  codeSeul(texte)
+    .split("\n")
+    .forEach((ligne, n) => {
+      for (const [motif, nom, sauf] of INTERDITS) {
+        if (sauf && sauf.test(brutes[n] ?? "")) continue;
+        if (motif.test(ligne)) fautes.push(`${n + 1} ${nom} : ${ligne.trim()}`);
+      }
+    });
+  return fautes;
+}
 
 test("le code TypeScript n'a ni any, ni as, ni !, ni @ts-ignore", () => {
   assert.ok(sources.length >= 10, "les sources sont bien lues");
-  const fautes = [];
-  for (const fichier of sources) {
-    const brut = fs.readFileSync(path.join(dossierTs, fichier), "utf8");
-    const directives = brut.split("\n"); // les directives vivent dans des commentaires : on les cherche dans le brut
-    directives.forEach((ligne, n) => {
-      if (/@ts-(?:ignore|expect-error|nocheck)/.test(ligne)) fautes.push(`${fichier}:${n + 1} directive @ts-…`);
-    });
-    codeSeul(brut)
-      .split("\n")
-      .forEach((ligne, n) => {
-        for (const [motif, nom] of INTERDITS) {
-          if (motif.test(ligne)) fautes.push(`${fichier}:${n + 1} ${nom} : ${ligne.trim()}`);
-        }
-      });
-  }
+  const fautes = sources.flatMap((fichier) => fautesDe(fs.readFileSync(path.join(dossierTs, fichier), "utf8")).map((f) => `${fichier}:${f}`));
   assert.deepEqual(fautes, []);
 });
 
 test("le filet attrape bien ce qu'il doit attraper", () => {
-  const essais = ["let x: any = 1;", "const y = z as HTMLInputElement;", "el!.focus();", "fn(a!);", "const t = <Foo>bar;"];
-  for (const essai of essais) {
-    const ligne = codeSeul(essai);
-    assert.ok(INTERDITS.some(([motif]) => motif.test(ligne)), `non détecté : ${essai}`);
-  }
-  const permis = ['const s = "Jonny !";', "if (a !== b) {}", "const c = [1] as const;", "// any est un mot anglais", "if (!ok) return;", "x = /a!b/.test(s);", "AbortSignal.any([a, b]);"];
-  for (const essai of permis) {
-    const ligne = codeSeul(essai);
-    assert.ok(!INTERDITS.some(([motif]) => motif.test(ligne)), `faux positif : ${essai}`);
-  }
+  const essais = [
+    "let x: any = 1;",
+    "const y = z as HTMLInputElement;",
+    'const n = v as "debutant";',
+    "const m = v as 1;",
+    "el!.focus();",
+    "fn(a!);",
+    "const t = <Foo>bar;",
+    "const s = `${(x as any).y}`;",
+    "const s = `${el!.value}`;",
+    "let el!: HTMLElement;",
+    "class A { champ!: string }",
+    "const t = [b!];",
+    "const o = { c: d! };",
+    "const n = el! + 1;",
+    "const v = m.get(k)!",
+    "const s = `a ${`b ${c as any}`} d`;",
+    "// @ts-ignore",
+  ];
+  for (const essai of essais) assert.ok(fautesDe(essai).length > 0, `non détecté : ${essai}`);
+
+  // Le gabarit imbriqué de catalogue.ts ne doit pas désynchroniser la suite
+  const imbrique = "console.error(`a (${p.raison}${p.statut ? ` ${p.statut}` : \"\"}).`, p);\nconst x = y as any;\nel!.focus();";
+  assert.equal(fautesDe(imbrique).length, 3, "les deux lignes après le gabarit sont analysées");
+});
+
+test("le filet ne crie pas à tort", () => {
+  const permis = [
+    'const s = "Jonny !";',
+    "if (a !== b) {}",
+    "if (a!==b) {}",
+    "const c = [1] as const;",
+    "// any est un mot anglais, as aussi !",
+    "if (!ok) return;",
+    "x = /a!b/.test(s);",
+    "x = /[`'\"]/.test(s);",
+    "AbortSignal.any([a, b]);",
+    'import { a as b } from "./x.js";',
+    'import * as ns from "./x.js";',
+    "export { a as b };",
+    "const m = new Map<string, Regle>();",
+    "function f<T extends Element>(x: T): T { return x; }",
+    "const p: Promise<void> = attendre();",
+    "const s = `Merci ${prenom} !`;",
+  ];
+  for (const essai of permis) assert.deepEqual(fautesDe(essai), [], `faux positif : ${essai}`);
 });
 
 test("chaque source a son JavaScript compilé, et aucun JavaScript n'est orphelin", () => {

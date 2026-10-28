@@ -131,6 +131,20 @@ test("les écouteurs du document n'existent que tant qu'un panneau est ouvert", 
   await page.close();
 });
 
+test("aria-current suit la section visible, et disparaît quand on remonte à l'accroche", async () => {
+  const page = await nouvellePage(navigateur, serveur.url, { largeur: 1280, hauteur: 800 });
+  await page.waitForFunction(() => document.querySelector(".ateliers").getAttribute("aria-busy") === "false");
+  const courant = () => page.$$eval(".navigation__liste [aria-current]", (l) => l.map((a) => a.textContent.trim()));
+  await page.evaluate(() => document.querySelector("#valeurs").scrollIntoView({ block: "center", behavior: "instant" }));
+  await page.waitForFunction(() => document.querySelector('.navigation__liste a[href="#valeurs"]').hasAttribute("aria-current"));
+  assert.deepEqual(await courant(), ["Valeurs"]);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  await page.waitForFunction(() => !document.querySelector(".navigation__liste [aria-current]"));
+  assert.deepEqual(await courant(), [], "en haut de page, aucun lien n'est « la page actuelle »");
+  assert.deepEqual(await page.$$eval("#sous-menu-ateliers [aria-current]", (l) => l.length), 0, "jamais les raccourcis");
+  await page.close();
+});
+
 test("ouverte en file://, où les modules ne se chargent pas, la page garde son menu déplié", async () => {
   const fichier = pathToFileURL(path.join(RACINE_SRC, "index.html")).href;
   const page = await nouvellePage(navigateur, fichier, { largeur: 375 });

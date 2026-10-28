@@ -63,7 +63,7 @@ export interface Validation {
 
 export function brancherValidation(formulaire: HTMLFormElement): Validation {
   const champs = trouverTous(formulaire, "input, select, textarea", Element).filter(estChamp).filter((champ) => champ.name);
-  const zones = new Map(champs.map((champ) => [champ, zoneErreurDe(champ)] as const));
+  const zones = new Map(champs.map((champ): [Champ, HTMLElement | undefined] => [champ, zoneErreurDe(champ)]));
   const enErreur = new Set<Champ>(); // l'état : les champs dont l'erreur est affichée (on ne relit pas aria-invalid)
 
   // Le JavaScript prend le relais des bulles du navigateur, pour des messages en français
@@ -93,6 +93,10 @@ export function brancherValidation(formulaire: HTMLFormElement): Validation {
   // tant qu'elle est affichée, et disparaît dès que la saisie devient valide.
   // focusout et non blur : blur ne remonte pas, focusout si — un écouteur sur le formulaire suffit.
   formulaire.addEventListener("focusout", (evenement) => {
+    // Le focus part vers « Annuler » (formnovalidate) : on abandonne, on ne valide pas. Sinon le message
+    // qui apparaît pousserait le bouton sous le pointeur, et le clic serait perdu.
+    const vers = evenement.relatedTarget;
+    if (vers instanceof HTMLButtonElement && vers.formNoValidate) return;
     const champ = champDe(evenement);
     if (champ) verifierChamp(champ);
   });

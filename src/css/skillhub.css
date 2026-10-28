@@ -751,8 +751,14 @@ ul {
   color: var(--erreur);
 }
 
+/* Vide, la zone reste rendue (une zone aria-live absente de l'arbre d'accessibilité n'est pas toujours
+   suivie quand son texte arrive) ; une marge négative annule l'écart qu'elle ajouterait dans le champ */
 .champ__erreur:empty {
-  display: none;
+  margin-top: calc(-1 * var(--e-1));
+}
+
+.champ--case .champ__erreur:empty {
+  margin-top: calc(-1 * var(--e-2));
 }
 
 /* État erreur : bordure plus épaisse ET message écrit, jamais la couleur seule.
@@ -791,6 +797,13 @@ ul {
   color: var(--succes);
   background: var(--succes-fond);
   border-radius: var(--rayon-s);
+}
+
+/* Pendant l'envoi, la même zone dit « … en cours » : sans l'allure d'un succès (--texte-doux sur --fond-teinte : 6,82:1) */
+.formulaire__confirmation[data-en-cours] {
+  font-weight: 400;
+  color: var(--texte-doux);
+  background: var(--fond-teinte);
 }
 
 /* Le refus du serveur : bordure ET texte, jamais la couleur seule (--erreur sur --fond : 6,53:1) */

@@ -27,10 +27,14 @@
 
 ```ts
 export async function chargerAteliers(signal?: AbortSignal, { url = URL_ATELIERS, delaiMax = DELAI_MAX } = {}) {
-  const delai = AbortSignal.timeout(delaiMax);                            // 8 s, puis on arrête d'attendre
-  const signaux = signal ? AbortSignal.any([signal, delai]) : delai;      // le premier qui tombe arrête tout
+  const arret = new AbortController();                                    // UN signal pour fetch…
+  let delaiDepasse = false;
+  const minuterie = setTimeout(() => { delaiDepasse = true; arret.abort(); }, delaiMax);   // … qui tombe au bout de 8 s
+  const relayer = () => arret.abort(signal?.reason);                      // … ou quand l'appelant annule
+  if (signal?.aborted) relayer();
+  signal?.addEventListener("abort", relayer, { once: true });
   try {
-    const reponse = await fetch(url, { headers: { Accept: "application/json" }, signal: signaux });
+    const reponse = await fetch(url, { headers: { Accept: "application/json" }, signal: arret.signal });
     if (!reponse.ok) throw new ErreurChargement("http", …, { statut: reponse.status });   // fetch ne rejette PAS sur 404/500
     const donnees: unknown = await reponse.json();
     if (!estListeDAteliers(donnees)) throw new ErreurChargement("format", …);           // le type est une promesse
@@ -38,16 +42,19 @@ export async function chargerAteliers(signal?: AbortSignal, { url = URL_ATELIERS
   } catch (erreur) {
     if (erreur instanceof ErreurChargement) throw erreur;
     if (signal?.aborted) throw erreur;                    // annulation voulue : l'AbortError passe telle quelle
-    if (delai.aborted) throw new ErreurChargement("delai", …);
+    if (delaiDepasse) throw new ErreurChargement("delai", …);
     if (erreur instanceof SyntaxError) throw new ErreurChargement("format", …);   // une page HTML servie en 200
     throw new ErreurChargement("reseau", …);              // la seule chose que fetch rejette
+  } finally {
+    clearTimeout(minuterie);                              // quoi qu'il arrive, la minuterie et l'écouteur partent
+    signal?.removeEventListener("abort", relayer);        // la MÊME fonction des deux côtés (cours, 2.4)
   }
 }
 ```
 
 - **`response.ok`** : sans ce test, un 500 deviendrait un catalogue vide (cours, 5.2).
-- **Le délai** : un serveur qui ne répond jamais laisserait l'indicateur tourner pour toujours. Au bout de 8 s, la panne devient « délai ».
-- **L'annulation** : le signal de l'appelant passe à `fetch`. `AbortError` n'est jamais traitée comme une panne.
+- **Le délai** : un serveur qui ne répond jamais laisserait l'indicateur tourner pour toujours. Au bout de 8 s, la panne devient « délai ». Le signal combiné est écrit à la main avec un `AbortController` plutôt qu'avec `AbortSignal.any` (2024, trop récent pour tous les navigateurs : sans lui, le catalogue resterait en panne pour toujours ; testé en retirant `AbortSignal.any`).
+- **L'annulation** : le signal de l'appelant est relayé à `fetch`, et son `AbortError` n'est jamais traitée comme une panne (testé). Dans cette page, une seule requête part à la fois ; le catalogue annulerait la précédente s'il relançait pendant qu'elle vole (une recherche côté serveur, cours 5.6).
 - **La forme** : `as Promise<Atelier[]>` ne vérifie rien. `estAtelier(valeur: unknown): valeur is Atelier` contrôle chaque champ, y compris un prix reçu en chaîne (« 25 € »), qui est refusé.
 - **Le chemin** : `new URL("../donnees/ateliers.json", import.meta.url)`, c'est-à-dire relatif au module lui-même. Il reste juste quelle que soit l'adresse de la page (en local ou sous `/CDWS-2027-FilRouge/src/` sur GitHub Pages).
 
@@ -119,8 +126,11 @@ axe-core (le moteur de Lighthouse Accessibilité) ne relève **aucune violation 
 Tout est rejoué par [`catalogue.test.js`](../tests/e2e/catalogue.test.js). **À la main**, pour la démonstration :
 
 1. `npm run servir`, puis http://localhost:8000.
-2. F12 → Réseau → *Offline* → « Réessayer » : l'erreur hors ligne. Décocher → « Réessayer ».
-3. Renommer `src/donnees/ateliers.json` en `ateliers.bak.json`, recharger : l'erreur 404. Remettre le nom.
+2. **404** : renommer `src/donnees/ateliers.json` en `ateliers.bak.json`, recharger la page : l'erreur « introuvable » et son bouton « Réessayer ».
+3. **Hors ligne** : laisser l'erreur affichée, remettre le nom du fichier, puis F12 → Réseau → cocher *Offline* → « Réessayer » : l'erreur « connexion coupée », aucun indicateur resté (`aria-busy="false"`, plus de carte fantôme).
+4. Décocher *Offline* → « Réessayer » : les 14 ateliers.
+
+(« Réessayer » n'existe que dans l'état d'erreur : c'est pourquoi la panne réseau se provoque à partir d'une première erreur.)
 
 ## 6. Le parcours au clavier : filtrer, trier, ouvrir une fiche, revenir
 
@@ -147,7 +157,7 @@ Chaque annonce diffère de la précédente : le compteur est annoncé **à chaqu
 ## 8. Limites assumées
 
 - **Pas de vrai serveur** : GitHub Pages ne sert que des fichiers. Le catalogue est un vrai `fetch` d'un vrai fichier, mais les réservations passent par `serveur-simule.ts` (mêmes délais, mêmes refus) et ne survivent pas au rechargement.
-- **Recherche locale** : le JSON est chargé une fois. Annuler la requête en vol à chaque frappe (cours, 5.6) n'a donc pas lieu d'être ici. Le signal sert à « Réessayer » (la requête précédente, si elle traîne, est annulée) et au délai maximal.
+- **Recherche locale** : le JSON est chargé une fois. Annuler la requête en vol à chaque frappe (cours, 5.6) n'a donc pas lieu d'être ici : une seule requête part à la fois. Le mécanisme d'annulation sert au délai maximal, et le signal de l'appelant est accepté et testé pour le jour où une recherche côté serveur relancerait des requêtes.
 
 ---
 

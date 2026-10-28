@@ -57,7 +57,7 @@ Un seul point d'entrée (`main`), un fichier par responsabilité. Chaque composa
 | `attendre-la-fin` | anti-rebond de 300 ms (cours, 5.6) | — |
 | `navigation-courante` | `aria-current` sur le lien de la section visible (FM02, inchangé) | — |
 
-Le TP 1 crée `main`, `dom`, `menu`, `validation`, `envoi`, `serveur-simule`, `inscription`, `modale`, `filtre` (version FM02 : soir, débutants), `navigation-courante`. Le TP 3 ajoute le reste et remplace le filtre FM02 par le catalogue.
+Le TP 1 crée `main`, `menu`, `validation`, `envoi`, `serveur-simule`, `inscription`, `modale`, `filtre` (version FM02 : soir, débutants), `navigation-courante`. Le TP 2 ajoute `dom` (la réponse typée au cas `null`), `types` et `formulaire` (lire un `FormData` sans `any`). Le TP 3 ajoute le reste et remplace le filtre FM02 par le catalogue ; `Criteres` et `Tri` vivent dans `filtre`, avec la logique qui les applique.
 
 ## 4. TP 1 — comportement
 

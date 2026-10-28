@@ -43,10 +43,21 @@ const estListeDAteliers = (v) => Array.isArray(v) && v.every(estAtelier);
  * si l'APPELANT annule par son signal, l'AbortError passe telle quelle : une annulation n'est pas une panne.
  */
 export async function chargerAteliers(signal, { url = URL_ATELIERS, delaiMax = DELAI_MAX } = {}) {
-    const delai = AbortSignal.timeout(delaiMax);
-    const signaux = signal ? AbortSignal.any([signal, delai]) : delai; // le premier des deux qui tombe arrête tout
+    // UN signal pour fetch, qui tombe au premier des deux : l'appelant annule, ou le délai expire.
+    // Écrit à la main avec un AbortController (cours, 2.4) plutôt qu'avec AbortSignal.any, trop récent
+    // pour tous les navigateurs : sans lui, le catalogue resterait en panne pour toujours.
+    const arret = new AbortController();
+    let delaiDepasse = false;
+    const minuterie = setTimeout(() => {
+        delaiDepasse = true;
+        arret.abort();
+    }, delaiMax);
+    const relayer = () => arret.abort(signal?.reason);
+    if (signal?.aborted)
+        relayer();
+    signal?.addEventListener("abort", relayer, { once: true });
     try {
-        const reponse = await fetch(url, { headers: { Accept: "application/json" }, signal: signaux });
+        const reponse = await fetch(url, { headers: { Accept: "application/json" }, signal: arret.signal });
         // fetch NE REJETTE PAS sur un 404 ou un 500 : une réponse est arrivée, la promesse est tenue
         if (!reponse.ok) {
             throw new ErreurChargement("http", `Chargement impossible (${reponse.status})`, { statut: reponse.status });
@@ -62,13 +73,19 @@ export async function chargerAteliers(signal, { url = URL_ATELIERS, delaiMax = D
             throw erreur;
         if (signal?.aborted)
             throw erreur; // annulation voulue : AbortError, rendue telle quelle
-        if (delai.aborted) {
+        if (delaiDepasse) {
             throw new ErreurChargement("delai", `Pas de réponse en ${delaiMax / 1000} s`, { cause: erreur });
         }
         if (erreur instanceof SyntaxError) {
             throw new ErreurChargement("format", "La réponse n'est pas du JSON", { cause: erreur });
         }
         throw new ErreurChargement("reseau", "Le réseau ne répond pas", { cause: erreur }); // la seule chose que fetch rejette
+    }
+    finally {
+        // Quoi qu'il arrive : la minuterie et l'écouteur partent. Même fonction (relayer) des deux côtés,
+        // sinon removeEventListener ne retirerait rien.
+        clearTimeout(minuterie);
+        signal?.removeEventListener("abort", relayer);
     }
 }
 //# sourceMappingURL=api.js.map

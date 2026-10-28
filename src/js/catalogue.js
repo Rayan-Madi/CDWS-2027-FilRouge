@@ -51,14 +51,19 @@ export function monterCatalogue(section, rappels, options = {}) {
     const vide = trouver(section, ".ateliers__vide", HTMLElement);
     // UN état, à un seul endroit
     let etat = { chargement: { statut: "en-cours" }, criteres: CRITERES_PAR_DEFAUT };
-    let arret = null; // la requête en vol, pour l'annuler si on relance
+    // La requête en vol. Aujourd'hui une seule part à la fois (« Réessayer » n'existe qu'après une panne),
+    // mais si l'on relançait pendant qu'elle vole — une recherche côté serveur, cours 5.6 —, l'ancienne
+    // serait annulée et ne reviendrait pas écraser la nouvelle.
+    let arret = null;
     // UNE fonction de rendu : l'écran est toujours le reflet de l'état
     function rendre() {
         const { criteres } = etat;
-        // Les commandes suivent l'état (un raccourci du menu les change aussi). Le champ de recherche n'est
-        // réécrit que s'il diffère, sinon le curseur sauterait en fin de champ pendant la frappe.
-        if (champRecherche.value !== criteres.recherche)
+        // Les commandes suivent l'état (un raccourci du menu les change aussi). Sauf le champ de recherche
+        // pendant qu'on y tape : il a 300 ms d'avance sur l'état (l'anti-rebond), et le réécrire effacerait
+        // la frappe — par exemple quand le catalogue finit de charger au milieu d'un mot.
+        if (document.activeElement !== champRecherche && champRecherche.value !== criteres.recherche) {
             champRecherche.value = criteres.recherche;
+        }
         choixNiveau.value = criteres.niveau;
         choixTri.value = criteres.tri;
         caseSoir.checked = criteres.soir;
@@ -75,7 +80,10 @@ export function monterCatalogue(section, rappels, options = {}) {
             case "erreur":
                 statut.textContent = "";
                 liste.replaceChildren();
-                zoneErreur.replaceChildren(boiteErreur(ecran.erreur));
+                // Insérée à l'ENTRÉE dans l'erreur seulement : un filtre changé pendant la panne ne doit pas la
+                // faire réannoncer (une alerte interrompt). « Réessayer » passe par le chargement, qui la vide.
+                if (!zoneErreur.hasChildNodes())
+                    zoneErreur.replaceChildren(boiteErreur(ecran.erreur));
                 return;
             case "vide":
                 statut.textContent = MESSAGE_VIDE; // polie : un résultat vide n'est pas une panne
@@ -116,7 +124,7 @@ export function monterCatalogue(section, rappels, options = {}) {
     }
     const majCriteres = (changement) => majEtat({ criteres: { ...etat.criteres, ...changement } });
     async function charger() {
-        arret?.abort(); // une requête encore en vol ne reviendra pas écraser la suivante
+        arret?.abort(); // une requête encore en vol ne reviendra pas écraser la suivante (voir plus haut)
         const controleur = new AbortController();
         arret = controleur;
         majEtat({ chargement: { statut: "en-cours" } }); // AVANT la requête, jamais après
@@ -146,15 +154,20 @@ export function monterCatalogue(section, rappels, options = {}) {
         const cible = evenement.target;
         const niveau = choixNiveau.value;
         const tri = choixTri.value;
+        // Une frappe encore en attente part AVEC ce changement : un seul rendu, une seule annonce, rien de perdu
+        const avecLaRecherche = (changement) => {
+            rechercher.annuler();
+            majCriteres({ ...changement, recherche: champRecherche.value });
+        };
         // Une valeur du HTML n'est pas une valeur du type : on la vérifie avant de la ranger dans l'état
         if (cible === choixNiveau && (niveau === "tous" || estNiveau(niveau))) {
-            majCriteres({ niveau });
+            avecLaRecherche({ niveau });
         }
         else if (cible === choixTri && estTri(tri)) {
-            majCriteres({ tri });
+            avecLaRecherche({ tri });
         }
         else if (cible === caseSoir) {
-            majCriteres({ soir: caseSoir.checked });
+            avecLaRecherche({ soir: caseSoir.checked });
         }
     });
     // Entrée dans la recherche : on applique tout de suite, et on ne recharge surtout pas la page

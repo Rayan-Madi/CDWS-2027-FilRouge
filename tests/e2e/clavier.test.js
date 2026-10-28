@@ -21,6 +21,9 @@ function relevé(page) {
     etapes,
     async touche(touche, attendu) {
       await page.keyboard.press(touche);
+      // Certains effets d'une touche partent dans une tâche suivante (l'événement close d'un <dialog>,
+      // et le focus qu'il rend) : on laisse passer les tâches en file avant de relever le focus
+      await page.evaluate(() => new Promise((fin) => setTimeout(fin, 0)));
       const actif = await elementActif(page);
       etapes.push(`${touche.padEnd(6)} → ${actif}`);
       if (attendu) assert.match(actif, attendu, `après ${touche} (étape ${etapes.length})`);
@@ -65,7 +68,7 @@ test("téléphone, au clavier seul : menu, sous-menu, raccourci, réservation, r
   await r.touche("Tab", /^input#r-courriel/);
   await r.taper("jonny@exemple.fr");
   await r.touche("Enter");
-  await page.waitForFunction(() => document.querySelector("#form-reservation .formulaire__confirmation").textContent !== "");
+  await page.waitForFunction(() => (document.querySelector("#form-reservation .formulaire__confirmation").textContent !== "" && !document.querySelector("#form-reservation .formulaire__confirmation").hasAttribute("data-en-cours")));
   assert.match(await elementActif(page), /"Fermer"/, "le focus passe sur « Fermer »");
   r.etapes.push(`(confirmation) → ${await elementActif(page)}`);
   await r.touche("Enter", /"Réserver l'atelier Initiation à Git"/);
@@ -145,7 +148,7 @@ test("ordinateur, au clavier seul : le formulaire d'inscription, de l'erreur à 
   await r.touche("Tab", /"Créer mon compte"/);
   await r.touche("Enter");
   assert.equal(await texteDe(page, "#form-inscription button[type=submit]"), "Inscription en cours…");
-  await page.waitForFunction(() => document.querySelector("#form-inscription .formulaire__confirmation").textContent !== "");
+  await page.waitForFunction(() => (document.querySelector("#form-inscription .formulaire__confirmation").textContent !== "" && !document.querySelector("#form-inscription .formulaire__confirmation").hasAttribute("data-en-cours")));
   r.etapes.push(`(confirmation) → ${await elementActif(page)}`);
   assert.match(await elementActif(page), /"Créer mon compte"/, "le focus est resté sur le bouton, rendu");
 

@@ -30,7 +30,7 @@ Le cas téléphone s'écrit sans media query ; les paliers **ajoutent** en `min-
 **Pourquoi `minmax(0, 1fr)` et pas `1fr` ?**
 Une colonne `1fr` ne descend jamais sous la largeur de son contenu le plus large : la page débordait à 375 px. C'est un bug que j'ai rencontré et corrigé.
 
-**Les cartes passent de 3 à 1 colonne sans media query : comment ?**
+**Les cartes passent de 4 à 1 colonne sans media query : comment ?**
 `repeat(auto-fit, minmax(min(16rem, 100%), 1fr))` : autant de colonnes que la place en autorise, chacune d'au moins 16 rem.
 
 **Comment tu prouves qu'il n'y a pas de débordement ?**
@@ -39,7 +39,7 @@ Une colonne `1fr` ne descend jamais sous la largeur de son contenu le plus large
 ## C1.2 — Accessibilité (/6)
 
 **Montre-moi un attribut ARIA utile, et un que tu as évité.**
-Utile : `aria-expanded` sur le bouton du menu, écrit par la seule fonction qui rend l'affichage (`src/ts/menu.ts`, `rendre()` ; en FM02 c'était `ouvrirMenu` dans `skillhub.js`). Évité : aucun `role` sur un élément natif. La première règle d'ARIA, c'est de ne pas s'en servir quand le HTML suffit : les boutons « Réserver » sont de vrais `<button>`.
+Utile : `aria-expanded` sur le bouton du menu, écrit par la seule fonction qui rend l'affichage (`src/ts/menu.ts`, `rendre()` ; en FM02 c'était `ouvrirMenu` dans `skillhub.js`). Évité : aucun `role` qui répète la sémantique native (pas de `role="button"` sur un `<button>`). La première règle d'ARIA, c'est de ne pas s'en servir quand le HTML suffit : les boutons « Réserver » sont de vrais `<button>`. Je n'en pose que là où le HTML n'a pas d'équivalent : `search` sur le formulaire de filtres, `status` et `alert` sur les zones annoncées.
 
 **Pourquoi `String(ouvert)` ?**
 `aria-expanded` attend la chaîne « true » ou « false ». Et `getAttribute` rend une chaîne : « false » est une chaîne non vide, donc **vraie** dans un `if`. D'où la comparaison `=== "true"`.
@@ -96,7 +96,7 @@ Le natif d'abord, gratuit. Puis deux trous qu'il laisse : un nom fait d'espaces 
 Un fichier, une responsabilité, une portée à lui (plus de variables globales qui s'écrasent). La page ne charge que `js/main.js`, et `type="module"` implique `defer`. « Un seul fichier massif » est une erreur listée de l'EC02.
 
 **Qu'a trouvé TypeScript dans ton code ?**
-72 erreurs dans mes modules, 79 dans le code de FM02. Cinq cachaient un vrai bug : un champ nommé « constructor » toujours invalide (`REGLES[champ.name]` trouve ce qu'un objet hérite : d'où les `Map`), `querySelector("#")` qui lève une erreur, `FormData.get().trim()` sur `null`, un garde-fou qui ne protégeait pas les fonctions du menu, `textContent = nombre`. → `docs/fm03-tp2-typescript.md`.
+72 erreurs dans mes modules, 79 dans le code de FM02. Trois cachaient un vrai bug : un champ nommé « constructor » toujours invalide (`REGLES[champ.name]` trouve ce qu'un objet hérite : d'où les `Map`), `querySelector("#")` qui lève une erreur, `FormData.get().trim()` sur `null`. Deux, une fragilité : un garde-fou qui ne protégeait pas les fonctions du menu, `textContent = nombre`. → `docs/fm03-tp2-typescript.md`.
 
 **Zéro `any` : comment tu le prouves ?**
 Un test lit chaque `.ts` et refuse `any`, `as`, `!` et `@ts-ignore`. Et un `any` caché que le test ne voit pas : `formulaire.nom` est typé `any` par le DOM. Je lis donc les formulaires par `FormData`.
@@ -108,12 +108,12 @@ TypeScript n'existe plus à l'exécution. Ce qui vient du dehors (le JSON) n'est
 La promesse est **tenue** : une réponse est arrivée. `fetch` ne rejette que sur une panne réseau. D'où `if (!reponse.ok) throw …` : sans lui, un 500 deviendrait un catalogue vide.
 
 **Une annulation, c'est une panne ?**
-Non. Si c'est moi qui annule (« Réessayer » relance, la requête précédente est abandonnée), l'`AbortError` est ignorée. Le délai maximal (8 s), lui, est une vraie panne : « le serveur met trop de temps ».
+Non. Une annulation voulue par l'appelant rend une `AbortError`, qui n'est jamais affichée comme une erreur (testé). Dans cette page, une seule requête part à la fois ; le signal servirait le jour où l'on relance pendant qu'une requête vole (une recherche côté serveur, cours 5.6). Le délai maximal (8 s), lui, est une vraie panne : « le serveur met trop de temps ».
 
 **Les quatre états, et l'annonce de chacun ?**
 Chargement : cartes fantômes à la taille des vraies, `aria-busy`, « Chargement… » poli. Vide : poli, ce n'est pas une panne, avec « Tout afficher ». Erreur : `role="alert"`, qui interrompt, avec « Réessayer », et le code HTTP dans la console seulement. Succès : le compteur. → `docs/fm03-tp3-catalogue.md` et ses captures.
 
-**Pourquoi ton compteur dit « 2 ateliers · niveau débutant · par prix croissant » ?**
+**Pourquoi ton compteur dit « 6 ateliers · niveau débutant · par prix croissant » ?**
 Une zone `role="status"` n'annonce qu'un texte qui change. « 12 ateliers » ne changerait pas quand on change le tri : rien ne serait annoncé. En nommant chaque critère, chaque changement change le texte.
 
 **L'anti-rebond, à quoi bon si le filtre est local ?**

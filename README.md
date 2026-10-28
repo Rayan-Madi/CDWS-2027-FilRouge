@@ -102,7 +102,7 @@ La maquette Figma (TP 3) est construite par le plugin [`outils/figma-skillhub/`]
 
 - **Mobile-first** : le cas téléphone s'écrit sans media query, les paliers s'ajoutent en `min-width`, en `em`.
 - Structure de page en `grid-template-areas`.
-- Grilles de cartes en `repeat(auto-fit, minmax(min(16rem, 100%), 1fr))` : 3, 2 puis 1 colonne sans point de rupture.
+- Grilles de cartes en `repeat(auto-fit, minmax(min(16rem, 100%), 1fr))` : jusqu'à 4 colonnes pour les ateliers (3 pour les valeurs et les formateurs, qui ont 3 cartes), puis 2, puis 1, sans point de rupture.
 - Carte d'atelier en Flexbox colonne, bouton poussé en pied par `margin-top: auto`.
 - Titre d'accroche en `clamp()`, paragraphes bornés à `65ch`, tailles en `rem`.
 - `box-sizing: border-box`, `img { max-width: 100% }`, `overflow-wrap: break-word`.
@@ -120,13 +120,13 @@ Vérifié à 375, 800 et 1280 px : `scrollWidth === innerWidth`, **aucune barre 
 Rapport complet : [`docs/fm02-tp4-accessibilite.md`](docs/fm02-tp4-accessibilite.md).
 
 
-- Étiquettes `label for` liées à chaque champ des formulaires (les cases du filtre sont enveloppées dans leur `label`), `autocomplete`, aide lue avec le champ via `aria-describedby`.
+- Étiquettes `label for` liées à chaque champ des formulaires, filtres compris, `autocomplete`, aide lue avec le champ via `aria-describedby`.
 - Messages d'erreur annoncés (`aria-live`), `aria-invalid` sur les champs fautifs, focus renvoyé au premier champ invalide.
 - `:focus-visible` sur tout élément interactif ; boutons et champs d'au moins 44 px de haut, cases à cocher de 24 × 24 px (WCAG 2.5.8).
 - Menu mobile : vrai `button`, `aria-expanded`, `aria-controls`, fermeture par Échap.
 - Modale de réservation en `<dialog>` ouverte par `showModal()` : focus piégé dans la modale tant qu'elle est ouverte, Échap ferme, le focus revient au bouton « Réserver ».
 - Boutons d'envoi désactivés pendant l'envoi (« … en cours ») : pas de double envoi.
-- Filtre des ateliers en `<fieldset>` + `<legend>`, nombre de résultats annoncé par `role="status"` ; section courante marquée par `aria-current` dans la navigation.
+- Filtres des ateliers dans un `<form role="search">` étiqueté (recherche, niveau, tri, « le soir »), compteur annoncé par `role="status"`, panne par `role="alert"` ; section courante marquée par `aria-current` dans la navigation.
 - Icônes SVG décoratives en `aria-hidden="true"` ; texte masqué visuellement sur les boutons « Réserver » pour qu'ils soient distincts au lecteur d'écran.
 - `prefers-reduced-motion` respecté.
 
@@ -163,7 +163,7 @@ Sans JavaScript, la page reste complète : le menu est déplié, le bouton Menu 
 - [x] Rapports Lighthouse accessibilité avant et après exportés dans `docs/` (`lighthouse-a11y-avant.html`, `lighthouse-a11y-apres.html`)
 - [x] Rapports Wave avant et après exportés dans `docs/` ([`wave-avant.pdf`](docs/wave-avant.pdf), [`wave-apres.pdf`](docs/wave-apres.pdf)) : 0 erreur, 0 erreur de contraste, 0 alerte dans les deux cas
 - [x] Parcours clavier rejoué sur la page en ligne (Tab, Maj+Tab, modale, menu mobile) : [`docs/fm02-tp4-accessibilite.md`](docs/fm02-tp4-accessibilite.md), § 4
-- [x] FM03 : `npm test` — TypeScript strict sans erreur, 29 tests unitaires, 43 tests de bout en bout (menu et délégation, validation, envoi, modale, catalogue et ses pannes, parcours clavier, axe-core sans violation dans les quatre états)
+- [x] FM03 : `npm test` — TypeScript strict sans erreur, 35 tests unitaires, 50 tests de bout en bout (menu et délégation, validation, envoi, modale, catalogue et ses pannes, parcours clavier, axe-core sans violation dans les quatre états)
 - [x] FM03 : captures des quatre états, hors ligne et 404 comprises : [`docs/captures/fm03/`](docs/captures/fm03/)
 - [x] Plugin Figma (TP 3) : `cd outils/figma-skillhub && npm install && npm test && npm run types`. Il vérifie que les jetons sont ceux du CSS, que le contenu est celui de la page, et qu'une construction complète passe sur un simulateur de l'API. Les appels à l'API sont vérifiés contre ses types officiels.
 

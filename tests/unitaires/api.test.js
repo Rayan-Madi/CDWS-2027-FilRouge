@@ -72,6 +72,33 @@ test("une annulation par l'appelant n'est pas une panne : l'AbortError passe tel
   assert.equal(await raisonDe(promesse), "AbortError");
 });
 
+test("sans AbortSignal.any ni AbortSignal.timeout (navigateurs d'avant 2024) : tout marche encore", async () => {
+  const { any, timeout } = AbortSignal;
+  try {
+    delete AbortSignal.any;
+    delete AbortSignal.timeout;
+    repondre(ateliers);
+    assert.equal((await chargerAteliers()).length, ateliers.length);
+    neJamaisRepondre();
+    assert.equal(await raisonDe(chargerAteliers(undefined, { delaiMax: 30 })), "delai");
+  } finally {
+    AbortSignal.any = any;
+    AbortSignal.timeout = timeout;
+  }
+});
+
+test("un signal déjà annulé : rien ne part, l'AbortError revient", async () => {
+  let appele = false;
+  globalThis.fetch = (url, { signal }) => {
+    appele = true;
+    return signal.aborted ? Promise.reject(signal.reason) : Promise.resolve(new Response("[]"));
+  };
+  const arret = new AbortController();
+  arret.abort();
+  assert.equal(await raisonDe(chargerAteliers(arret.signal)), "AbortError");
+  assert.ok(appele, "fetch reçoit un signal déjà tombé, et rejette aussitôt");
+});
+
 test("une page d'erreur HTML servie en 200, ou des données de mauvaise forme : panne « format »", async () => {
   repondre("<!DOCTYPE html><p>Maintenance</p>");
   assert.equal(await raisonDe(chargerAteliers()), "format");
