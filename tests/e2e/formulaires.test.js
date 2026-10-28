@@ -71,7 +71,9 @@ test("envoi valide : bouton désactivé, « Inscription en cours… », puis la 
   const bouton = "#form-inscription button[type=submit]";
   assert.equal(await page.$eval(bouton, (b) => b.disabled), true);
   assert.equal(await texteDe(page, bouton), "Inscription en cours…");
-  await page.waitForFunction(() => document.querySelector("#form-inscription .formulaire__confirmation").textContent !== "");
+  // Le bouton désactivé n'est plus annoncé : l'attente est écrite aussi dans la zone role="status"
+  assert.equal(await texteDe(page, "#form-inscription .formulaire__confirmation"), "Inscription en cours…");
+  await page.waitForFunction(() => (document.querySelector("#form-inscription .formulaire__confirmation").textContent !== "" && !document.querySelector("#form-inscription .formulaire__confirmation").hasAttribute("data-en-cours")));
   assert.equal(
     await texteDe(page, "#form-inscription .formulaire__confirmation"),
     "Merci Jonny, votre compte est prêt. Choisissez maintenant un atelier ci-dessus et touchez « Réserver »."
@@ -87,7 +89,7 @@ test("la même adresse une seconde fois : le refus du serveur est annoncé (role
   const page = await nouvellePage(navigateur, serveur.url);
   await remplir(page);
   await envoyer(page);
-  await page.waitForFunction(() => document.querySelector("#form-inscription .formulaire__confirmation").textContent !== "");
+  await page.waitForFunction(() => (document.querySelector("#form-inscription .formulaire__confirmation").textContent !== "" && !document.querySelector("#form-inscription .formulaire__confirmation").hasAttribute("data-en-cours")));
   await remplir(page);
   await envoyer(page);
   await page.waitForFunction(() => document.querySelector("#form-inscription .formulaire__erreur").textContent !== "");
@@ -98,9 +100,13 @@ test("la même adresse une seconde fois : le refus du serveur est annoncé (role
   await page.close();
 });
 
-test("le lien « Créez votre compte » des formateurs choisit déjà le profil", async () => {
+test("le lien « Créez votre compte » des formateurs choisit déjà le profil, et retire son erreur", async () => {
   const page = await nouvellePage(navigateur, serveur.url);
+  await envoyer(page); // tout vide : « Choisissez votre profil. » s'affiche
+  assert.equal(await erreurDe(page, "profil"), "Choisissez votre profil.");
   await page.click("a[data-profil]");
   assert.equal(await page.$eval("#profil", (s) => s.value), "formateur");
+  assert.equal(await erreurDe(page, "profil"), "", "le message n'est plus là");
+  assert.equal(await page.$eval("#profil", (s) => s.getAttribute("aria-invalid")), "false");
   await page.close();
 });

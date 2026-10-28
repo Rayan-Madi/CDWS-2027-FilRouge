@@ -135,10 +135,15 @@ test("la recherche ignore les accents, et attend la fin de la frappe : un seul c
 test("Entrée dans la recherche applique tout de suite, sans recharger la page", async () => {
   const page = await nouvellePage(navigateur, serveur.url);
   await chargementFini(page);
+  await page.evaluate(() => {
+    window.sansRechargement = true; // un rechargement ou un envoi du formulaire l'effacerait
+  });
   await page.focus("#recherche");
   await page.keyboard.type("figma");
   await page.keyboard.press("Enter");
   assert.equal(await statut(page), "2 ateliers · « figma » · par date", "sans attendre les 300 ms");
+  await new Promise((fin) => setTimeout(fin, 500)); // le temps qu'une navigation, s'il y en avait une, ait lieu
+  assert.equal(await page.evaluate(() => window.sansRechargement), true, "pas de rechargement");
   assert.equal(new URL(page.url()).search, "", "pas d'envoi du formulaire");
   await page.close();
 });
@@ -180,6 +185,57 @@ test("vide : une phrase polie et « Tout afficher », qui remet tout et renvoie 
   assert.equal(await page.$eval("#niveau", (c) => c.value), "tous");
   assert.equal(await statut(page), `${ateliers.length} ateliers · par date`);
   assert.equal(await estVisible(page, ".ateliers__vide"), false);
+  await page.close();
+});
+
+test("taper pendant le chargement : la frappe n'est pas effacée quand le catalogue arrive", async () => {
+  serveur.pannes.set(JSON_ATELIERS, { delai: 900 });
+  const page = await nouvellePage(navigateur, serveur.url, { attendre: false });
+  await page.waitForSelector(".atelier-fantome");
+  await page.click("#recherche");
+  await page.keyboard.type("fig", { delay: 30 });
+  await chargementFini(page); // le catalogue arrive au milieu du mot
+  await page.keyboard.type("ma", { delay: 30 });
+  assert.equal(await page.$eval("#recherche", (c) => c.value), "figma");
+  await page.waitForFunction(() => document.querySelector(".catalogue__statut").textContent.includes("figma"));
+  assert.equal(await statut(page), "2 ateliers · « figma » · par date");
+  await page.close();
+});
+
+test("changer le niveau juste après avoir tapé : le mot part avec, une seule annonce", async () => {
+  const page = await nouvellePage(navigateur, serveur.url);
+  await chargementFini(page);
+  await page.type("#recherche", "git");
+  await page.evaluate(() => {
+    window.annonces = [];
+    new MutationObserver(() => window.annonces.push(document.querySelector(".catalogue__statut").textContent)).observe(
+      document.querySelector(".catalogue__statut"),
+      { childList: true, characterData: true, subtree: true }
+    );
+  });
+  await page.select("#niveau", "debutant"); // moins de 300 ms après la dernière lettre
+  assert.equal(await page.$eval("#recherche", (c) => c.value), "git", "le champ n'est pas vidé");
+  await new Promise((fin) => setTimeout(fin, 450));
+  assert.deepEqual(await page.evaluate(() => window.annonces), ["1 atelier · « git » · niveau débutant · par date"]);
+  await page.close();
+});
+
+test("en panne, changer un filtre ne réannonce pas l'alerte (elle interrompt)", async () => {
+  serveur.pannes.set(JSON_ATELIERS, { statut: 500 });
+  const page = await nouvellePage(navigateur, serveur.url);
+  await page.waitForSelector(".catalogue__panne");
+  await page.evaluate(() => {
+    window.alertesInserees = 0;
+    new MutationObserver((mutations) => {
+      for (const m of mutations) for (const n of m.addedNodes) if (n instanceof Element && n.querySelector('[role="alert"]')) window.alertesInserees += 1;
+    }).observe(document.querySelector(".catalogue__erreur"), { childList: true });
+  });
+  await page.select("#niveau", "avance");
+  await page.click("#soir");
+  await page.type("#recherche", "git");
+  await new Promise((fin) => setTimeout(fin, 450));
+  assert.equal(await page.evaluate(() => window.alertesInserees), 0);
+  assert.equal(await page.$$eval('.catalogue__panne [role="alert"]', (a) => a.length), 1, "l'alerte est toujours là");
   await page.close();
 });
 

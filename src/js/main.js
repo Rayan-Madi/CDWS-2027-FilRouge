@@ -44,7 +44,7 @@ const formInscription = document.querySelector("#form-inscription");
 if (formInscription instanceof HTMLFormElement) {
     monter("inscription", () => brancherInscription(formInscription));
 }
-monter("navigation courante", () => brancherNavigationCourante(trouverTous(document, '.navigation__liste > li > a[href^="#"]', HTMLAnchorElement)));
+monter("navigation courante", () => brancherNavigationCourante(trouverTous(document, '.navigation__liste > li > a[href^="#"]', HTMLAnchorElement), trouverTous(document, "main section[id]", HTMLElement)));
 /* ---------- Lien « formateur » : le profil est déjà choisi ----------
    Un choix de moins pour la formatrice qui arrive par l'appel aux formateurs. Délégué à la section :
    un seul écouteur, quel que soit le nombre de liens. */
@@ -55,6 +55,9 @@ if (formateurs && profil instanceof HTMLSelectElement) {
         const lien = elementCible(evenement)?.closest("a[data-profil]");
         if (lien instanceof HTMLAnchorElement) {
             profil.value = lien.dataset.profil ?? "";
+            // Une valeur posée par le code ne déclenche aucun événement : on prévient la validation,
+            // qui retire le message « Choisissez votre profil » s'il était affiché
+            profil.dispatchEvent(new Event("input", { bubbles: true }));
         }
     });
 }

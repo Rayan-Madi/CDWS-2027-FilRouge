@@ -30,7 +30,13 @@ export async function demarrerServeur({ racine = RACINE_SRC, port = 0 } = {}) {
   const pannes = new Map();
 
   const serveur = http.createServer(async (requete, reponse) => {
-    const chemin = decodeURIComponent(new URL(requete.url ?? "/", "http://x").pathname);
+    let chemin;
+    try {
+      chemin = decodeURIComponent(new URL(requete.url ?? "/", "http://x").pathname);
+    } catch {
+      reponse.writeHead(400).end(); // « /% » : une adresse mal encodée ne doit pas faire tomber le serveur
+      return;
+    }
     const panne = pannes.get(chemin);
     if (panne?.delai) {
       await new Promise((fin) => setTimeout(fin, panne.delai));

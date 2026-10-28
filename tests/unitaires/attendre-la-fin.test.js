@@ -31,6 +31,7 @@ test("annuler oublie l'appel en attente ; maintenant appelle tout de suite", () 
   assert.deepEqual(appels, []);
   chercher("figm");
   chercher.maintenant("figma");
+  assert.deepEqual(appels, ["figma"], "tout de suite, sans attendre l'horloge");
   mock.timers.tick(1000);
   assert.deepEqual(appels, ["figma"], "l'appel en attente est oublié");
 });

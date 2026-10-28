@@ -32,7 +32,7 @@ export function brancherInscription(formulaire: HTMLFormElement): void {
 
     enCours = true;
     try {
-      await envoyer(bouton, "Inscription en cours…", () => inscrire(inscription));
+      await envoyer(bouton, "Inscription en cours…", () => inscrire(inscription), confirmation);
       formulaire.reset();
       effacer();
       confirmation.textContent = `Merci ${prenomDe(inscription.nom)}, votre compte est prêt. Choisissez maintenant un atelier ci-dessus et touchez « Réserver ».`;

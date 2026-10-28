@@ -23,7 +23,7 @@ async function reserver(page, { nom = "Jonny Martin", courriel = "jonny@exemple.
   await page.type("#r-courriel", courriel);
   await page.click("#form-reservation button[value=reserver]");
   await page.waitForFunction(
-    () => document.querySelector("#form-reservation .formulaire__confirmation").textContent !== "" || document.querySelector("#form-reservation .formulaire__erreur").textContent !== ""
+    () => (document.querySelector("#form-reservation .formulaire__confirmation").textContent !== "" && !document.querySelector("#form-reservation .formulaire__confirmation").hasAttribute("data-en-cours")) || document.querySelector("#form-reservation .formulaire__erreur").textContent !== ""
   );
 }
 
@@ -53,7 +53,7 @@ test("réserver : « Réservation en cours… », la confirmation, une place de 
   await page.type("#r-courriel", "jonny@exemple.fr");
   await page.click("#form-reservation button[value=reserver]");
   assert.equal(await texteDe(page, "#form-reservation button[value=reserver]"), "Réservation en cours…");
-  await page.waitForFunction(() => document.querySelector("#form-reservation .formulaire__confirmation").textContent !== "");
+  await page.waitForFunction(() => (document.querySelector("#form-reservation .formulaire__confirmation").textContent !== "" && !document.querySelector("#form-reservation .formulaire__confirmation").hasAttribute("data-en-cours")));
   assert.equal(
     await texteDe(page, "#form-reservation .formulaire__confirmation"),
     "C'est réservé, Jonny ! Initiation à Git : Niveau débutant · 3 h · en ligne · mercredi 4 novembre, 18 h 30 · 25 €. Le lien de connexion arrivera à jonny@exemple.fr la veille."
@@ -63,6 +63,56 @@ test("réserver : « Réservation en cours… », la confirmation, une place de 
   await page.keyboard.press("Enter");
   assert.equal(await modaleOuverte(page), false);
   assert.match(await elementActif(page), /"Réserver l'atelier Initiation à Git"/, "la carte a été reconstruite, le focus la retrouve");
+  await page.close();
+});
+
+test("pendant « Réservation en cours… » : ni Annuler, ni Échap, ni le fond ne ferment ; l'attente est annoncée", async () => {
+  const page = await nouvellePage(navigateur, serveur.url);
+  await pret(page);
+  await page.click(reserverGit);
+  await page.type("#r-nom", "Jonny Martin");
+  await page.type("#r-courriel", "jonny@exemple.fr");
+  await page.click("#form-reservation button[value=reserver]");
+  // L'attente est écrite dans la zone role="status" : un bouton désactivé, lui, n'est plus annoncé
+  assert.equal(await texteDe(page, "#form-reservation .formulaire__confirmation"), "Réservation en cours…");
+  assert.equal(await page.$eval("#form-reservation button[value=annuler]", (b) => b.disabled), true);
+  await page.keyboard.press("Escape");
+  assert.equal(await modaleOuverte(page), true, "Échap ne ferme pas pendant l'envoi");
+  await page.mouse.click(5, 5);
+  assert.equal(await modaleOuverte(page), true, "le fond ne ferme pas pendant l'envoi");
+  await page.waitForFunction(() => document.querySelector("#form-reservation .formulaire__confirmation").textContent.startsWith("C'est réservé"));
+  assert.match(await elementActif(page), /^button.action "Fermer"/, "la réponse est lue, le focus sur « Fermer »");
+  assert.equal(await page.$eval("#form-reservation button[value=annuler]", (b) => b.disabled), false, "rendu après l'envoi");
+  assert.equal(await texteDe(page, ".modale__places"), "5 places", "la fiche suit la place prise");
+  await page.close();
+});
+
+test("une sélection de texte commencée dans un champ et relâchée sur le fond ne ferme pas la modale", async () => {
+  const page = await nouvellePage(navigateur, serveur.url);
+  await pret(page);
+  await page.click(reserverGit);
+  await page.type("#r-nom", "Jonny Martin");
+  const champ = await page.$eval("#r-nom", (c) => {
+    const r = c.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  });
+  await page.mouse.move(champ.x, champ.y);
+  await page.mouse.down();
+  await page.mouse.move(5, 5, { steps: 5 });
+  await page.mouse.up();
+  assert.equal(await modaleOuverte(page), true);
+  assert.equal(await page.$eval("#r-nom", (c) => c.value), "Jonny Martin", "rien n'est perdu");
+  await page.close();
+});
+
+test("quitter un champ vide pour « Annuler » : un seul clic suffit, sans message qui pousse le bouton", async () => {
+  const page = await nouvellePage(navigateur, serveur.url);
+  await pret(page);
+  await page.click(reserverGit);
+  await page.focus("#r-nom");
+  await page.click("#form-reservation button[value=annuler]");
+  assert.equal(await modaleOuverte(page), false);
+  assert.equal(await texteDe(page, "#erreur-r-nom"), "", "aucune validation au départ vers Annuler");
   await page.close();
 });
 

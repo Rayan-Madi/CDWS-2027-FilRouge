@@ -55,7 +55,10 @@ if (formInscription instanceof HTMLFormElement) {
 }
 
 monter("navigation courante", () =>
-  brancherNavigationCourante(trouverTous(document, '.navigation__liste > li > a[href^="#"]', HTMLAnchorElement))
+  brancherNavigationCourante(
+    trouverTous(document, '.navigation__liste > li > a[href^="#"]', HTMLAnchorElement),
+    trouverTous(document, "main section[id]", HTMLElement)
+  )
 );
 
 /* ---------- Lien « formateur » : le profil est déjà choisi ----------
@@ -68,6 +71,9 @@ if (formateurs && profil instanceof HTMLSelectElement) {
     const lien = elementCible(evenement)?.closest("a[data-profil]");
     if (lien instanceof HTMLAnchorElement) {
       profil.value = lien.dataset.profil ?? "";
+      // Une valeur posée par le code ne déclenche aucun événement : on prévient la validation,
+      // qui retire le message « Choisissez votre profil » s'il était affiché
+      profil.dispatchEvent(new Event("input", { bubbles: true }));
     }
   });
 }

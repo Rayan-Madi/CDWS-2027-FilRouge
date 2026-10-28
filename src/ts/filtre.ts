@@ -20,9 +20,16 @@ export const estNiveau = (valeur: unknown): valeur is Niveau =>
 export const estTri = (valeur: unknown): valeur is Tri =>
   valeur === "date" || valeur === "prix-croissant" || valeur === "prix-decroissant";
 
-/** Sans accents, sans majuscules, espaces resserrés : « Accessibilité » et « accessibilite » se rejoignent. */
+/** Sans accents, sans majuscules, espaces resserrés : « Accessibilité » et « accessibilite » se rejoignent.
+    Les apostrophes aussi : le clavier d'un téléphone tape « N’Diaye » (’), les données disent « N'Diaye » ('). */
 export function normaliser(texte: string): string {
-  return texte.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/\s+/g, " ").trim();
+  return texte
+    .replace(/[\u2018\u2019\u02bc\u0060\u00b4]/g, "'") // AVANT les accents : U+02BC est lui-même un diacritique
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 const chronologique = (a: Atelier, b: Atelier): number => Date.parse(a.date) - Date.parse(b.date);

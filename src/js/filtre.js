@@ -2,9 +2,16 @@ import { estLeSoir, libelleNiveau } from "./format.js";
 export const CRITERES_PAR_DEFAUT = { recherche: "", niveau: "tous", soir: false, tri: "date" };
 export const estNiveau = (valeur) => valeur === "debutant" || valeur === "intermediaire" || valeur === "avance";
 export const estTri = (valeur) => valeur === "date" || valeur === "prix-croissant" || valeur === "prix-decroissant";
-/** Sans accents, sans majuscules, espaces resserrés : « Accessibilité » et « accessibilite » se rejoignent. */
+/** Sans accents, sans majuscules, espaces resserrés : « Accessibilité » et « accessibilite » se rejoignent.
+    Les apostrophes aussi : le clavier d'un téléphone tape « N’Diaye » (’), les données disent « N'Diaye » ('). */
 export function normaliser(texte) {
-    return texte.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/\s+/g, " ").trim();
+    return texte
+        .replace(/[\u2018\u2019\u02bc\u0060\u00b4]/g, "'") // AVANT les accents : U+02BC est lui-même un diacritique
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
 }
 const chronologique = (a, b) => Date.parse(a.date) - Date.parse(b.date);
 // À prix égal, le plus proche d'abord : un ordre stable et prévisible

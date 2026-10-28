@@ -37,6 +37,7 @@ export function brancherModale(modale: HTMLDialogElement, rappels: RappelsModale
   const places = trouver(modale, ".modale__places", HTMLElement);
   const zonesSaisie = trouverTous(formulaire, ".champ, .modale__actions", HTMLElement);
   const boutonReserver = trouver(formulaire, "button[value=reserver]", HTMLButtonElement);
+  const boutonAnnuler = trouver(formulaire, "button[value=annuler]", HTMLButtonElement);
   const confirmation = trouver(formulaire, ".formulaire__confirmation", HTMLElement);
   const alerte = trouver(formulaire, ".formulaire__erreur", HTMLElement);
   const fin = trouver(formulaire, ".modale__fin", HTMLElement);
@@ -46,6 +47,7 @@ export function brancherModale(modale: HTMLDialogElement, rappels: RappelsModale
   // L'état de la modale : l'atelier affiché, et l'envoi en cours ou non
   let atelier: Atelier | null = null;
   let enCours = false;
+  let appuiSurLeFond = false; // le geste a-t-il COMMENCÉ sur le fond ? (voir le clic, plus bas)
 
   function ouvrir(choisi: Atelier): void {
     atelier = choisi;
@@ -66,13 +68,18 @@ export function brancherModale(modale: HTMLDialogElement, rappels: RappelsModale
   }
 
   formulaire.addEventListener("submit", async (evenement) => {
+    // Pendant l'envoi, la modale ne se ferme pas : la demande est partie, sa réponse doit être lue
+    if (enCours) {
+      evenement.preventDefault();
+      return;
+    }
     const envoyeur = evenement.submitter;
     const action = envoyeur instanceof HTMLButtonElement ? envoyeur.value : "";
     if (action === "annuler" || action === "fermer") {
       return; // method="dialog" : ces deux boutons ferment la modale, sans validation
     }
     evenement.preventDefault(); // retient la modale ouverte tant que ce n'est pas réservé
-    if (enCours || !atelier) return;
+    if (!atelier) return;
     alerte.textContent = "";
     if (!toutVerifier()) return;
 
@@ -81,10 +88,12 @@ export function brancherModale(modale: HTMLDialogElement, rappels: RappelsModale
     const reservation: Reservation = { atelierId: choisi.id, nom: texteDu(donnees, "nom"), courriel: texteDu(donnees, "courriel") };
 
     enCours = true;
+    boutonAnnuler.disabled = true; // ni Annuler, ni Échap, ni le fond : voir plus haut et plus bas
     try {
-      await envoyer(boutonReserver, "Réservation en cours…", () => reserver(reservation, choisi.places));
+      await envoyer(boutonReserver, "Réservation en cours…", () => reserver(reservation, choisi.places), confirmation);
       rappels.surReservee(choisi);
       zonesSaisie.forEach((zone) => (zone.hidden = true));
+      places.textContent = formaterPlaces(Math.max(0, choisi.places - 1)); // la fiche suit, elle aussi
       confirmation.textContent = `C'est réservé, ${prenomDe(reservation.nom)} ! ${choisi.titre} : ${recapAtelier(choisi)}. ${suiteConfirmation(choisi, reservation.courriel)}`;
       fin.hidden = false;
       boutonFermer.focus(); // le focus ne reste pas sur un bouton devenu caché
@@ -97,7 +106,13 @@ export function brancherModale(modale: HTMLDialogElement, rappels: RappelsModale
       }
     } finally {
       enCours = false;
+      boutonAnnuler.disabled = false;
     }
+  });
+
+  // Échap déclenche « cancel » avant de fermer : pendant l'envoi, on l'empêche
+  modale.addEventListener("cancel", (evenement) => {
+    if (enCours) evenement.preventDefault();
   });
 
   // La seule chose que <dialog> ne garantit pas partout : rendre le focus là d'où l'on vient.
@@ -107,12 +122,18 @@ export function brancherModale(modale: HTMLDialogElement, rappels: RappelsModale
     if (atelier) rappels.surFermee(atelier);
   });
 
-  // Un clic sur le fond sombre ferme : la cible est alors le <dialog> lui-même,
-  // car tout le contenu est dans .modale__contenu et le dialog n'a pas de marge interne.
+  // Un clic sur le fond sombre ferme : la cible est alors le <dialog> lui-même, car tout le contenu
+  // est dans .modale__contenu et le dialog n'a pas de marge interne. Mais un clic dont l'appui commence
+  // dans un champ (une sélection de texte) et finit sur le fond vise aussi le dialog : on ne ferme que
+  // si le geste a commencé sur le fond.
+  modale.addEventListener("pointerdown", (evenement) => {
+    appuiSurLeFond = evenement.target === modale;
+  });
   modale.addEventListener("click", (evenement) => {
-    if (evenement.target === modale) {
+    if (evenement.target === modale && appuiSurLeFond && !enCours) {
       modale.close();
     }
+    appuiSurLeFond = false;
   });
 
   return { ouvrir };

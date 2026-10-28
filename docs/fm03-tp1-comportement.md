@@ -107,7 +107,7 @@ formulaire.addEventListener("submit", async (evenement) => {
 });
 ```
 
-`envoyer()` désactive le bouton, affiche « Inscription en cours… », puis rend le bouton **dans un `finally`** : quoi qu'il arrive, l'indicateur ne reste pas bloqué. Le relevé clavier montre qu'un bouton désactivé **perd le focus** (`Enter → body`) : `envoyer()` le lui rend, sinon le clavier repartirait du haut de la page.
+`envoyer()` désactive le bouton, affiche « Inscription en cours… », puis rend le bouton **dans un `finally`** : quoi qu'il arrive, l'indicateur ne reste pas bloqué. Un bouton désactivé n'est plus annoncé : « Inscription en cours… » est donc écrit aussi dans la zone `role="status"` du formulaire, que le résultat remplace ensuite. Dans la modale, pendant l'envoi, ni « Annuler », ni Échap, ni le fond ne ferment : la demande est partie, sa réponse doit être lue. Le relevé clavier montre qu'un bouton désactivé **perd le focus** (`Enter → body`) : `envoyer()` le lui rend, sinon le clavier repartirait du haut de la page.
 
 Sans back-end, [`serveur-simule.ts`](../src/ts/serveur-simule.ts) tient le rôle du serveur. Il répond en 800 ms et **refuse** une adresse déjà inscrite (le 409 du cours, 5.3). Le refus s'affiche dans une zone `role="alert"`, la confirmation dans une zone `role="status"`. Ces deux zones sont dans la page dès le départ, vides, parce qu'une zone cachée puis montrée n'est pas toujours annoncée.
 
@@ -146,7 +146,7 @@ Ordinateur, formulaire d'inscription : Entrée sur le formulaire vide → messag
 
 ## 8. Ma gestion du focus, à dire sans le code
 
-> 1. **Le focus ne disparaît jamais.** Chaque fois qu'un élément focalisé va disparaître, je pose le focus ailleurs AVANT : Échap dans le menu → sur le bouton qui l'a ouvert ; confirmation de la modale → le bouton « Réserver » est caché, le focus passe sur « Fermer » ; « Réessayer » disparaît → le focus va au titre du catalogue.
+> 1. **Le focus ne disparaît jamais.** Chaque fois qu'un élément focalisé va disparaître, je pose le focus ailleurs AVANT : Échap dans le menu → sur le bouton qui l'a ouvert ; confirmation de la modale → le bouton « Réserver » est caché, le focus passe sur « Fermer » ; « Réessayer » disparaît → le focus va au titre du catalogue ; « Tout afficher » disparaît → le focus va au champ de recherche. Et la modale ne se ferme pas pendant un envoi : sinon la réponse arriverait dans une fenêtre fermée, et la carte reconstruite emporterait le focus.
 > 2. **On revient d'où l'on vient.** La modale fermée (bouton, Échap ou clic sur le fond : l'événement `close` part dans tous les cas), le focus revient au bouton « Réserver » de la carte. Si la carte a été reconstruite entre-temps, le catalogue la retrouve par l'identifiant de l'atelier ; si l'atelier est devenu complet, son bouton est inerte, donc le focus se pose sur son titre.
 > 3. **À l'erreur, au premier champ fautif.** Le formulaire refusé met le focus sur le premier champ en erreur, dont le message est lu avec lui (`aria-describedby`).
 > 4. **Le navigateur fait le reste, je ne le refais pas.** `showModal()` fait entrer le focus dans la modale, le garde dedans et ferme par Échap. Un vrai `<button>` répond à Entrée et Espace. Un lien vers une ancre déplace le point de départ du clavier.

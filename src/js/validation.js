@@ -69,6 +69,11 @@ export function brancherValidation(formulaire) {
     // tant qu'elle est affichée, et disparaît dès que la saisie devient valide.
     // focusout et non blur : blur ne remonte pas, focusout si — un écouteur sur le formulaire suffit.
     formulaire.addEventListener("focusout", (evenement) => {
+        // Le focus part vers « Annuler » (formnovalidate) : on abandonne, on ne valide pas. Sinon le message
+        // qui apparaît pousserait le bouton sous le pointeur, et le clic serait perdu.
+        const vers = evenement.relatedTarget;
+        if (vers instanceof HTMLButtonElement && vers.formNoValidate)
+            return;
         const champ = champDe(evenement);
         if (champ)
             verifierChamp(champ);
