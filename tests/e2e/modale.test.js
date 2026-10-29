@@ -17,6 +17,13 @@ after(async () => {
 const modaleOuverte = (page) => page.$eval("#modale-reservation", (d) => d.open);
 const reserverGit = '[data-reserver="git-initiation"]';
 const pret = (page) => page.waitForFunction(() => document.querySelector(".ateliers").getAttribute("aria-busy") === "false");
+// La modale fermée, le focus n'est rendu qu'à l'événement close, qui part dans une TÂCHE suivante :
+// on attend que le focus soit sorti de la modale avant de le relever (sinon on lit encore « Fermer »)
+const focusRendu = (page) =>
+  page.waitForFunction(() => {
+    const modale = document.querySelector("#modale-reservation");
+    return !modale.open && !modale.contains(document.activeElement);
+  });
 
 async function reserver(page, { nom = "Jonny Martin", courriel = "jonny@exemple.fr" } = {}) {
   await page.type("#r-nom", nom);
@@ -41,6 +48,7 @@ test("au clavier : « Réserver » ouvre la fiche, Échap la ferme, le focus rev
   assert.match(await elementActif(page), /^input#r-nom/, "le focus est entré dans la modale");
   await page.keyboard.press("Escape");
   assert.equal(await modaleOuverte(page), false);
+  await focusRendu(page);
   assert.match(await elementActif(page), /^button\.action "Réserver l'atelier Initiation à Git"/);
   await page.close();
 });
@@ -62,6 +70,7 @@ test("réserver : « Réservation en cours… », la confirmation, une place de 
   assert.equal(await texteDe(page, '[data-id="git-initiation"] .atelier__places'), "5 places", "la carte a suivi l'état");
   await page.keyboard.press("Enter");
   assert.equal(await modaleOuverte(page), false);
+  await focusRendu(page);
   assert.match(await elementActif(page), /"Réserver l'atelier Initiation à Git"/, "la carte a été reconstruite, le focus la retrouve");
   await page.close();
 });
@@ -154,6 +163,7 @@ test("la dernière place réservée : la carte passe à « Complet », et le foc
   await page.click("#form-reservation button[value=fermer]");
   assert.equal(await texteDe(page, `${carte} .atelier__places`), "Complet");
   assert.equal(await page.$eval(`${carte} button`, (b) => b.disabled), true);
+  await focusRendu(page);
   assert.match(await elementActif(page), /^h3#titre-linkedin-reconversion/);
   await page.close();
 });
