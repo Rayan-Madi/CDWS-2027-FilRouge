@@ -22,9 +22,13 @@ function relevé(page) {
     async touche(touche, attendu) {
       await page.keyboard.press(touche);
       // Certains effets d'une touche partent dans une tâche suivante (l'événement close d'un <dialog>,
-      // et le focus qu'il rend) : on laisse passer les tâches en file avant de relever le focus
-      await page.evaluate(() => new Promise((fin) => setTimeout(fin, 0)));
-      const actif = await elementActif(page);
+      // et le focus qu'il rend) : on attend la CONDITION — le focus attendu, au plus 2 s — et non un délai
+      // arbitraire, qui dépendrait de la vitesse de la machine
+      let actif = await elementActif(page);
+      for (let essai = 0; attendu && !attendu.test(actif) && essai < 40; essai += 1) {
+        await new Promise((fin) => setTimeout(fin, 50));
+        actif = await elementActif(page);
+      }
       etapes.push(`${touche.padEnd(6)} → ${actif}`);
       if (attendu) assert.match(actif, attendu, `après ${touche} (étape ${etapes.length})`);
       return actif;
