@@ -1,0 +1,48 @@
+# À chaque push sur main et à chaque PR : le TypeScript compile en strict, le JavaScript commité
+# est bien celui que produit tsc, et tous les tests passent (unitaires, bout en bout, plugin Figma).
+name: Vérifier
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Installer les outils (TypeScript, puppeteer-core, axe-core)
+        run: npm ci
+
+      - name: TypeScript strict, sans erreur
+        run: npm run verifier
+
+      - name: Le JavaScript commité est celui que produit tsc
+        run: |
+          npm run build
+          if [ -n "$(git status --porcelain -- src/js)" ]; then
+            git status --short -- src/js
+            echo "::error::src/js n'est pas à jour : lancez npm run build, puis commitez src/js."
+            exit 1
+          fi
+
+      - name: Tests unitaires
+        run: npm run test:unitaires
+
+      - name: Tests de bout en bout (Chrome du runner, sans fenêtre)
+        run: npm run test:e2e
+
+      - name: Plugin Figma (FM02)
+        working-directory: outils/figma-skillhub
+        run: |
+          npm ci
+          npm test
+          npm run types

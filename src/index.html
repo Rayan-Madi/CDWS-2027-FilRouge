@@ -18,10 +18,19 @@
   </style>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/skillhub.css">
-  <!-- Signale que le JavaScript est disponible, avant la première peinture (pas de flash du menu) -->
-  <script>document.documentElement.classList.add("js");</script>
-  <!-- defer : téléchargé en parallèle, exécuté après l'analyse du HTML -->
-  <script src="js/skillhub.js" defer></script>
+  <!-- Signale que le JavaScript est disponible, avant la première peinture (pas de flash du menu).
+       Seulement si le navigateur sait charger les modules ; et si le module ne se charge pas
+       (page ouverte en file://, réseau coupé), la classe est retirée : la page reste complète, menu déplié. -->
+  <script>
+    if ("noModule" in HTMLScriptElement.prototype) {
+      document.documentElement.classList.add("js");
+      addEventListener("error", (e) => {
+        if (e.target instanceof HTMLScriptElement) document.documentElement.classList.remove("js");
+      }, true);
+    }
+  </script>
+  <!-- Un seul point d'entrée ; type="module" implique defer : exécuté après l'analyse du HTML -->
+  <script type="module" src="js/main.js"></script>
 </head>
 <body>
   <a class="evitement" href="#contenu">Aller au contenu</a>
@@ -47,7 +56,22 @@
         </button>
         <ul class="navigation__liste" id="menu" data-ferme>
           <li><a href="#valeurs">Valeurs</a></li>
-          <li><a href="#ateliers">Ateliers</a></li>
+          <!-- Le lien reste un lien ; le bouton à côté ouvre les raccourcis (motif « disclosure » de l'APG).
+               Sans JavaScript, bouton et sous-menu n'apparaissent pas : ils n'ont de sens qu'avec le filtre. -->
+          <li class="navigation__groupe">
+            <a href="#ateliers">Ateliers</a>
+            <button class="navigation__deplier" type="button" aria-expanded="false" aria-controls="sous-menu-ateliers">
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="visuellement-masque">Raccourcis vers les ateliers</span>
+            </button>
+            <ul class="navigation__sous-menu" id="sous-menu-ateliers" data-ferme>
+              <li><a href="#ateliers" data-raccourci="tous">Tout le catalogue</a></li>
+              <li><a href="#ateliers" data-raccourci="debutant">Pour débutants</a></li>
+              <li><a href="#ateliers" data-raccourci="soir">Le soir</a></li>
+            </ul>
+          </li>
           <li><a href="#formateurs">Formateurs</a></li>
           <li><a class="navigation__action" href="#inscription">S'inscrire</a></li>
         </ul>
@@ -111,49 +135,86 @@
       </section>
 
       <section id="ateliers" class="bloc bloc--teinte" aria-labelledby="t-ateliers">
-        <h2 id="t-ateliers">Les ateliers du moment</h2>
-        <!-- Filtres : affichés par le JavaScript ; sans lui, tous les ateliers restent visibles -->
-        <div class="filtres" hidden>
-          <fieldset class="filtres__choix">
-            <legend>Filtrer les ateliers</legend>
-            <label class="filtres__option"><input type="checkbox" name="soir"> Le soir (à partir de 18 h)</label>
-            <label class="filtres__option"><input type="checkbox" name="debutant"> Ouverts aux débutants</label>
-          </fieldset>
-          <p class="filtres__resultat" role="status"></p>
-        </div>
+        <!-- tabindex="-1" : le focus y revient après « Réessayer », dont le bouton disparaît -->
+        <h2 id="t-ateliers" tabindex="-1">Les ateliers du moment</h2>
+        <!-- Filtres : affichés par le JavaScript, qui charge le catalogue (js/catalogue.js) ;
+             sans lui, les trois ateliers écrits ci-dessous restent visibles -->
+        <form class="filtres" role="search" aria-label="Filtrer les ateliers" hidden>
+          <p class="champ filtres__recherche">
+            <label for="recherche">Rechercher un titre, un formateur ou un thème</label>
+            <input id="recherche" name="recherche" type="search" autocomplete="off">
+          </p>
+          <p class="champ">
+            <label for="niveau">Niveau</label>
+            <select id="niveau" name="niveau">
+              <option value="tous">Tous les niveaux</option>
+              <option value="debutant">Débutant</option>
+              <option value="intermediaire">Intermédiaire</option>
+              <option value="avance">Avancé</option>
+            </select>
+          </p>
+          <p class="champ">
+            <label for="tri">Trier par</label>
+            <select id="tri" name="tri">
+              <option value="date">Date</option>
+              <option value="prix-croissant">Prix croissant</option>
+              <option value="prix-decroissant">Prix décroissant</option>
+            </select>
+          </p>
+          <p class="champ champ--case filtres__soir">
+            <input id="soir" name="soir" type="checkbox">
+            <label for="soir">Le soir (à partir de 18 h)</label>
+          </p>
+        </form>
+        <!-- Les deux zones annoncées sont dans la page dès le départ, vides : role="status" pour le
+             chargement, le vide et le compteur (poli) ; l'alerte d'une panne y est insérée (elle interrompt) -->
+        <p class="catalogue__statut" role="status"></p>
+        <div class="catalogue__erreur"></div>
         <ul class="ateliers">
-          <li>
-            <article class="atelier" data-moment="soir" data-niveau="debutant">
+          <li data-id="git-initiation">
+            <article class="atelier">
               <h3>Initiation à Git</h3>
               <p class="atelier__etiquette">Développement</p>
               <p>Versionner son travail, revenir en arrière et collaborer sur GitHub sans peur de tout casser.</p>
-              <p class="atelier__infos">Niveau débutant · 3 h · en ligne · <time datetime="2026-10-07T18:30">mercredi 7 octobre, 18 h 30</time></p>
-              <p class="atelier__prix">25 €</p>
-              <a class="action" href="#inscription" data-reserver>Réserver <span class="visuellement-masque">l'atelier Initiation à Git</span></a>
+              <p class="atelier__infos">Niveau débutant · 3&nbsp;h · en ligne · <time datetime="2026-11-04T18:30:00+01:00">mercredi 4 novembre, 18&nbsp;h&nbsp;30</time></p>
+              <p class="atelier__formateur">Avec Sarah Benali</p>
+              <p class="atelier__prerequis"><span class="atelier__libelle">Prérequis : </span>Aucun : venez avec un ordinateur.</p>
+              <p class="atelier__places">6 places</p>
+              <p class="atelier__prix">25&nbsp;€</p>
+              <a class="action" href="#inscription">Réserver <span class="visuellement-masque">l'atelier Initiation à Git</span></a>
             </article>
           </li>
-          <li>
-            <article class="atelier" data-moment="journee" data-niveau="intermediaire">
+          <li data-id="figma-maquette">
+            <article class="atelier">
               <h3>Maquetter une page avec Figma</h3>
               <p class="atelier__etiquette">Design</p>
               <p>Passer d'une idée griffonnée à une maquette propre, prête à être intégrée.</p>
-              <p class="atelier__infos">Niveau intermédiaire · 4 h · Paris · <time datetime="2026-10-17T10:00">samedi 17 octobre, 10 h</time></p>
-              <p class="atelier__prix">35 €</p>
-              <a class="action" href="#inscription" data-reserver>Réserver <span class="visuellement-masque">l'atelier Maquetter une page avec Figma</span></a>
+              <p class="atelier__infos">Niveau intermédiaire · 4&nbsp;h · Paris · <time datetime="2026-11-14T10:00:00+01:00">samedi 14 novembre, 10&nbsp;h</time></p>
+              <p class="atelier__formateur">Avec Thomas Martin</p>
+              <p class="atelier__prerequis"><span class="atelier__libelle">Prérequis : </span>Avoir déjà ouvert Figma ; un compte gratuit suffit.</p>
+              <p class="atelier__places atelier__places--rares">Plus que 2 places</p>
+              <p class="atelier__prix">35&nbsp;€</p>
+              <a class="action" href="#inscription">Réserver <span class="visuellement-masque">l'atelier Maquetter une page avec Figma</span></a>
             </article>
           </li>
-          <li>
-            <article class="atelier" data-moment="soir" data-niveau="tous">
+          <li data-id="portfolio">
+            <article class="atelier">
               <h3>Construire son portfolio</h3>
               <p class="atelier__etiquette">Carrière</p>
               <p>Choisir ses projets, les présenter et les mettre en ligne gratuitement.</p>
-              <p class="atelier__infos">Tous niveaux · 2 h · en ligne · <time datetime="2026-10-21T19:00">mercredi 21 octobre, 19 h</time></p>
+              <p class="atelier__infos">Niveau débutant · 2&nbsp;h · en ligne · <time datetime="2026-11-18T19:00:00+01:00">mercredi 18 novembre, 19&nbsp;h</time></p>
+              <p class="atelier__formateur">Avec Aïcha N'Diaye</p>
+              <p class="atelier__prerequis"><span class="atelier__libelle">Prérequis : </span>Aucun.</p>
+              <p class="atelier__places">8 places</p>
               <p class="atelier__prix">Gratuit</p>
-              <a class="action" href="#inscription" data-reserver>Réserver <span class="visuellement-masque">l'atelier Construire son portfolio</span></a>
+              <a class="action" href="#inscription">Réserver <span class="visuellement-masque">l'atelier Construire son portfolio</span></a>
             </article>
           </li>
         </ul>
-        <p class="ateliers__vide" hidden>Aucun atelier ne correspond à ces filtres. Décochez-en un pour élargir la recherche.</p>
+        <div class="ateliers__vide" hidden>
+          <p>Changez de niveau ou de mot-clé, ou revenez au catalogue complet.</p>
+          <button class="action action--secondaire" type="button" data-tout-afficher>Tout afficher</button>
+        </div>
       </section>
 
       <section id="formateurs" class="bloc" aria-labelledby="t-formateurs">
@@ -259,7 +320,8 @@
           <p>
             <button class="action" type="submit">Créer mon compte</button>
           </p>
-          <p class="formulaire__confirmation" role="status" hidden></p>
+          <p class="formulaire__confirmation" role="status"></p>
+          <p class="formulaire__erreur" role="alert"></p>
         </form>
       </section>
     </main>
@@ -274,11 +336,21 @@
     </footer>
   </div>
 
-  <!-- Modale de réservation : fermée par défaut, ouverte par showModal() (js/skillhub.js) -->
+  <!-- Fiche et réservation d'un atelier : fermée par défaut, ouverte par showModal() (js/modale.js) -->
   <dialog id="modale-reservation" class="modale" aria-labelledby="t-modale">
     <div class="modale__contenu">
       <h2 id="t-modale">Réserver : <span class="modale__atelier">un atelier</span></h2>
       <p class="modale__recap"></p>
+      <!-- La fiche : ce qu'il faut savoir AVANT de réserver (les prérequis : correctif de l'audit Nielsen) -->
+      <p class="modale__description"></p>
+      <dl class="modale__fiche">
+        <dt>Formateur</dt>
+        <dd class="modale__formateur"></dd>
+        <dt>Prérequis</dt>
+        <dd class="modale__prerequis"></dd>
+        <dt>Places</dt>
+        <dd class="modale__places"></dd>
+      </dl>
       <form class="formulaire formulaire--modale" id="form-reservation" method="dialog">
         <p class="champ">
           <label for="r-nom">Prénom et nom</label>
@@ -297,7 +369,8 @@
           <button class="action" type="submit" value="reserver">Confirmer la réservation</button>
           <button class="action action--secondaire" type="submit" value="annuler" formnovalidate>Annuler</button>
         </p>
-        <p class="formulaire__confirmation" role="status" hidden></p>
+        <p class="formulaire__erreur" role="alert"></p>
+        <p class="formulaire__confirmation" role="status"></p>
         <p class="modale__fin" hidden>
           <button class="action" type="submit" value="fermer" formnovalidate>Fermer</button>
         </p>

@@ -298,6 +298,62 @@ ul {
   display: none;
 }
 
+/* Sous-menu « Ateliers » : le lien, puis le bouton qui déplie les raccourcis.
+   Bouton et sous-menu n'existent qu'avec le JavaScript (sans lui, le filtre non plus). */
+.navigation__groupe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.navigation__groupe > a {
+  flex: 1;
+}
+
+.navigation__deplier,
+.navigation__sous-menu {
+  display: none;
+}
+
+.js .navigation__deplier {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--cible);
+  min-height: var(--cible);
+  padding: 0;
+  color: var(--texte);
+  background: transparent;
+  border: 0;
+  border-radius: var(--rayon-s);
+  cursor: pointer;
+}
+
+.js .navigation__deplier:hover {
+  background: var(--accent-clair);
+}
+
+.navigation__deplier svg {
+  flex: none; /* sans lui, l'icône rétrécit dans le bouton (et la règle svg { height: auto } l'écrase) */
+  width: 1rem;
+  height: 1rem;
+  transition: transform 0.2s;
+}
+
+/* La flèche suit l'état annoncé : ce que voit l'œil et ce qu'entend le lecteur d'écran restent d'accord */
+.navigation__deplier[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* Sur téléphone, dans le panneau du menu : les raccourcis s'emboîtent sous « Ateliers » */
+.js .navigation__sous-menu:not([data-ferme]) {
+  display: block;
+  flex-basis: 100%;
+  margin-left: var(--e-4);
+  padding-left: var(--e-2);
+  border-left: 2px solid var(--bordure);
+}
+
 /* ---------- Bouton (composant 1) — six états ---------- */
 .action {
   display: inline-block;
@@ -426,60 +482,113 @@ ul {
   margin-bottom: var(--e-3);
 }
 
-/* ---------- Filtre des ateliers ---------- */
+/* ---------- Catalogue : filtres, compteur et les quatre états ---------- */
+/* Une colonne sur téléphone ; les commandes alignées par le bas, sur la ligne des champs */
 .filtres {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--e-3) var(--e-4);
+  align-items: end;
+  margin-top: var(--e-4);
+  padding: var(--e-4);
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-m);
+}
+
+.filtres .champ {
+  max-width: none;
+  margin: 0;
+}
+
+.filtres__soir {
+  min-height: var(--cible); /* la case est centrée sur la hauteur d'un champ */
+}
+
+/* Le compteur : il nomme le résultat ET les critères, d'où une annonce à chaque changement */
+.catalogue__statut {
+  margin-top: var(--e-4);
+  margin-bottom: 0;
+  font-weight: 600;
+  color: var(--texte-doux);
+}
+
+.catalogue__statut:empty {
+  margin: 0;
+}
+
+/* La panne : une phrase, un bouton ; bordure ET texte, jamais la couleur seule */
+.catalogue__panne {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--e-2) var(--e-6);
-  margin-top: var(--e-4);
+  gap: var(--e-3) var(--e-6);
+  margin-top: var(--e-6);
+  padding: var(--e-4) var(--e-6);
+  background: var(--fond);
+  border: 1px solid var(--erreur);
+  border-left-width: 4px;
+  border-radius: var(--rayon-m);
 }
 
-.filtres__choix {
+.catalogue__panne p {
+  margin: 0;
+}
+
+.catalogue__panne strong {
+  color: var(--erreur);
+}
+
+/* Le vide n'est pas une panne : une bordure tiretée, un conseil, une action */
+.ateliers__vide {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--e-2) var(--e-6);
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.filtres__choix legend {
-  float: left; /* la légende sur la même ligne que les cases, sans perdre son rôle */
-  margin-right: var(--e-2);
-  padding: 0;
-  font-weight: 600;
-  line-height: var(--cible); /* même hauteur que les options : alignée sur leur centre */
-}
-
-.filtres__option {
-  display: inline-flex;
   align-items: center;
-  gap: var(--e-2);
-  min-height: var(--cible);
-  cursor: pointer;
-}
-
-.filtres__option input {
-  width: 1.5rem;       /* 24 px : taille minimale d'une cible (WCAG 2.5.8) */
-  height: 1.5rem;
-  margin: 0;
-  accent-color: var(--accent);
-}
-
-.filtres__resultat {
-  margin: 0;
-  font-size: var(--t-xs);
-  color: var(--texte-doux);
-}
-
-.ateliers__vide {
+  justify-content: space-between;
+  gap: var(--e-3) var(--e-6);
   margin-top: var(--e-6);
-  padding: var(--e-4);
+  padding: var(--e-4) var(--e-6);
   background: var(--fond);
   border: 1px dashed var(--texte-doux);
   border-radius: var(--rayon-m);
+}
+
+.ateliers__vide p {
+  margin: 0;
+}
+
+/* Le chargement : des cartes fantômes à la taille des vraies, pour que rien ne saute à l'arrivée */
+.atelier-fantome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-3);
+  min-height: 24rem;
+  padding: var(--e-6);
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-m);
+}
+
+.atelier-fantome span {
+  display: block;
+  height: 1rem;
+  background: var(--fond-teinte);
+  border-radius: var(--rayon-s);
+  animation: fantome 1.2s ease-in-out infinite alternate;
+}
+
+.atelier-fantome span:nth-child(1) { width: 75%; height: 1.5rem; }
+.atelier-fantome span:nth-child(2) { width: 30%; }
+.atelier-fantome span:nth-child(3) { height: 3rem; }
+.atelier-fantome span:nth-child(4) { width: 85%; }
+.atelier-fantome span:nth-child(5) { width: 50%; }
+.atelier-fantome span:nth-child(6) { width: 9rem; height: var(--cible); margin-top: auto; border-radius: var(--pilule); }
+
+@keyframes fantome {
+  to {
+    opacity: 0.4;
+  }
 }
 
 /* ---------- Carte d'atelier (composant 3) : Flexbox en colonne, bouton collé en pied ---------- */
@@ -509,9 +618,30 @@ ul {
   color: var(--texte-doux);
 }
 
+.atelier__formateur,
+.atelier__prerequis,
+.atelier__places {
+  font-size: var(--t-xs);
+}
+
+.atelier__libelle {
+  font-weight: 600;
+}
+
+/* Peu de places : écrit en toutes lettres et en gras, pas seulement en couleur (WCAG 1.4.1) */
+.atelier__places--rares {
+  font-weight: 600;
+  color: var(--accent-fonce);
+}
+
 .atelier__prix {
   font-size: var(--t-m);
   font-weight: 600;
+}
+
+/* Complet : le bouton est inerte et le dit ; pas le curseur « en cours » d'un envoi */
+.action[data-complet]:disabled {
+  cursor: not-allowed;
 }
 
 .atelier > .action {
@@ -592,7 +722,7 @@ ul {
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--e-2);
+  gap: 0 var(--e-2); /* pas d'écart entre les lignes : l'erreur, sur sa ligne, porte sa propre marge */
 }
 
 .champ--case input {
@@ -621,8 +751,20 @@ ul {
   color: var(--erreur);
 }
 
+/* Vide, la zone reste rendue (une zone aria-live absente de l'arbre d'accessibilité n'est pas toujours
+   suivie quand son texte arrive) ; une marge négative annule l'écart qu'elle ajouterait dans le champ
+   en colonne. Dans la case à cocher (en ligne), l'erreur passe à la ligne : elle n'y prend de la place
+   que remplie. */
 .champ__erreur:empty {
-  display: none;
+  margin-top: calc(-1 * var(--e-1));
+}
+
+.champ--case .champ__erreur:empty {
+  margin-top: 0;
+}
+
+.champ--case .champ__erreur:not(:empty) {
+  margin-top: var(--e-2);
 }
 
 /* État erreur : bordure plus épaisse ET message écrit, jamais la couleur seule.
@@ -663,6 +805,32 @@ ul {
   border-radius: var(--rayon-s);
 }
 
+/* Pendant l'envoi, la même zone dit « … en cours » : sans l'allure d'un succès (--texte-doux sur --fond-teinte : 6,82:1) */
+.formulaire__confirmation[data-en-cours] {
+  font-weight: 400;
+  color: var(--texte-doux);
+  background: var(--fond-teinte);
+}
+
+/* Le refus du serveur : bordure ET texte, jamais la couleur seule (--erreur sur --fond : 6,53:1) */
+.formulaire__erreur {
+  padding: var(--e-3) var(--e-4);
+  font-weight: 600;
+  color: var(--erreur);
+  background: var(--fond);
+  border-left: 4px solid var(--erreur);
+  border-radius: var(--rayon-s);
+}
+
+/* Zones annoncées (role="status", role="alert") : toujours dans la page, pour que le lecteur d'écran
+   les suive dès le départ ; vides, elles ne prennent aucune place. Jamais hidden : une zone cachée
+   puis montrée n'est pas toujours annoncée. */
+.formulaire__confirmation:empty,
+.formulaire__erreur:empty {
+  padding: 0;
+  border: 0;
+}
+
 /* ---------- Modale de réservation (composant 4) ---------- */
 /* padding: 0 sur le dialog : tout le contenu est dans .modale__contenu,
    si bien qu'un clic dont la cible est le dialog lui-même vient du fond */
@@ -690,6 +858,23 @@ ul {
 
 .modale__recap {
   color: var(--texte-doux);
+}
+
+/* La fiche : des paires terme-définition, en deux colonnes alignées */
+.modale__fiche {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--e-1) var(--e-3);
+  margin: 0 0 var(--e-4);
+  font-size: var(--t-xs);
+}
+
+.modale__fiche dt {
+  font-weight: 600;
+}
+
+.modale__fiche dd {
+  margin: 0;
 }
 
 .formulaire--modale {
@@ -771,6 +956,30 @@ ul {
     border: 2px solid var(--accent);
   }
 
+  /* Sur grand écran, le sous-menu se déroule sous « Ateliers », par-dessus la page */
+  .navigation__groupe {
+    position: relative;
+    flex-wrap: nowrap;
+  }
+
+  .js .navigation__deplier {
+    min-width: 1.75rem; /* 28 px de large, 44 de haut : au-delà des 24 × 24 de WCAG 2.5.8 */
+  }
+
+  .js .navigation__sous-menu:not([data-ferme]) {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1;
+    min-width: 14rem;
+    margin: var(--e-1) 0 0;
+    padding: var(--e-2);
+    background: var(--fond);
+    border: 1px solid var(--bordure);
+    border-radius: var(--rayon-m);
+    box-shadow: var(--ombre-1);
+  }
+
   .accroche {
     grid-template-columns: 1fr 1fr;
     padding-block: var(--e-16);
@@ -796,6 +1005,16 @@ ul {
   .formulaire--modale {
     grid-template-columns: 1fr;
   }
+
+  /* Le filtre sur deux colonnes : la recherche et la case du soir sur toute la largeur */
+  .filtres {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filtres__recherche,
+  .filtres__soir {
+    grid-column: 1 / -1;
+  }
 }
 
 /* Palier 3 — ordinateur : au-delà de 64em les lignes de l'accroche deviennent
@@ -816,6 +1035,16 @@ ul {
 
   .entete {
     padding-inline: max(var(--espace), (100% - var(--largeur-max)) / 2);
+  }
+
+  /* Sur une ligne : la recherche prend deux parts, puis le niveau, le tri et la case */
+  .filtres {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+
+  .filtres__recherche,
+  .filtres__soir {
+    grid-column: auto;
   }
 }
 

@@ -1,0 +1,23 @@
+{
+  "name": "skillhub",
+  "private": true,
+  "description": "Landing SkillHub. Ces dépendances ne servent qu'à compiler et à tester : la page se sert telle quelle, sans installation.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p .",
+    "verifier": "tsc -p . --noEmit",
+    "test": "npm run build && npm run test:unitaires && npm run test:e2e",
+    "test:unitaires": "node --test \"tests/unitaires/*.test.js\"",
+    "test:e2e": "node --test --test-concurrency=1 --test-timeout=180000 \"tests/e2e/*.test.js\"",
+    "captures": "node tests/captures.js",
+    "servir": "node tests/outils/serveur.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "axe-core": "^4.14.0",
+    "puppeteer-core": "^25.16.0",
+    "typescript": "^7.0.2"
+  }
+}
