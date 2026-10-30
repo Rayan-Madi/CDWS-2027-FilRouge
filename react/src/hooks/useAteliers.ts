@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Atelier } from "../types";
+import { useAteliersCrees } from "../contexts/AteliersCrees";
 import { chargerAteliers, ErreurChargement } from "../services/api";
 
 /** Les états d'une requête, en union : pas de données pendant le chargement, pas d'erreur en succès. */
@@ -8,7 +9,7 @@ export type Requete<T> =
   | { statut: "erreur"; erreur: ErreurChargement }
   | { statut: "succes"; donnees: T };
 
-/** Le catalogue, chargé par le module de FM03 (inchangé), annulé si le composant disparaît. */
+/** Le catalogue, chargé par le module de FM03 (inchangé), annulé si le composant disparaît, et complété des ateliers publiés pendant la visite. */
 export function useAteliers(): { requete: Requete<readonly Atelier[]>; recharger: () => void } {
   const [requete, setRequete] = useState<Requete<readonly Atelier[]>>({ statut: "chargement" });
   const [essai, setEssai] = useState(0); // « Réessayer » relance l'effet en changeant ce compteur
@@ -33,5 +34,12 @@ export function useAteliers(): { requete: Requete<readonly Atelier[]>; recharger
     setRequete({ statut: "chargement" });
     setEssai((n) => n + 1);
   }, []);
-  return { requete, recharger };
+
+  // Valeur DÉRIVÉE : le catalogue du serveur plus les ateliers publiés ici, recalculée quand l'un des deux change
+  const { crees } = useAteliersCrees();
+  const complete = useMemo<Requete<readonly Atelier[]>>(
+    () => (requete.statut === "succes" && crees.length > 0 ? { statut: "succes", donnees: [...crees, ...requete.donnees] } : requete),
+    [requete, crees]
+  );
+  return { requete: complete, recharger };
 }

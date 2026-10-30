@@ -14,9 +14,16 @@
         "allowExportNames": [
           "useCompte",
           "useInscriptions",
+          "useAteliersCrees",
           "ConfirmationDesinscription"
         ]
       }
     ]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["tests/**"],
+      "rules": { "react/only-export-components": "off" }
+    }
+  ]
 }
