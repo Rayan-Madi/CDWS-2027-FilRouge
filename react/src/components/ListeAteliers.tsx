@@ -57,7 +57,7 @@ type PropsConfirmation = {
 /** « Se désinscrire de … ? » : une action qui libère une place se confirme. */
 export function ConfirmationDesinscription({ atelier, envoi, erreur, onConfirmer, onAnnuler }: PropsConfirmation) {
   return (
-    <Modale ouverte={atelier !== null} titre={atelier ? `Se désinscrire de « ${atelier.titre} » ?` : ""} onFermer={onAnnuler}>
+    <Modale ouverte={atelier !== null} titre={atelier ? `Se désinscrire de « ${atelier.titre} » ?` : ""} bloquee={envoi} onFermer={onAnnuler}>
       {atelier && <p className="mb-4 text-texte-doux">{formaterDate(atelier.date)}. Votre place sera rendue à une autre personne.</p>}
       {erreur && (
         <p role="alert" className="mb-4 font-semibold text-erreur">
