@@ -1,4 +1,4 @@
-# FM04 · SkillHub en React — TP 1 et TP 2
+# FM04 · SkillHub en React — TP 1, 2 et 3
 
 Le projet : [`react/`](../react/). L'architecture est décrite dans son [README](../react/README.md).
 
@@ -43,9 +43,52 @@ Grille relevée dans Chrome sur le build, sans débordement horizontal :
 
 Le formulaire « Créer un atelier » se remplit entièrement au clavier, date comprise. Envoi vide : focus sur le titre, 8 champs signalés. Après publication, focus sur le `h1` « Mes ateliers ».
 
+## TP 3, point par point
+
+| Consigne | Où, et ce qui a été relevé |
+|---|---|
+| 1. Une API locale, son adresse dans une variable `VITE_*` | `npm run api` : json-server sur `src/donnees/ateliers.json`, sans copie à la main (`api/preparer.mjs` fabrique `db.json`). `VITE_API_URL` dans `.env.development`, lue par `services/config.ts`. En développement, le catalogue est bien lu sur `http://localhost:3001/ateliers` ; API arrêtée, il affiche « Impossible de charger les ateliers… » et « Réessayer » |
+| 2. `useAteliers` : union discriminée, `AbortController`, nettoyage, module de FM03 TEL QUEL | `hooks/useAteliers.ts` ; `api.ts` n'a pas bougé, il reçoit l'adresse par son option `url` |
+| 3. Les quatre états dans un `switch` | `views/Catalogue.tsx` : `aria-busy`, `role="alert"` et « Réessayer », phrase du vide, compteur annoncé ; un état oublié ne compile pas (`never`) |
+| 4. `lazy` + `Suspense`, la taille du paquet avant et après | voir ci-dessous |
+| 5. Le build servi, les DEUX rapports exportés | [`rapports/fm04/`](rapports/fm04/) : voir ci-dessous |
+| 6. Rechargement direct d'une URL profonde, parcours clavier complet | voir ci-dessous |
+
+**Le paquet, avant et après le découpage** (`npm run build`, JavaScript chargé au premier écran) :
+
+| | JavaScript initial | gzip |
+|---|---|---|
+| Avant (TP 2) | 308,5 ko | 96,7 ko |
+| Après | 301,6 ko | 95,5 ko |
+| Morceaux à part | Dashboard 2,1 ko · MesAteliers 1,6 ko · CreerAtelier 6,1 ko | 1,0 · 0,8 · 2,3 ko |
+
+Le gain est réel mais modeste : 7 ko. La diapo 5.3 annonce « la moitié du paquet » pour une application dont les vues pèsent lourd. Ici, l'essentiel du paquet est React, React DOM et React Router, qui servent à toutes les pages. Les trois vues découpées sont petites. À retenir : on mesure avant de promettre.
+
+**Les rapports**, Lighthouse 13.6 sur le build servi (`vite preview`), en émulation mobile :
+
+| Fichier | Page | Scores |
+|---|---|---|
+| [`lighthouse-accessibilite.report.html`](rapports/fm04/lighthouse-accessibilite.report.html) | `/ateliers` | Accessibilité **100** |
+| [`lighthouse-structuration.report.html`](rapports/fm04/lighthouse-structuration.report.html) | `/` | Performance **98** · Bonnes pratiques **100** · SEO **100** |
+
+Les mêmes rapports existent en JSON à côté, et j'ai aussi passé l'accessibilité sur `/`, `/inscription`, une fiche, `/formateurs` et la page introuvable : 100 partout. Les pages de l'espace ne s'auditent pas ainsi, parce qu'elles demandent un compte et que le compte vit en mémoire.
+
+Le premier passage donnait Performance 87 et SEO 92. Deux défauts ont été corrigés avant l'export :
+- **Décalage de mise en page (CLS 0,155 → 0).** La police Sora arrivait après le JavaScript : le texte de l'accroche changeait de hauteur et l'image sautait. Les polices passent dans `public/polices/` et sont préchargées par `index.html`.
+- **`robots.txt` en erreur.** Le serveur renvoyait `index.html` à sa place. Il y a maintenant un vrai `public/robots.txt`.
+
+Ce qui reste signalé, et pourquoi on le garde :
+- **L'image d'accroche n'est découverte qu'après le JavaScript.** C'est le prix d'une page rendue dans le navigateur. Le TP 4 (Next.js, rendu serveur) le règle.
+- **Environ 45 ko de JavaScript inutilisé au premier écran.** Ce sont des morceaux de React et de React Router qui servent ailleurs.
+
+**Rechargement direct et clavier** (Chrome, sur le build) :
+- `/ateliers/git-initiation`, `/ateliers?niveau=debutant` et `/nimporte/quoi` rechargés : HTTP 200 et la bonne vue, filtre compris. `/mon-espace` rechargé : HTTP 200, puis l'inscription, puisque le compte vivait en mémoire. Jamais de 404, parce que `vite preview` renvoie `index.html` pour toute adresse inconnue, comme doit le faire l'hébergeur (diapo 5.1).
+- Morceaux de l'espace retenus 1,5 s exprès : la page quittée reste affichée, le bouton dit « Inscription en cours… » jusqu'au bout, puis le focus arrive sur « Bonjour Léa ». Ce test a révélé un défaut, corrigé : pendant l'attente, Inscription affichait « Vous avez déjà un compte ».
+- Le parcours au clavier du TP 1, rejoué en entier : aucune erreur en console.
+
 ## Vérifications
 
-- `npm run build` : `tsc -b` passe sans erreur, puis `dist/` est produit. Taille : **308,5 ko de JavaScript, 96,7 ko compressés en gzip**, et 17,9 ko de CSS (le TP 3 la mesurera avant et après découpage).
+- `npm run build` : `tsc -b` passe sans erreur, puis `dist/` est produit. Taille : **308,5 ko de JavaScript, 96,7 ko compressés en gzip**, et 17,9 ko de CSS (avant le découpage du TP 3).
 - `npm test` : **26 tests** Vitest + Testing Library. Ils couvrent la carte, les quatre états du catalogue (404 compris), les critères lus dans l'URL, le garde, la page introuvable, le formulaire et ses erreurs reliées, le menu et Échap, et un hook utilisé hors de son fournisseur, le focus après une navigation ou une désinscription, et le côté formateur (garde par profil, envoi vide, publication jusqu'au catalogue et à la fiche).
 - `npm run lint` : Oxlint ne relève rien.
 - Aucun débordement horizontal à 375 et 1280 px, sur les cinq vues, et aucune erreur en console.
