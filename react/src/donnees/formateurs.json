@@ -1,0 +1,23 @@
+[
+  {
+    "id": "sarah-benali",
+    "nom": "Sarah Benali",
+    "role": "Développeuse web",
+    "citation": "J'ai changé de métier à 34 ans. Je transmets ce que j'aurais aimé qu'on m'apprenne.",
+    "photo": "sarah-benali"
+  },
+  {
+    "id": "thomas-martin",
+    "nom": "Thomas Martin",
+    "role": "Designer UX/UI",
+    "citation": "Une bonne interface, c'est celle qu'on ne remarque pas. Ça s'apprend.",
+    "photo": "thomas-martin"
+  },
+  {
+    "id": "aicha-ndiaye",
+    "nom": "Aïcha N'Diaye",
+    "role": "Coach en reconversion",
+    "citation": "Votre ancien métier n'est pas un poids : c'est votre différence.",
+    "photo": "aicha-ndiaye"
+  }
+]
