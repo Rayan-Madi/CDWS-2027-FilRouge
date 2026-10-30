@@ -46,3 +46,24 @@ jobs:
           npm ci
           npm test
           npm run types
+
+  react:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: react
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: react/package-lock.json
+      - run: npm ci
+      - name: Linter (Oxlint)
+        run: npm run lint
+      - name: Tests (Vitest)
+        run: npm test
+      - name: Types et construction (tsc -b, vite build)
+        run: npm run build

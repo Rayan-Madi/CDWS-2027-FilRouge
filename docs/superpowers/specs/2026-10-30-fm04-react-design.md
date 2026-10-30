@@ -3,6 +3,8 @@
 Date : 30/10/2026 · Module BC01-FM04 (C06) · Projet fil rouge SkillHub
 Sources : le support du module (81 diapositives) — TP 1 (diapo 29), TP 2 (diapo 53), chapitres 2 et 3, fiche EC02 (diapos 5, 14, 78, 79) — et la demande de Rayan du 30/10.
 
+> **Révisé le 30/10, sur demande de Rayan (« un TP : bon et efficace, pas parfait »)** : on garde l'application, les routes, l'état, les composants et le README de l'EC02 ; on reporte au TP 3 la publication par GitHub Actions et les liens profonds (§ 11), et on remplace les tests de bout en bout par 18 tests Vitest et un parcours clavier rejoué sur le build. Le contexte Annonces et le test des jetons ne sont pas faits ; le plan détaillé est abandonné au profit d'une exécution directe.
+
 ## 1. But
 
 La séance fil rouge du 30/10 passe SkillHub en React. On livre le **TP 1** (la carte et la liste en composants, Tailwind avec les jetons de FM02) et, en avance sur le TP 2 du 24/11, ce que la demande nomme : **les routes React Router, l'inscription au site, l'inscription aux ateliers, toutes les parties de la landing transposées, les données en JSON**. Le code sera relu : chaque ligne doit pouvoir se défendre.
