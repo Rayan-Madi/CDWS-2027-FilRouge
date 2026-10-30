@@ -1,4 +1,4 @@
-# FM04 · SkillHub en React — TP 1 (et le TP 2 en avance)
+# FM04 · SkillHub en React — TP 1 et TP 2
 
 Le projet : [`react/`](../react/). L'architecture est décrite dans son [README](../react/README.md).
 
@@ -13,22 +13,40 @@ Le projet : [`react/`](../react/). L'architecture est décrite dans son [README]
 | 5. Jetons de FM02 dans `tailwind.config.js`, mêmes hexadécimaux | `react/tailwind.config.js` |
 | 6. Clavier, puis `npm run build` et le résultat construit | ci-dessous |
 
-## Pris en avance sur le TP 2 (24/11)
+## TP 2 (24/11), fait en avance
 
-Ce qui est déjà fait :
+| Consigne | Où |
+|---|---|
+| 1. Routes dans `src/router/`, vues aux noms de la fiche (`Dashboard`, `MesAteliers`, `CreerAtelier`), route `*` | `routes.tsx` ; `views/Dashboard.tsx`, `views/MesAteliers.tsx`, `views/CreerAtelier.tsx`, `views/PageIntrouvable.tsx` |
+| 2. Le filtre du catalogue dans l'URL | `hooks/useCriteres.ts` (`useSearchParams`, `replace`) |
+| 3. Le contexte des inscriptions et son hook maison | `contexts/Inscriptions.tsx` (`useInscriptions`) |
+| 4. Le tableau de bord : ateliers suivis, places, désinscription | `views/Dashboard.tsx`, confirmation dans une modale |
+| 5. Un formulaire contrôlé « créer un atelier », côté formateur | `views/CreerAtelier.tsx`, règles dans `utils/atelier.ts`, mécanique partagée `hooks/useFormulaire.ts` |
+| 6. `TitreDeVue` dans chaque vue, grille vérifiée à 360, 768 et 1280 px | `components/TitreDeVue.tsx` ; relevé ci-dessous |
+
+En détail :
 - les routes, avec un layout, le paramètre `:id`, un garde et la route `*` ;
 - le **filtre dans l'URL** (`useSearchParams`) ;
 - le **contexte des inscriptions** et son hook maison ;
 - **Mon espace** (`Dashboard`), avec les ateliers suivis, les places et la désinscription par une modale ;
-- le **formulaire contrôlé** « Créer mon compte » ;
+- deux **formulaires contrôlés** sur la même mécanique (`useFormulaire`) : « Créer mon compte » et « Créer un atelier ». Chaque champ est jugé quand on le quitte, avec un message relié au champ ; à l'envoi, le focus va au premier champ fautif, et le bouton est en `aria-disabled` pendant l'envoi ;
+- **Mes ateliers** et **Créer un atelier**, derrière un second garde : connecté ET formateur. Un atelier publié apparaît dans Mes ateliers, dans le catalogue (15 ateliers au lieu de 14) et a sa fiche ;
 - `TitreDeVue`, qui donne le focus, le titre et le défilement.
 
-Ce qui reste pour le TP 2 : le côté formateur, `CreerAtelier` et `MesAteliers`.
+Grille relevée dans Chrome sur le build, sans débordement horizontal :
+
+| Largeur | Catalogue | Mes ateliers | Créer un atelier |
+|---|---|---|---|
+| 360 px | 1 colonne | 1 colonne | 1 colonne |
+| 768 px | 2 colonnes | 2 colonnes | 2 colonnes |
+| 1280 px | 4 colonnes | 3 colonnes | 2 colonnes |
+
+Le formulaire « Créer un atelier » se remplit entièrement au clavier, date comprise. Envoi vide : focus sur le titre, 8 champs signalés. Après publication, focus sur le `h1` « Mes ateliers ».
 
 ## Vérifications
 
-- `npm run build` : `tsc -b` passe sans erreur, puis `dist/` est produit. Taille : **298,7 ko de JavaScript, 94,4 ko compressés en gzip**, et 17,7 ko de CSS.
-- `npm test` : **20 tests** Vitest + Testing Library. Ils couvrent la carte, les quatre états du catalogue (404 compris), les critères lus dans l'URL, le garde, la page introuvable, le formulaire et ses erreurs reliées, le menu et Échap, et un hook utilisé hors de son fournisseur, et le focus après une navigation ou une désinscription.
+- `npm run build` : `tsc -b` passe sans erreur, puis `dist/` est produit. Taille : **308,5 ko de JavaScript, 96,7 ko compressés en gzip**, et 17,9 ko de CSS (le TP 3 la mesurera avant et après découpage).
+- `npm test` : **26 tests** Vitest + Testing Library. Ils couvrent la carte, les quatre états du catalogue (404 compris), les critères lus dans l'URL, le garde, la page introuvable, le formulaire et ses erreurs reliées, le menu et Échap, et un hook utilisé hors de son fournisseur, le focus après une navigation ou une désinscription, et le côté formateur (garde par profil, envoi vide, publication jusqu'au catalogue et à la fiche).
 - `npm run lint` : Oxlint ne relève rien.
 - Aucun débordement horizontal à 375 et 1280 px, sur les cinq vues, et aucune erreur en console.
 - **Le parcours au clavier**, rejoué sur le résultat construit (`vite preview`), dans Chrome :
@@ -63,4 +81,4 @@ Vérifié aussi : Tailwind écrit bien les calculs des valeurs arbitraires (`min
 
 ---
 
-*Fait avec un assistant de code. Ce qui est vérifié : la compilation, les 20 tests, le linter, le parcours au clavier sur le résultat construit.*
+*Fait avec un assistant de code. Ce qui est vérifié : la compilation, les 26 tests, le linter, le parcours au clavier sur le résultat construit.*

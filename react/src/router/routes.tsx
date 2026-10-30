@@ -2,10 +2,12 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { Layout } from "../components/Layout";
 import { Accueil } from "../views/Accueil";
 import { Catalogue } from "../views/Catalogue";
+import { CreerAtelier } from "../views/CreerAtelier";
 import { Dashboard } from "../views/Dashboard";
 import { FicheAtelier } from "../views/FicheAtelier";
 import { Formateurs } from "../views/Formateurs";
 import { Inscription } from "../views/Inscription";
+import { MesAteliers } from "../views/MesAteliers";
 import { PageIntrouvable } from "../views/PageIntrouvable";
 import { ExigeConnexion } from "./ExigeConnexion";
 
@@ -23,6 +25,11 @@ export function RoutesSkillHub() {
         {/* Route protégée : le garde décide, la page ne sait rien */}
         <Route element={<ExigeConnexion />}>
           <Route path="mon-espace" element={<Dashboard />} />
+          {/* Un second garde, imbriqué : connecté ne suffit pas, il faut être formateur */}
+          <Route element={<ExigeConnexion formateursSeulement />}>
+            <Route path="mon-espace/mes-ateliers" element={<MesAteliers />} />
+            <Route path="mon-espace/creer-un-atelier" element={<CreerAtelier />} />
+          </Route>
         </Route>
         <Route path="*" element={<PageIntrouvable />} />
       </Route>

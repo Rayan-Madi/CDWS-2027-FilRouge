@@ -1,12 +1,12 @@
 // Les composants et les vues, sous jsdom : ce qu'on voit, ce qu'on annonce, où va le focus.
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { describe, expect, test, vi } from "vitest";
 import type { Atelier } from "../src/types";
 import { CarteAtelier } from "../src/components/CarteAtelier";
 import { useCompte } from "../src/contexts/Compte";
-import { ateliers, catalogueOk, rendreA, simulerFetch } from "./outils";
+import { ateliers, catalogueOk, creerUnCompte, rendreA, simulerFetch, taperLAdresse } from "./outils";
 
 const git = ateliers[0] as Atelier;
 
@@ -150,13 +150,68 @@ describe("Le focus ne se perd jamais en route", () => {
     await screen.findByRole("button", { name: "Se désinscrire de l'atelier Initiation à Git" }, { timeout: 3000 });
 
     await userEvent.click(nav.getByRole("link", { name: "Mon espace" }));
-    // Sous le h2 « Mes ateliers », les cartes sont des h3
+    // Sous le h2 « Mes inscriptions », les cartes sont des h3
     expect(await screen.findByRole("heading", { level: 3, name: "Initiation à Git" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Se désinscrire de l'atelier Initiation à Git" }));
     await userEvent.click(screen.getByRole("button", { name: "Confirmer la désinscription" }));
 
     expect(await screen.findByText(/aucun atelier pour l'instant/, undefined, { timeout: 3000 })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1, name: "Bonjour Léa" })).toHaveFocus();
+    // La modale rend le focus dans le nettoyage de son effet, juste APRÈS l'affichage : on l'attend
+    await waitFor(() => expect(screen.getByRole("heading", { level: 1, name: "Bonjour Léa" })).toHaveFocus());
+  }, 10000);
+});
+
+describe("Côté formateur : CreerAtelier et MesAteliers", () => {
+  test("un apprenant qui tape l'adresse de création lit que c'est réservé aux formateurs", async () => {
+    catalogueOk();
+    rendreA("/inscription");
+    await creerUnCompte("Paul Simon", "paul@exemple.fr", "apprenant");
+    expect(screen.queryByRole("link", { name: "Créer un atelier" })).toBeNull();
+    // Le garde laisse passer la personne connectée, puis vérifie son profil
+    await taperLAdresse("/mon-espace/creer-un-atelier");
+    expect(screen.getByRole("heading", { level: 1, name: "Réservé aux formateurs" })).toBeInTheDocument();
+    await taperLAdresse("/mon-espace/mes-ateliers");
+    expect(screen.getByRole("heading", { level: 1, name: "Réservé aux formateurs" })).toBeInTheDocument();
+  }, 10000);
+
+  test("envoi vide : un message relié à chaque champ obligatoire, focus sur le titre", async () => {
+    catalogueOk();
+    rendreA("/inscription?profil=formateur");
+    await creerUnCompte("Aïcha N'Diaye", "aicha@exemple.fr", "formateur");
+    await userEvent.click(screen.getByRole("link", { name: "Créer un atelier" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Publier l'atelier" }));
+    const titre = screen.getByLabelText("Titre de l'atelier");
+    expect(titre).toHaveFocus();
+    expect(titre).toHaveAccessibleDescription("Donnez un titre d'au moins 5 caractères.");
+    expect(screen.getByLabelText("Date et heure")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText(/Prérequis/)).toHaveAttribute("aria-invalid", "false");
+  }, 10000);
+
+  test("atelier publié : il arrive dans Mes ateliers, puis dans le catalogue, avec sa fiche", async () => {
+    catalogueOk();
+    rendreA("/inscription");
+    await creerUnCompte("Thomas Martin", "thomas@exemple.fr", "formateur");
+    await userEvent.click(screen.getByRole("link", { name: "Créer un atelier" }));
+    await userEvent.type(await screen.findByLabelText("Titre de l'atelier"), "Docker sans douleur");
+    await userEvent.type(screen.getByLabelText("Description"), "Construire, lancer et partager ses premiers conteneurs.");
+    await userEvent.selectOptions(screen.getByLabelText("Catégorie"), "Développement");
+    await userEvent.selectOptions(screen.getByLabelText("Niveau"), "intermediaire");
+    fireEvent.change(screen.getByLabelText("Date et heure"), { target: { value: "2027-03-10T18:30" } });
+    await userEvent.selectOptions(screen.getByLabelText("Durée"), "180");
+    await userEvent.type(screen.getByLabelText("Places"), "8");
+    await userEvent.type(screen.getByLabelText("Prix en euros"), "30");
+    await userEvent.click(screen.getByRole("button", { name: "Publier l'atelier" }));
+    expect(screen.getByRole("button", { name: "Publication en cours…" })).toHaveAttribute("aria-disabled", "true");
+
+    expect(await screen.findByRole("heading", { level: 1, name: "Mes ateliers" }, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.getByText("« Docker sans douleur » est publié : il apparaît dans le catalogue.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Docker sans douleur" })).toBeInTheDocument();
+
+    await userEvent.click(within(screen.getByRole("navigation")).getByRole("link", { name: "Ateliers" }));
+    expect(await screen.findByText("15 ateliers · par date")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("link", { name: "Docker sans douleur" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Docker sans douleur" })).toBeInTheDocument();
+    expect(screen.getByText("Thomas Martin")).toBeInTheDocument();
   }, 10000);
 });
 

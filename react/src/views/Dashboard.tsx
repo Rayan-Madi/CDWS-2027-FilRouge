@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router";
+import { LienAction } from "../components/Action";
 import { CartesFantomes } from "../components/CartesFantomes";
 import { ListeAteliers } from "../components/ListeAteliers";
 import { TitreDeVue } from "../components/TitreDeVue";
@@ -9,7 +10,7 @@ import { CHEMINS } from "../router/chemins";
 import { CRITERES_PAR_DEFAUT, filtrerAteliers } from "../utils/filtre";
 import { messageErreur, prenomDe } from "../utils/messages";
 
-/** « Mon espace » (TP 2, point 4) : les ateliers suivis, leurs places, et de quoi se désinscrire. Gardée par ExigeConnexion. */
+/** « Mon espace » (TP 2, point 4) : les ateliers suivis, leurs places, et de quoi se désinscrire ; pour un formateur, l'accès à ses ateliers. Gardée par ExigeConnexion. */
 export function Dashboard() {
   const { utilisateur } = useCompte();
   const { inscrits } = useInscriptions();
@@ -27,7 +28,21 @@ export function Dashboard() {
       {bienvenue && <p className="mb-4 rounded-s bg-succes-fond px-4 py-3 font-semibold text-succes">Votre compte est créé. Bienvenue !</p>}
       <p className="text-texte-doux">Profil : {utilisateur?.profil === "formateur" ? "formateur indépendant" : "en reconversion"}</p>
 
-      <h2 className="mt-8 text-[clamp(1.563rem,3vw+0.5rem,2.441rem)] leading-titre font-semibold">Mes ateliers</h2>
+      {utilisateur?.profil === "formateur" && (
+        <section aria-labelledby="t-cote-formateur" className="mt-8">
+          <h2 id="t-cote-formateur" className="text-[clamp(1.563rem,3vw+0.5rem,2.441rem)] leading-titre font-semibold">
+            Côté formateur
+          </h2>
+          <p className="mt-4 flex flex-wrap gap-3">
+            <LienAction to={CHEMINS.creerAtelier}>Créer un atelier</LienAction>
+            <LienAction to={CHEMINS.mesAteliers} variante="secondaire">
+              Mes ateliers publiés
+            </LienAction>
+          </p>
+        </section>
+      )}
+
+      <h2 className="mt-8 text-[clamp(1.563rem,3vw+0.5rem,2.441rem)] leading-titre font-semibold">Mes inscriptions</h2>
       <div aria-busy={requete.statut === "chargement"}>
         {requete.statut === "chargement" && <CartesFantomes />}
         {requete.statut === "erreur" && (
@@ -52,7 +67,7 @@ export function Dashboard() {
               Vous n'êtes inscrit à aucun atelier pour l'instant. <Link to={CHEMINS.ateliers}>Parcourir le catalogue</Link>
             </p>
           ) : (
-            // Sous le h2 « Mes ateliers » : les titres des cartes sont des h3
+            // Sous le h2 « Mes inscriptions » : les titres des cartes sont des h3
             <ListeAteliers ateliers={suivis} niveauTitre={3} />
           ))}
       </div>
