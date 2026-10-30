@@ -14,7 +14,9 @@ export function Dashboard() {
   const { utilisateur } = useCompte();
   const { inscrits } = useInscriptions();
   const { requete, recharger } = useAteliers();
-  const bienvenue = (useLocation().state as { bienvenue?: unknown } | null)?.bienvenue === true;
+  // Le state de navigation est « unknown » : on le vérifie au lieu de l'affirmer avec un « as »
+  const etat: unknown = useLocation().state;
+  const bienvenue = typeof etat === "object" && etat !== null && "bienvenue" in etat && etat.bienvenue === true;
 
   // Valeur dérivée : le catalogue chargé, réduit aux ateliers suivis, par date
   const suivis = requete.statut === "succes" ? filtrerAteliers(requete.donnees, CRITERES_PAR_DEFAUT).filter((a) => inscrits.has(a.id)) : [];
@@ -31,7 +33,15 @@ export function Dashboard() {
         {requete.statut === "erreur" && (
           <p role="alert" className="mt-4">
             {messageErreur(requete.erreur)}{" "}
-            <button type="button" onClick={recharger} className="underline">
+            <button
+              type="button"
+              onClick={() => {
+                // Le bouton va disparaître : le focus part sur le titre, pas dans le vide
+                document.querySelector<HTMLElement>("[data-titre-de-vue]")?.focus();
+                recharger();
+              }}
+              className="underline"
+            >
               Réessayer
             </button>
           </p>
@@ -42,7 +52,8 @@ export function Dashboard() {
               Vous n'êtes inscrit à aucun atelier pour l'instant. <Link to={CHEMINS.ateliers}>Parcourir le catalogue</Link>
             </p>
           ) : (
-            <ListeAteliers ateliers={suivis} />
+            // Sous le h2 « Mes ateliers » : les titres des cartes sont des h3
+            <ListeAteliers ateliers={suivis} niveauTitre={3} />
           ))}
       </div>
     </div>
