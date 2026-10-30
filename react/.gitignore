@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Fabriqué par npm run api à partir de src/donnees/ateliers.json
+api/db.json
