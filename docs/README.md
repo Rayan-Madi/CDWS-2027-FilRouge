@@ -42,6 +42,13 @@
 | [`captures/fm03/`](captures/fm03/) | TP 3 : les quatre états (chargement, vide, erreur 404, erreur hors ligne, succès), à 1280 et 375 px |
 | [`superpowers/specs/2026-10-27-fm03-applications-dynamiques-design.md`](superpowers/specs/2026-10-27-fm03-applications-dynamiques-design.md) | La conception des trois TP |
 
+## FM04 — React
+
+| Fichier | Contenu |
+|---|---|
+| [`../react/`](../react/) | SkillHub en React (Vite, TypeScript, React Router, Tailwind) ; son README porte les trois sections exigées par la fiche EC02 |
+| [`fm04-react.md`](fm04-react.md) | TP 1 point par point, ce qui est pris en avance sur le TP 2, le parcours clavier sur le build |
+
 À faire par moi (FM02) : faire jouer le prototype Figma à deux camarades et remplir les retours d'essai, régler l'appareil du prototype sur 360 × 800 (TP 3) ; la capture de l'arbre d'accessibilité dans Chrome et le test NVDA (TP 4) ; relire l'audit Nielsen et rejouer ses deux tâches moi-même (TP 2).
 
 À faire par moi (FM03) : rejouer le parcours au clavier sur la page en ligne et expliquer ma gestion du focus à un voisin sans regarder l'écran (TP 1, § 8) ; provoquer moi-même les pannes dans les outils de développement : case *Offline*, fichier renommé (TP 3, § 5) ; renommer un fichier `.ts` et lire une erreur à voix haute (TP 2).

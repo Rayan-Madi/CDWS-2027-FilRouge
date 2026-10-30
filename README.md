@@ -8,6 +8,8 @@ Projet fil rouge du bloc **BC01** (CDWFS, RNCP 39608), préparation de l'épreuv
 
 **En ligne :** https://rayan-madi.github.io/CDWS-2027-FilRouge/ (GitHub Pages, branche `main`, dossier racine — `index.html` redirige vers `src/`)
 
+**Version React (FM04, EC02)** : le dossier [`react/`](react/), un projet Vite autonome — voir [son README](react/README.md).
+
 ## Lancer le projet
 
 Aucune installation pour **voir** la page : servez le dossier `src/` avec n'importe quel serveur statique.
