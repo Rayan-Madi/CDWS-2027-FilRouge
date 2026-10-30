@@ -8,7 +8,7 @@ Le tableau de bord SkillHub (EC02) : la landing de l'EC01 transposée en composa
 cd react
 npm install
 npm run dev      # http://localhost:5173
-npm test         # 18 tests (Vitest + Testing Library)
+npm test         # 20 tests (Vitest + Testing Library)
 npm run build    # tsc -b (types) puis vite build → dist/
 npm run preview  # sert le résultat construit : c'est lui qu'on vérifie, pas le serveur de dev
 ```
