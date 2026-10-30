@@ -126,6 +126,40 @@ describe("Inscription, puis Mon espace", () => {
   });
 });
 
+describe("Le focus ne se perd jamais en route", () => {
+  test("arriver sur une fiche : le focus est sur son h1, et y reste une fois l'atelier chargé", async () => {
+    catalogueOk();
+    rendreA("/ateliers");
+    await userEvent.click(await screen.findByRole("link", { name: "Initiation à Git" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Initiation à Git" })).toHaveFocus();
+  });
+
+  test("se désinscrire du dernier atelier suivi : la liste disparaît avec la modale, le focus revient au h1", async () => {
+    catalogueOk();
+    rendreA("/inscription");
+    await userEvent.type(screen.getByLabelText("Prénom et nom"), "Léa Durand");
+    await userEvent.type(screen.getByLabelText("Adresse électronique"), "lea@exemple.fr");
+    await userEvent.selectOptions(screen.getByLabelText("Je suis"), "apprenant");
+    await userEvent.click(screen.getByLabelText("J'accepte les conditions d'utilisation"));
+    await userEvent.click(screen.getByRole("button", { name: "Créer mon compte" }));
+    await screen.findByRole("heading", { level: 1, name: "Bonjour Léa" }, { timeout: 3000 });
+
+    const nav = within(screen.getByRole("navigation"));
+    await userEvent.click(nav.getByRole("link", { name: "Ateliers" }));
+    await userEvent.click(await screen.findByRole("button", { name: "S'inscrire à l'atelier Initiation à Git" }));
+    await screen.findByRole("button", { name: "Se désinscrire de l'atelier Initiation à Git" }, { timeout: 3000 });
+
+    await userEvent.click(nav.getByRole("link", { name: "Mon espace" }));
+    // Sous le h2 « Mes ateliers », les cartes sont des h3
+    expect(await screen.findByRole("heading", { level: 3, name: "Initiation à Git" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Se désinscrire de l'atelier Initiation à Git" }));
+    await userEvent.click(screen.getByRole("button", { name: "Confirmer la désinscription" }));
+
+    expect(await screen.findByText(/aucun atelier pour l'instant/, undefined, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Bonjour Léa" })).toHaveFocus();
+  }, 10000);
+});
+
 describe("Navigation et hooks", () => {
   test("« Menu » : aria-expanded suit, et Échap referme en rendant le focus au bouton", async () => {
     catalogueOk();

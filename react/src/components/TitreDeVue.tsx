@@ -5,7 +5,7 @@ import { useEffect } from "react";
  * d'elle-même (diapo 36). tabIndex={-1} : focalisable par le code (Layout y porte le focus après une
  * navigation), absent de l'ordre de tabulation.
  */
-export function TitreDeVue({ children, titreOnglet, id }: { children: string; titreOnglet?: string; id?: string }) {
+export function TitreDeVue({ children, titreOnglet, id }: { children: string; titreOnglet?: string | undefined; id?: string }) {
   const onglet = titreOnglet ?? `${children} · SkillHub`;
   useEffect(() => {
     document.title = onglet;
