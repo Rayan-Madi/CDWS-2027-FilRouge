@@ -10,6 +10,8 @@ Projet fil rouge du bloc **BC01** (CDWFS, RNCP 39608), préparation de l'épreuv
 
 **Version React (FM04, EC02)** : le dossier [`react/`](react/), un projet Vite autonome — voir [son README](react/README.md).
 
+**Version Next.js (FM04, TP 4)** : le dossier [`nextjs-skillhub/`](nextjs-skillhub/), le même SkillHub transformé en Next.js 16 — voir [son README](nextjs-skillhub/README.md).
+
 ## Lancer le projet
 
 Aucune installation pour **voir** la page : servez le dossier `src/` avec n'importe quel serveur statique.

@@ -48,6 +48,7 @@
 |---|---|
 | [`../react/`](../react/) | SkillHub en React (Vite, TypeScript, React Router, Tailwind) ; son README porte les trois sections exigées par la fiche EC02 |
 | [`fm04-react.md`](fm04-react.md) | TP 1, 2 et 3 point par point, la relecture, le parcours clavier, la grille et le paquet relevés sur le build |
+| [`../nextjs-skillhub/`](../nextjs-skillhub/) | le TP 4 : SkillHub transformé en Next.js 16 ; son README liste ce que la transformation a changé et porte le tableau des routes de `next build` |
 | [`rapports/fm04/`](rapports/fm04/) | les deux rapports Lighthouse exportés (accessibilité, structuration), en HTML et en JSON |
 
 À faire par moi (FM02) : faire jouer le prototype Figma à deux camarades et remplir les retours d'essai, régler l'appareil du prototype sur 360 × 800 (TP 3) ; la capture de l'arbre d'accessibilité dans Chrome et le test NVDA (TP 4) ; relire l'audit Nielsen et rejouer ses deux tâches moi-même (TP 2).

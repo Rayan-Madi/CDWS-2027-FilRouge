@@ -1,4 +1,4 @@
-# FM04 · SkillHub en React — TP 1, 2 et 3
+# FM04 · SkillHub en React — TP 1, 2, 3 et 4
 
 Le projet : [`react/`](../react/). L'architecture est décrite dans son [README](../react/README.md).
 
@@ -85,6 +85,33 @@ Ce qui reste signalé, et pourquoi on le garde :
 - `/ateliers/git-initiation`, `/ateliers?niveau=debutant` et `/nimporte/quoi` rechargés : HTTP 200 et la bonne vue, filtre compris. `/mon-espace` rechargé : HTTP 200, puis l'inscription, puisque le compte vivait en mémoire. Jamais de 404, parce que `vite preview` renvoie `index.html` pour toute adresse inconnue, comme doit le faire l'hébergeur (diapo 5.1).
 - Morceaux de l'espace retenus 1,5 s exprès : la page quittée reste affichée, le bouton dit « Inscription en cours… » jusqu'au bout, puis le focus arrive sur « Bonjour Léa ». Ce test a révélé un défaut, corrigé : pendant l'attente, Inscription affichait « Vous avez déjà un compte ».
 - Le parcours au clavier du TP 1, rejoué en entier : aucune erreur en console.
+
+## TP 4 : la transformation en Next.js
+
+Le projet : [`nextjs-skillhub/`](../nextjs-skillhub/). Son [README](../nextjs-skillhub/README.md) porte les quatre livrables :
+- le rangement (`src/app`, `src/components`, `src/hooks`, `src/services`) ;
+- la sortie de `next build` et son tableau des routes ;
+- la page du catalogue et la fiche ;
+- la liste de ce que la transformation a changé.
+
+| Consigne | Où |
+|---|---|
+| 1. `create-next-app@16.4` aux réglages du TP, `NEXT_PUBLIC_API_URL` | Les mêmes réglages passés en options (16.4.3). L'adresse est dans `.env.local`, avec un modèle commité, `.env.example` |
+| 2. Copier types, components, contexts, hooks, services ; `"use client"` ; `NEXT_PUBLIC_API_URL` | `"use client"` au plus près, dans `services/config.ts`. Les imports `.js` de FM03 perdent leur extension, que Turbopack ne résout pas |
+| 3. Une `page.tsx` par route, `layout.tsx` et son fournisseur, `not-found.tsx`, `next/link` et `next/navigation` | `src/app/`. Le garde devient `proxy.ts`, doublé d'un garde client, parce que le compte vit en mémoire |
+| 4. Le catalogue en composant SERVEUR | `app/ateliers/page.tsx` attend `catalogueEnCache()`, traite la liste vide et passe les ateliers à `Catalogue`, sous `Suspense` |
+| 5. La fiche : `await params`, `generateStaticParams`, `generateMetadata`, `notFound()` | `app/ateliers/[id]/page.tsx` |
+| 6. L'API du TP 3, `next build`, `"use cache"`, le tableau des routes | Le refus « uncached data during prerendering » a été reproduit, puis corrigé par `services/en-cache.ts`. Le tableau des routes est dans le README |
+
+Vérifié sur `next start` :
+- le HTML de `/ateliers` contient les 14 cartes avant tout JavaScript ;
+- `/mon-espace` sans cookie répond 307 vers l'inscription ;
+- les parcours du projet Vite, rejoués dans Chrome, passent sans erreur en console ;
+- Lighthouse sur l'accueil : Performance 96, et 100 en accessibilité, bonnes pratiques et SEO.
+
+Limites, écrites dans le README :
+- une fiche inconnue répond 200 avec « Page introuvable » et `noindex`, le comportement documenté du streaming ;
+- un atelier publié reste dans la mémoire du navigateur.
 
 ## Vérifications
 
