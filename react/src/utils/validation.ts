@@ -13,7 +13,10 @@ export type ChampInscription = keyof ValeursInscription;
 
 export const VALEURS_VIDES: ValeursInscription = { nom: "", courriel: "", profil: "", cgu: false };
 
-export const REGLES: { readonly [C in ChampInscription]: (valeurs: ValeursInscription) => string } = {
+/** Une règle par champ : elle lit toutes les valeurs (une règle peut en comparer deux) et rend le message, ou "". */
+export type Regles<V> = { readonly [C in keyof V]: (valeurs: V) => string };
+
+export const REGLES: Regles<ValeursInscription> = {
   // « required » du navigateur accepte un nom fait d'espaces : pas nous
   nom: ({ nom }) => (nom.trim().length < 2 ? "Indiquez votre prénom et votre nom." : ""),
   courriel: ({ courriel }) => {
@@ -27,12 +30,14 @@ export const REGLES: { readonly [C in ChampInscription]: (valeurs: ValeursInscri
 
 export const ORDRE_DES_CHAMPS: readonly ChampInscription[] = ["nom", "courriel", "profil", "cgu"];
 
-/** Toutes les erreurs d'un coup, dans l'ordre du formulaire (seules les erreurs non vides). */
-export function erreursDe(valeurs: ValeursInscription): Partial<Record<ChampInscription, string>> {
-  const erreurs: Partial<Record<ChampInscription, string>> = {};
-  for (const champ of ORDRE_DES_CHAMPS) {
-    const message = REGLES[champ](valeurs);
+/** Toutes les erreurs d'un coup, dans l'ordre du formulaire (seules les erreurs non vides). Sert aux deux formulaires. */
+export function erreursSelon<V>(regles: Regles<V>, ordre: readonly (keyof V)[], valeurs: V): Partial<Record<keyof V, string>> {
+  const erreurs: Partial<Record<keyof V, string>> = {};
+  for (const champ of ordre) {
+    const message = regles[champ](valeurs);
     if (message !== "") erreurs[champ] = message;
   }
   return erreurs;
 }
+
+export const erreursDe = (valeurs: ValeursInscription) => erreursSelon(REGLES, ORDRE_DES_CHAMPS, valeurs);

@@ -1,15 +1,14 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { BoutonAction, LienAction } from "../components/Action";
 import { Champ, CLASSES_CHAMP } from "../components/Champ";
 import { TitreDeVue } from "../components/TitreDeVue";
 import { useCompte } from "../contexts/Compte";
+import { useFormulaire } from "../hooks/useFormulaire";
 import { CHEMINS } from "../router/chemins";
 import { ErreurServeur } from "../services/serveur-simule";
 import { prenomDe } from "../utils/messages";
-import { erreursDe, ORDRE_DES_CHAMPS, REGLES, VALEURS_VIDES, type ChampInscription, type ValeursInscription } from "../utils/validation";
-
-type Erreurs = Partial<Record<ChampInscription, string>>;
+import { ORDRE_DES_CHAMPS, REGLES, VALEURS_VIDES, type ValeursInscription } from "../utils/validation";
 
 /** Le state de navigation est « unknown » : on vérifie ce qu'on lit (où revenir, et pourquoi). */
 function lireRetour(state: unknown): { depuis: string | undefined; pourquoi: string | undefined } {
@@ -20,26 +19,20 @@ function lireRetour(state: unknown): { depuis: string | undefined; pourquoi: str
   };
 }
 
-/** Pose ou retire l'erreur d'un champ : une règle qui rend "" veut dire « plus d'erreur ». */
-function avecErreur(erreurs: Erreurs, champ: ChampInscription, message: string): Erreurs {
-  const copie = { ...erreurs };
-  if (message === "") delete copie[champ];
-  else copie[champ] = message;
-  return copie;
-}
-
 /** Créer mon compte : un formulaire CONTRÔLÉ (diapo 51) — la valeur est l'état, le champ n'en est que le reflet. */
 export function Inscription() {
   const { utilisateur, creerCompte } = useCompte();
   const navigate = useNavigate();
   const retour = lireRetour(useLocation().state);
   const [params] = useSearchParams();
-  const [valeurs, setValeurs] = useState<ValeursInscription>({ ...VALEURS_VIDES, profil: params.get("profil") === "formateur" ? "formateur" : "" });
-  // Les erreurs AFFICHÉES : un champ n'est jugé qu'une fois quitté (aider, pas punir)
-  const [erreurs, setErreurs] = useState<Erreurs>({});
+  // ?profil=formateur (le lien de l'accueil) présélectionne le profil
+  const { valeurs, erreurs, changer, quitter, valider, formulaire } = useFormulaire<ValeursInscription>(
+    () => ({ ...VALEURS_VIDES, profil: params.get("profil") === "formateur" ? "formateur" : "" }),
+    REGLES,
+    ORDRE_DES_CHAMPS
+  );
   const [refus, setRefus] = useState("");
   const [envoi, setEnvoi] = useState(false);
-  const formulaire = useRef<HTMLFormElement>(null);
 
   if (utilisateur) {
     return (
@@ -54,26 +47,11 @@ export function Inscription() {
     );
   }
 
-  function changer<C extends ChampInscription>(champ: C, valeur: ValeursInscription[C]) {
-    const suivantes = { ...valeurs, [champ]: valeur };
-    setValeurs(suivantes);
-    // Une erreur déjà affichée se met à jour à chaque frappe, et disparaît dès que c'est bon
-    if (erreurs[champ] !== undefined) setErreurs((e) => avecErreur(e, champ, REGLES[champ](suivantes)));
-  }
-
-  const quitter = (champ: ChampInscription) => setErreurs((e) => avecErreur(e, champ, REGLES[champ](valeurs)));
-
   async function envoyer(evenement: FormEvent) {
     evenement.preventDefault(); // sans lui, le navigateur recharge la page et tout est perdu
     if (envoi) return; // aria-disabled n'empêche pas le clic : c'est ici qu'on refuse le double envoi
     setRefus("");
-    const toutes = erreursDe(valeurs);
-    setErreurs(toutes);
-    const premier = ORDRE_DES_CHAMPS.find((c) => toutes[c] !== undefined);
-    if (premier) {
-      formulaire.current?.querySelector<HTMLElement>(`[name="${premier}"]`)?.focus();
-      return;
-    }
+    if (!valider()) return; // le focus est déjà sur le premier champ fautif
     if (valeurs.profil === "") return; // déjà signalé ; garde pour le type
 
     setEnvoi(true);
