@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="SkillHub met en relation des apprenants en reconversion et des formateurs indépendants, autour d'ateliers courts et concrets." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Les polices demandées dès la lecture du HTML, pas après le JavaScript : sinon le texte change
+         de police une fois la page affichée, et tout ce qui le suit saute (CLS relevé par Lighthouse au TP 3) -->
+    <link rel="preload" href="/polices/sora-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/polices/sora-600.woff2" as="font" type="font/woff2" crossorigin />
     <title>SkillHub – apprendre avec un formateur indépendant</title>
   </head>
   <body>

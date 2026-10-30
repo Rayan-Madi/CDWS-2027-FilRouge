@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Atelier } from "../types";
 import { useAteliersCrees } from "../contexts/AteliersCrees";
 import { chargerAteliers, ErreurChargement } from "../services/api";
+import { URL_CATALOGUE } from "../services/config";
 
 /** Les états d'une requête, en union : pas de données pendant le chargement, pas d'erreur en succès. */
 export type Requete<T> =
@@ -16,7 +17,7 @@ export function useAteliers(): { requete: Requete<readonly Atelier[]>; recharger
 
   useEffect(() => {
     const arret = new AbortController();
-    chargerAteliers(arret.signal)
+    chargerAteliers(arret.signal, { url: URL_CATALOGUE })
       .then((donnees) => setRequete({ statut: "succes", donnees }))
       .catch((erreur: unknown) => {
         if (arret.signal.aborted) return; // annulation : normal, rien à afficher

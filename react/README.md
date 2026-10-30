@@ -1,17 +1,20 @@
 # SkillHub en React
 
-Le tableau de bord SkillHub (EC02) : la landing de l'EC01 transposée en composants React, avec routes, état partagé et formulaire contrôlé. Module **BC01-FM04**, TP 1 et TP 2.
+Le tableau de bord SkillHub (EC02) : la landing de l'EC01 transposée en composants React, avec routes, état partagé et formulaire contrôlé. Module **BC01-FM04**, TP 1 à 3.
 
 **React 19 · TypeScript 7 (strict) · Vite 8 · React Router 8 · Tailwind CSS 4**
 
 ```bash
 cd react
 npm install
-npm run dev      # http://localhost:5173
+npm run api      # l'API locale (json-server) sur http://localhost:3001/ateliers, à laisser tourner
+npm run dev      # http://localhost:5173, dans un second terminal : le catalogue vient de l'API
 npm test         # 26 tests (Vitest + Testing Library)
 npm run build    # tsc -b (types) puis vite build → dist/
 npm run preview  # sert le résultat construit : c'est lui qu'on vérifie, pas le serveur de dev
 ```
+
+L'adresse de l'API est dans `VITE_API_URL` (`.env.development`, modèle dans `.env.example`). C'est une URL, jamais un secret : une variable `VITE_*` est inscrite en clair dans le JavaScript livré. Sans elle, comme dans le build, le catalogue est lu dans le fichier livré avec le site. Ce choix est fait à un seul endroit, `src/services/config.ts` : le module de chargement de FM03 reste tel quel.
 
 ## Choix du framework
 
@@ -40,7 +43,7 @@ src/
 ├── components/  des briques qui reçoivent des props et préviennent leur parent ; elles ne savent rien des routes
 ├── contexts/    Compte, Inscriptions, AteliersCrees : un fournisseur + un hook maison chacun
 ├── hooks/       useAteliers (les 4 états du chargement), useCriteres (le filtre dans l'URL), useActionsInscription, useFormulaire (les deux formulaires)
-├── services/    api.ts et serveur-simule.ts (repris de FM03), formateurs.ts
+├── services/    api.ts et serveur-simule.ts (repris de FM03), config.ts (où lire le catalogue), formateurs.ts
 ├── utils/       la logique pure : filtre.ts et format.ts (FM03), validation.ts, atelier.ts (les règles de « Créer un atelier »), messages.ts
 ├── donnees/     ateliers.json (FM03), formateurs.json
 └── types.ts     repris de FM03, à l'octet près
@@ -67,7 +70,8 @@ src/
 
   Un `Layout` parent enveloppe toutes les vues. Un apprenant qui tape l'adresse d'une page formateur lit « Réservé aux formateurs » au lieu d'être renvoyé sans explication.
 - **Ce que le routage casse, réparé :** à chaque changement de page, `Layout` porte le focus sur le `h1` et remonte en haut, sauf au retour arrière. `TitreDeVue` change le titre de l'onglet. La route `*` évite l'écran blanc.
-- **Pas de back-end avant BC02 :** l'état vit en mémoire, donc un rechargement repart de zéro. Le serveur simulé de FM03 répond en 800 ms et refuse ce qu'un vrai serveur refuserait. Le garde est un confort : c'est le serveur qui doit refuser.
+- **Découpage par route :** Dashboard, MesAteliers et CreerAtelier sont chargés avec `lazy` et `Suspense`, dans `Layout`. On ne les télécharge qu'en entrant dans l'espace. React Router navigue dans un `startTransition` : la page quittée reste affichée pendant le téléchargement, et le `h1` de la nouvelle arrive avec elle, donc le focus le trouve.
+- **Pas de back-end avant BC02 :** l'état vit en mémoire, donc un rechargement repart de zéro (recharger `/mon-espace` ramène à l'inscription, sans 404). Le serveur simulé de FM03 répond en 800 ms et refuse ce qu'un vrai serveur refuserait. Le garde est un confort : c'est le serveur qui doit refuser.
 
 ## Organisation des composants
 

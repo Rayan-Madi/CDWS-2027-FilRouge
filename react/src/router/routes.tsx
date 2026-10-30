@@ -1,15 +1,19 @@
+import { lazy } from "react";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { Layout } from "../components/Layout";
 import { Accueil } from "../views/Accueil";
 import { Catalogue } from "../views/Catalogue";
-import { CreerAtelier } from "../views/CreerAtelier";
-import { Dashboard } from "../views/Dashboard";
 import { FicheAtelier } from "../views/FicheAtelier";
 import { Formateurs } from "../views/Formateurs";
 import { Inscription } from "../views/Inscription";
-import { MesAteliers } from "../views/MesAteliers";
 import { PageIntrouvable } from "../views/PageIntrouvable";
 import { ExigeConnexion } from "./ExigeConnexion";
+
+// Découpage par route (TP 3, point 4) : l'espace connecté n'est téléchargé que si l'on y va.
+// lazy attend un export par défaut ; nos vues exportent un nom, on le lui présente.
+const Dashboard = lazy(() => import("../views/Dashboard").then((m) => ({ default: m.Dashboard })));
+const MesAteliers = lazy(() => import("../views/MesAteliers").then((m) => ({ default: m.MesAteliers })));
+const CreerAtelier = lazy(() => import("../views/CreerAtelier").then((m) => ({ default: m.CreerAtelier })));
 
 /** L'arbre des routes : le SEUL endroit où elles sont déclarées. Séparé du routeur pour se tester sous un MemoryRouter. */
 export function RoutesSkillHub() {

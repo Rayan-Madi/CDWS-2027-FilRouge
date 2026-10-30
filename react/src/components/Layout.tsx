@@ -1,6 +1,7 @@
-import { useEffect, useEffectEvent, useRef } from "react";
+import { Suspense, useEffect, useEffectEvent, useRef } from "react";
 import { Link, Outlet, useLocation, useNavigationType } from "react-router";
 import { CHEMINS } from "../router/chemins";
+import { ChargementDeVue } from "./ChargementDeVue";
 import { IconeLogo } from "./icones";
 import { Navigation } from "./Navigation";
 
@@ -58,7 +59,10 @@ export function Layout() {
         <Navigation />
       </header>
       <main id="contenu" ref={contenu} tabIndex={-1} className="focus:outline-none">
-        <Outlet />
+        {/* Les vues découpées (lazy) se suspendent ici, sous l'en-tête : la navigation reste affichée */}
+        <Suspense fallback={<ChargementDeVue />}>
+          <Outlet />
+        </Suspense>
       </main>
       <footer className="bg-texte px-4 py-8 text-center text-pied-texte">
         <ul role="list" className="flex flex-wrap justify-center gap-x-6 gap-y-2">
