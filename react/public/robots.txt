@@ -1,0 +1,3 @@
+# Tout est public : un site vitrine pédagogique, rien à cacher aux robots
+User-agent: *
+Allow: /
