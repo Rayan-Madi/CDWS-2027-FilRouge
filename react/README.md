@@ -1,6 +1,6 @@
 # SkillHub en React
 
-Le tableau de bord SkillHub (EC02) : la landing de l'EC01 transposée en composants React, avec routes, état partagé et formulaire contrôlé. Module **BC01-FM04**, TP 1 et partie du TP 2.
+Le tableau de bord SkillHub (EC02) : la landing de l'EC01 transposée en composants React, avec routes, état partagé et formulaire contrôlé. Module **BC01-FM04**, TP 1 et TP 2.
 
 **React 19 · TypeScript 7 (strict) · Vite 8 · React Router 8 · Tailwind CSS 4**
 
@@ -8,7 +8,7 @@ Le tableau de bord SkillHub (EC02) : la landing de l'EC01 transposée en composa
 cd react
 npm install
 npm run dev      # http://localhost:5173
-npm test         # 20 tests (Vitest + Testing Library)
+npm test         # 26 tests (Vitest + Testing Library)
 npm run build    # tsc -b (types) puis vite build → dist/
 npm run preview  # sert le résultat construit : c'est lui qu'on vérifie, pas le serveur de dev
 ```
@@ -36,21 +36,21 @@ npm run preview  # sert le résultat construit : c'est lui qu'on vérifie, pas l
 src/
 ├── main.tsx · Application.tsx   le point d'entrée, et les fournisseurs autour du routeur
 ├── router/      routes.tsx (le SEUL endroit où les routes sont déclarées), chemins.ts, ExigeConnexion.tsx (le garde)
-├── views/       une vue par route : Accueil, Catalogue, FicheAtelier, Formateurs, Inscription, Dashboard, PageIntrouvable
+├── views/       une vue par route, aux noms de la fiche : Dashboard, MesAteliers, CreerAtelier ; plus Accueil, Catalogue, FicheAtelier, Formateurs, Inscription, PageIntrouvable
 ├── components/  des briques qui reçoivent des props et préviennent leur parent ; elles ne savent rien des routes
-├── contexts/    Compte, Inscriptions : un fournisseur + un hook maison chacun
-├── hooks/       useAteliers (les 4 états du chargement), useCriteres (le filtre dans l'URL), useActionsInscription
+├── contexts/    Compte, Inscriptions, AteliersCrees : un fournisseur + un hook maison chacun
+├── hooks/       useAteliers (les 4 états du chargement), useCriteres (le filtre dans l'URL), useActionsInscription, useFormulaire (les deux formulaires)
 ├── services/    api.ts et serveur-simule.ts (repris de FM03), formateurs.ts
-├── utils/       la logique pure : filtre.ts et format.ts (FM03), validation.ts, messages.ts
+├── utils/       la logique pure : filtre.ts et format.ts (FM03), validation.ts, atelier.ts (les règles de « Créer un atelier »), messages.ts
 ├── donnees/     ateliers.json (FM03), formateurs.json
 └── types.ts     repris de FM03, à l'octet près
 ```
 
 - **Où vit chaque donnée** (diapo 50) :
   - les **critères du filtre** dans l'**URL** (`?niveau=debutant&soir=oui`), pour que l'adresse se partage et survive au rechargement ;
-  - le **compte** et les **inscriptions** dans un **contexte**, parce qu'ils sont lus par la navigation, les cartes, le garde et le tableau de bord ;
+  - le **compte**, les **inscriptions** et les **ateliers publiés** dans un **contexte**, parce qu'ils sont lus par la navigation, les cartes, le garde, le tableau de bord et le catalogue ;
   - le reste en `useState` local (menu ouvert, saisie d'un champ, envoi en cours).
-- **Ce qui n'est pas un état :** la liste filtrée, le compteur, les places restantes. Ce sont des valeurs dérivées, recalculées à chaque rendu.
+- **Ce qui n'est pas un état :** la liste filtrée, le compteur, les places restantes, le catalogue complété des ateliers publiés pendant la visite. Ce sont des valeurs dérivées, recalculées à chaque rendu.
 - **Les routes :**
 
   | Route | Vue |
@@ -61,9 +61,11 @@ src/
   | `/formateurs` | Formateurs |
   | `/inscription` | Inscription |
   | `/mon-espace` | Dashboard, derrière le garde `ExigeConnexion` |
+  | `/mon-espace/mes-ateliers` | MesAteliers, derrière un second garde `ExigeConnexion formateursSeulement` |
+  | `/mon-espace/creer-un-atelier` | CreerAtelier, derrière le même second garde |
   | `*` | PageIntrouvable |
 
-  Un `Layout` parent enveloppe toutes les vues.
+  Un `Layout` parent enveloppe toutes les vues. Un apprenant qui tape l'adresse d'une page formateur lit « Réservé aux formateurs » au lieu d'être renvoyé sans explication.
 - **Ce que le routage casse, réparé :** à chaque changement de page, `Layout` porte le focus sur le `h1` et remonte en haut, sauf au retour arrière. `TitreDeVue` change le titre de l'onglet. La route `*` évite l'écran blanc.
 - **Pas de back-end avant BC02 :** l'état vit en mémoire, donc un rechargement repart de zéro. Le serveur simulé de FM03 répond en 800 ms et refuse ce qu'un vrai serveur refuserait. Le garde est un confort : c'est le serveur qui doit refuser.
 
@@ -77,7 +79,7 @@ src/
 | `FiltresAteliers` | `<form role="search">` ; la frappe part dans l'URL après 300 ms de calme |
 | `CartesFantomes` | la place réservée pendant le chargement (`aria-hidden`) |
 | `Modale` | le `<dialog>` de FM02 (`showModal()` : focus piégé, Échap) ; le focus revient au déclencheur |
-| `Champ` | étiquette, aide et erreur reliées au champ (`useId`, `aria-describedby`, `aria-invalid`) |
+| `Champ` | étiquette, aide et erreur reliées au champ (`useId`, `aria-describedby`, `aria-invalid`) ; avec `useFormulaire`, il sert les deux formulaires contrôlés, « Créer mon compte » et « Créer un atelier » |
 | `Navigation` | menu mobile (`aria-expanded`), sous-menu « Ateliers », `NavLink` qui pose `aria-current="page"`, Échap qui rend le focus |
 | `TitreDeVue` | le `h1` de chaque vue (`tabIndex={-1}`) et le titre de l'onglet |
 | `Layout` | lien d'évitement, en-tête, `Outlet`, pied ; focus et défilement après navigation |
