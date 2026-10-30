@@ -6,4 +6,6 @@ export const CHEMINS = {
   formateurs: "/formateurs",
   inscription: "/inscription",
   monEspace: "/mon-espace",
+  mesAteliers: "/mon-espace/mes-ateliers",
+  creerAtelier: "/mon-espace/creer-un-atelier",
 } as const;
