@@ -34,7 +34,9 @@ export function Inscription() {
   const [refus, setRefus] = useState("");
   const [envoi, setEnvoi] = useState(false);
 
-  if (utilisateur) {
+  // Pas pendant l'envoi : le compte vient d'être créé, Mon espace se télécharge (lazy) et le bouton
+  // doit dire « Inscription en cours… » jusqu'au bout, pas « Vous avez déjà un compte »
+  if (utilisateur && !envoi) {
     return (
       <div className="mx-auto max-w-xl px-4 py-12">
         <TitreDeVue>Vous avez déjà un compte</TitreDeVue>
