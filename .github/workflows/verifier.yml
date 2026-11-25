@@ -67,3 +67,23 @@ jobs:
         run: npm test
       - name: Types et construction (tsc -b, vite build)
         run: npm run build
+
+  nextjs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: nextjs-skillhub
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: nextjs-skillhub/package-lock.json
+      - run: npm ci
+      - name: Linter (ESLint, réglages de create-next-app)
+        run: npm run lint
+      # Sans NEXT_PUBLIC_API_URL, le catalogue est lu dans src/donnees/ateliers.json : pas d'API à lancer ici
+      - name: Types et construction (next build)
+        run: npm run build

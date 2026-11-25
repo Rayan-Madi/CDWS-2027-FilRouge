@@ -1,0 +1,50 @@
+@import "tailwindcss";
+/* Sans cette ligne, tailwind.config.js serait ignoré, sans le moindre message */
+@config "../../tailwind.config.mjs";
+/* Les images de public/ ne doivent pas fabriquer de classes */
+@source not "../../public";
+
+/* La police Sora : chargée par next/font/local dans layout.tsx (variable --font-sora) */
+
+/* Ce que le reset de Tailwind retire, et que FM02 exigeait */
+@layer base {
+  html {
+    scroll-padding-top: 5rem;
+  }
+  body {
+    color: --theme(--color-texte);
+    background: --theme(--color-fond);
+    line-height: 1.5;
+    overflow-wrap: break-word;
+  }
+  /* Le reset rend les liens pareils au texte : dans le texte, un lien se voit (couleur ET soulignement, WCAG 1.4.1) */
+  a {
+    color: --theme(--color-accent);
+    text-decoration: underline;
+  }
+  a:hover {
+    color: --theme(--color-accent-fonce);
+  }
+  /* Le focus clavier toujours visible, décalé sur le fond (FM02) */
+  :focus-visible {
+    outline: 3px solid --theme(--color-accent);
+    outline-offset: 3px;
+  }
+  /* Le reset retire la marge auto : sans elle, le <dialog> modal colle en haut à gauche */
+  dialog:modal {
+    margin: auto;
+  }
+  dialog::backdrop {
+    background: rgba(18, 41, 63, 0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
