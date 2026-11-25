@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Page introuvable – SkillHub</title>
+  <link rel="icon" href="/CDWS-2027-FilRouge/src/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/CDWS-2027-FilRouge/src/css/skillhub.css">
+  <script>
+    // GitHub Pages ne sert qu'une page d'erreur pour tout le site : celle-ci. Or une adresse de
+    // l'application React (/CDWS-2027-FilRouge/react/ateliers…) n'est pas un fichier, c'est une route
+    // qu'elle sait afficher. On y retourne donc, le chemin passé dans la requête (technique
+    // spa-github-pages de Rafael Pedicini, licence MIT) :
+    //   /CDWS-2027-FilRouge/react/ateliers?niveau=debutant → /CDWS-2027-FilRouge/react/?/ateliers&niveau=debutant
+    // react/index.html remet ensuite l'adresse d'origine. Le reste du site garde cette page, lisible sans JavaScript.
+    (function (l) {
+      var application = "/CDWS-2027-FilRouge/react/";
+      if (l.pathname.indexOf(application) !== 0) return;
+      if (l.search.slice(0, 2) === "?/") return; // déjà redirigé : l'application manque, on ne boucle pas
+      var segments = 2; // CDWS-2027-FilRouge, puis react
+      l.replace(
+        l.protocol + "//" + l.host +
+        l.pathname.split("/").slice(0, 1 + segments).join("/") + "/?/" +
+        l.pathname.slice(1).split("/").slice(segments).join("/").replace(/&/g, "~and~") +
+        (l.search ? "&" + l.search.slice(1).replace(/&/g, "~and~") : "") +
+        l.hash
+      );
+    })(window.location);
+  </script>
+</head>
+<body>
+  <main>
+    <h1>Page introuvable</h1>
+    <p>Cette adresse ne correspond à aucune page de SkillHub.</p>
+    <ul>
+      <li><a href="/CDWS-2027-FilRouge/src/">La landing SkillHub, sans framework (EC01)</a></li>
+      <li><a href="/CDWS-2027-FilRouge/react/">SkillHub en React (FM04)</a></li>
+    </ul>
+  </main>
+</body>
+</html>

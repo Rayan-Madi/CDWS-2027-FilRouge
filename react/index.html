@@ -10,6 +10,18 @@
     <link rel="preload" href="/polices/sora-400.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/polices/sora-600.woff2" as="font" type="font/woff2" crossorigin />
     <title>SkillHub – apprendre avec un formateur indépendant</title>
+    <!-- Le retour d'une adresse profonde sur GitHub Pages : le 404.html du site a renvoyé
+         /react/ateliers?niveau=debutant vers /react/?/ateliers&niveau=debutant. On remet l'adresse
+         d'origine AVANT que React la lise (technique spa-github-pages de Rafael Pedicini, licence MIT). -->
+    <script>
+      (function (l) {
+        if (l.search[1] !== "/") return;
+        var adresse = l.search.slice(1).split("&").map(function (morceau) {
+          return morceau.replace(/~and~/g, "&");
+        }).join("?");
+        window.history.replaceState(null, null, l.pathname.slice(0, -1) + adresse + l.hash);
+      })(window.location);
+    </script>
   </head>
   <body>
     <!-- Une seule page HTML : React rend tout le reste dans #racine -->
