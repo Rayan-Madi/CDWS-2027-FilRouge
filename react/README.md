@@ -4,14 +4,16 @@ Le tableau de bord SkillHub (EC02) : la landing de l'EC01 transposée en composa
 
 **React 19 · TypeScript 7 (strict) · Vite 8 · React Router 8 · Tailwind CSS 4**
 
+**En ligne :** https://rayan-madi.github.io/CDWS-2027-FilRouge/react/ (n'importe quelle adresse se recharge : voir « Publication »)
+
 ```bash
 cd react
 npm install
 npm run api      # l'API locale (json-server) sur http://localhost:3001/ateliers, à laisser tourner
 npm run dev      # http://localhost:5173, dans un second terminal : le catalogue vient de l'API
-npm test         # 26 tests (Vitest + Testing Library)
+npm test         # 33 tests (Vitest + Testing Library)
 npm run build    # tsc -b (types) puis vite build → dist/
-npm run preview  # sert le résultat construit : c'est lui qu'on vérifie, pas le serveur de dev
+npm run preview  # le résultat construit, sous http://localhost:4173/CDWS-2027-FilRouge/react/ : c'est lui qu'on vérifie
 ```
 
 L'adresse de l'API est dans `VITE_API_URL` (`.env.development`, modèle dans `.env.example`). C'est une URL, jamais un secret : une variable `VITE_*` est inscrite en clair dans le JavaScript livré. Sans elle, comme dans le build, le catalogue est lu dans le fichier livré avec le site. Ce choix est fait à un seul endroit, `src/services/config.ts` : le module de chargement de FM03 reste tel quel.
@@ -95,6 +97,17 @@ Le style suit le design system de FM02 :
 - les cibles font au moins 44 px.
 
 Tailwind 4 exige Chrome et Edge 111, Safari 16.4 et Firefox 128.
+
+## Publication
+
+L'action [`publier.yml`](../.github/workflows/publier.yml) publie tout le site sur GitHub Pages à chaque fusion dans `main` : le site d'avant, rendu par Jekyll comme jusqu'ici, puis le build de `react/` sous `/CDWS-2027-FilRouge/react/`. Vite construit avec cette base (`vite.config.ts`) ; en développement, l'application reste à la racine.
+
+GitHub Pages ne renvoie pas `index.html` pour une adresse inconnue, comme le ferait un serveur réglé pour une application à page unique (diapo 5.1) : il sert `ateliers.html` pour `/ateliers`, et un seul `404.html`, celui de la racine du site, pour tout le reste. Deux réponses :
+
+- **les routes fixes** (`/ateliers`, `/formateurs`, `/inscription`, `/mon-espace`) reçoivent au build une copie de `index.html` : recharger répond 200 tout de suite ;
+- **les autres adresses de l'application** (une fiche, `/mon-espace/…`) passent par le [`404.html`](../404.html) de la racine, qui renvoie vers l'application en gardant le chemin dans la requête ; un script en tête de `index.html` remet l'adresse d'origine avant que React la lise (technique spa-github-pages de Rafael Pedicini). Le reste du site garde une vraie page introuvable.
+
+`vite preview` renvoie `index.html` pour tout : il ne montre pas ce problème. `tests/liens-profonds.test.ts` fait tourner les deux scripts, aller-retour compris.
 
 ---
 
