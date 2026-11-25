@@ -1,0 +1,69 @@
+# Publie le site sur GitHub Pages. D'abord le site tel qu'il était servi jusqu'ici, rendu par Jekyll
+# comme le faisait la source « branche » (les .md de docs/ deviennent des pages HTML, docs/ a son index) ;
+# puis l'application React, construite dans react/ et servie sous /CDWS-2027-FilRouge/react/.
+# Exige la source Pages « GitHub Actions » (Settings › Pages › Build and deployment).
+name: Publier
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Un déploiement à la fois ; celui qui a commencé va jusqu'au bout
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      # La même action que la construction « pages build and deployment » d'avant. AVANT tout npm ci :
+      # Jekyll n'exclut que le node_modules de la racine, il copierait celui de react/.
+      - name: Le site, rendu par Jekyll comme avant
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: react/package-lock.json
+
+      - name: Construire l'application React (base /CDWS-2027-FilRouge/react/)
+        working-directory: react
+        run: |
+          npm ci
+          npm run build
+
+      # Jekyll a copié les SOURCES de react/ ; on les remplace par le résultat construit.
+      # Jekyll tourne en root dans un conteneur : _site lui appartient, d'où sudo.
+      - name: Le build React à la place de ses sources
+        run: |
+          sudo rm -rf _site/react
+          sudo cp -r react/dist _site/react
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deployer:
+    needs: construire
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - id: deploiement
+        uses: actions/deploy-pages@v5

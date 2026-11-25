@@ -67,6 +67,9 @@ jobs:
         run: npm test
       - name: Types et construction (tsc -b, vite build)
         run: npm run build
+      # GitHub Pages sert « ateliers.html » pour « /ateliers » : sans ces copies, recharger la page renverrait 404
+      - name: Une page par route fixe, identique à index.html
+        run: for route in ateliers formateurs inscription mon-espace; do cmp dist/index.html "dist/$route.html"; done
 
   nextjs:
     runs-on: ubuntu-latest
